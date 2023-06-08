@@ -1,0 +1,55 @@
+### 1-6-23
+- Features
+    + [x] Player can draw a card
+    + [x] Switch turn after player draw a card
+    + [x] Show card on the table
+
+
+- Bug
+    + [x] After turn update, the previous hand disapear
+    + [x] After 4 turn, the game crash
+
+### 4-6-23
+
+- Features
+    + [x] Skip turn button
+    + [x] Show timer
+
+- Bug
+    + [] 10 J Q K A 2 -> should not allowed as a sequences
+    + [] Cards in the table should be sorted
+    + [] only move mouse around to get the update
+
+### 5-6-23
+
+- Features
+    + [x] After skip turn, counter should be reset
+    + [x] Decide if the turn can be play due to the last turn
+    + [] correct the turn:
+        + [] if all the player skip turn, the given card player can play another combo
+        + [] if player skip turn, they will not be able to play until new turn/combo
+
+- Bug
+    + [x] 10 J Q K A 2 -> should not allowed as a sequences
+    + [x] Only move mouse around to get the update (Why: de WinitSetting:desktop_app() plugin is the root cause, it's pause all the system if no focus to the app)
+    + [x] Card should be in the initial position after the turn update
+    + [x] 5 6 7 8 9 10 J Q -> should be playable
+    + [x] Cards in the table should be sorted
+
+### 6-6-2023
+
+- Features
+    + [] Add multiplayer
+        [x] Choose one: websocket client/server, webrtc p2p -> webrtc p2p
+
+
+### 8-6-2023
+
+- Features
+    + [x] Compile to WASM
+    + [] Add multiplayer
+        [x] Choose one: websocket client/server, webrtc p2p -> webrtc p2p
+        [x] Integrate matchbox, ggrs
+        [x] Create lobby
+        [x] After amount of player join the room, move into the game
+        [] Rewrite the determistic system
