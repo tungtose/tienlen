@@ -53,3 +53,14 @@
         [x] Create lobby
         [x] After amount of player join the room, move into the game
         [] Rewrite the determistic system
+### 14-6-2023
+
+[x] feat: Compile to WASM
+[] feat: Add multiplayer
+  [x] Choose one: websocket client/server, webrtc p2p -> webrtc p2p
+  [x] Integrate matchbox, ggrs
+  [x] Create lobby
+  [x] After amount of player join the room, move into the game
+  [] Rewrite the determistic system
+
+[] bug: Crash after 2 people join

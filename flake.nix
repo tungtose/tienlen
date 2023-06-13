@@ -17,25 +17,43 @@
       in
       with pkgs;
       {
-        devShells.default = mkShell {
-          buildInputs = [
-            openssl
+        devShells.default = mkShell rec {
+          nativeBuildInputs = [
+            makeWrapper
             pkg-config
-            exa
-            fd
+          ];
+          buildInputs = [
+            libxkbcommon
+            libGL
+
             cargo-watch
             wasm-pack
+            udev
+            alsa-lib
+            vulkan-loader
+
+            libxkbcommon
+            wayland
+
+            xorg.libXcursor
+            xorg.libXrandr
+            xorg.libXi
+            xorg.libX11
+
             (rust-bin.stable.latest.default.override {
               extensions = [ "rust-src" ];
               targets = [ "wasm32-unknown-unknown" ];
             })
           ];
-
+          env = {
+            ZSTD_SYS_USE_PKG_CONFIG = true;
+          };
+          LD_LIBRARY_PATH = "${lib.makeLibraryPath buildInputs}";
           shellHook = ''
             alias ls=exa
             alias find=fd
             alias find="cargo build"
-            alias run="cargo run --release --target wasm32-unknown-unknown"
+            alias web="cargo run --release --target wasm32-unknown-unknown"
           '';
         };
       }
