@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use naia_bevy_client::{events::ClientTickEvent, Client};
 use naia_bevy_demo_shared::{
-    channels::PlayerCommandChannel,
+    channels::{PlayerActionChannel, PlayerCommandChannel},
     components::{player::Host, Player},
     messages::Game,
 };
@@ -216,7 +216,6 @@ pub fn player_btn_click(
         (Changed<Interaction>, With<Button>),
     >,
     mut client: Client,
-    mut tick_reader: EventReader<ClientTickEvent>,
     // mut ev_player: EventWriter<PlayerEvent>,
 ) {
     for (interaction, (start_btn, play_btn, skip_btn)) in &mut interaction_query {
@@ -224,14 +223,8 @@ pub fn player_btn_click(
             Interaction::Clicked => {
                 if start_btn.is_some() {
                     info!("Clicked start!");
-                    for ClientTickEvent(client_tick) in tick_reader.iter() {
-                        let game = Game::new(true);
-                        // Send command
-                        client.send_tick_buffer_message::<PlayerCommandChannel, Game>(
-                            client_tick,
-                            &game.clone(),
-                        );
-                    }
+                    let game_action = Game::new(true);
+                    client.send_message::<PlayerActionChannel, Game>(&game_action.clone());
                     // ev_player.send(PlayerEvent(PlayerEventKind::Play));
                 }
                 if play_btn.is_some() {
