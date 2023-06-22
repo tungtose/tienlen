@@ -1,4 +1,4 @@
-use bevy::prelude::{Query, Transform, With};
+use bevy::prelude::{info, Query, Transform, With};
 
 use naia_bevy_client::Client;
 use naia_bevy_demo_shared::components::Position;
@@ -14,10 +14,16 @@ pub fn sync_clientside_sprites(
             interp.next_position(*position.x, *position.y);
         }
 
-        let interp_amount = client.client_interpolation().unwrap();
-        interp.interpolate(interp_amount);
-        transform.translation.x = interp.interp_x;
-        transform.translation.y = interp.interp_y;
+        let interp_amount = client.client_interpolation();
+
+        match interp_amount {
+            Some(amount) => {
+                interp.interpolate(amount);
+                transform.translation.x = interp.interp_x;
+                transform.translation.y = interp.interp_y;
+            }
+            None => info!("Please handle me: sync.rs"),
+        }
     }
 }
 
