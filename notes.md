@@ -64,3 +64,9 @@
   [] Rewrite the determistic system
 
 [] bug: Crash after 2 people join
+
+
+### 15-6 -> 22-6-2023
+
+- Found that P2P is hard for the initial implement -> switch to server-client approach -> using naia
+    [x] naia naia naia learning & init
