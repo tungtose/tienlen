@@ -106,44 +106,6 @@ fn spawn_player(mut commands: Commands, mut rip: ResMut<RollbackIdProvider>) {
     ));
 }
 
-const MAP_SIZE: i32 = 41;
-const GRID_WIDTH: f32 = 0.05;
-
-fn move_players(
-    inputs: Res<PlayerInputs<GGRSConfig>>,
-    mut player_q: Query<(&mut PlayerHand, &Player)>,
-    mut deck_q: Query<&mut Deck>,
-    mut ev_ui: EventWriter<ReloadUiEvent>,
-) {
-    let deck = deck_q.get_single_mut().unwrap();
-    for (hand, player) in player_q.iter_mut() {
-        let (input, _) = inputs[player.handle];
-        let direction = direction(input);
-
-        // ev_ui.send(ReloadUiEvent);
-
-        // info!("hand: {:?}", hand.cards);
-
-        if direction == Vec2::ZERO {
-            continue;
-        }
-        //
-        // move_direction.0 = direction;
-        //
-        // let move_speed = 0.13;
-        // let move_delta = direction * move_speed;
-        //
-        // let old_pos_3 = transform.translation.xyx().to_array();
-        // let old_pos = Vec2::from_slice(&[*old_pos_3.get(0).unwrap(), *old_pos_3.get(1).unwrap()]);
-        //
-        // let limit = Vec2::splat(MAP_SIZE as f32 / 2. - 0.5);
-        // let new_pos = (old_pos + move_delta).clamp(-limit, limit);
-        //
-        // transform.translation.x = new_pos.x;
-        // transform.translation.y = new_pos.y;
-    }
-}
-
 fn start_matchbox_socket(mut commands: Commands) {
     info!("Start matchbox socket !!!");
     let room_url = "ws://127.0.0.1:3536/thirteen?next=4";

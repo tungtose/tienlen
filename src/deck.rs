@@ -3,7 +3,7 @@ use bevy_ggrs::RollbackIdProvider;
 use rand::{seq::SliceRandom, thread_rng};
 use serde::{Deserialize, Serialize};
 
-use crate::{card::Card, states::MainState};
+use crate::{card::Card, player::SpawnPlayerEvent, states::MainState};
 
 #[derive(Component, Debug, Serialize, Deserialize, Clone, Reflect, Default)]
 pub struct Deck {
@@ -57,7 +57,11 @@ pub struct DealCard(pub bool);
 #[derive(Component, Reflect, Default)]
 pub struct Shuffle(pub bool);
 
-fn spawn_deck(mut commands: Commands, mut rip: ResMut<RollbackIdProvider>) {
+fn spawn_deck(
+    mut commands: Commands,
+    mut rip: ResMut<RollbackIdProvider>,
+    mut ev_spawn_player: EventWriter<SpawnPlayerEvent>,
+) {
     let mut all_cards = Card::all_cards().to_vec();
 
     // let mut rng = thread_rng();
@@ -79,4 +83,6 @@ fn spawn_deck(mut commands: Commands, mut rip: ResMut<RollbackIdProvider>) {
     info!("deck: {:?}", deck.cards);
 
     commands.spawn((rip.next(), deck, DealCard(false), Shuffle(false)));
+
+    ev_spawn_player.send(SpawnPlayerEvent);
 }

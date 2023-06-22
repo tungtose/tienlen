@@ -20,7 +20,8 @@ impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<PlayerEvent>()
             .add_event::<TurnUpdateEvent>()
-            .add_system(spawn_player.in_schedule(OnEnter(MainState::Game)))
+            .add_event::<SpawnPlayerEvent>()
+            .add_system(spawn_player.run_if(on_event::<SpawnPlayerEvent>()))
             .add_system(
                 select_card.run_if(on_event::<PlayerEvent>()), // .before(play_card),
             )
@@ -98,6 +99,8 @@ pub enum PlayerEventKind {
 }
 
 pub struct PlayerEvent(pub PlayerEventKind);
+
+pub struct SpawnPlayerEvent;
 
 pub struct TurnUpdateEvent;
 //
@@ -298,8 +301,8 @@ fn shuffle_deck(mut deck_q: Query<(&mut Deck, &mut Shuffle)>) {
     let (mut deck, mut shuffle) = deck_q.get_single_mut().unwrap();
     if !shuffle.0 {
         info!("SHUFFLING");
-        // let mut rng = StepRng::new(2, 4);
-        // deck.cards.shuffle(&mut rng);
+        let mut rng = StepRng::new(2, 4);
+        deck.cards.shuffle(&mut rng);
 
         info!("deck after: {:?}", deck.cards);
         shuffle.0 = true;
@@ -311,7 +314,6 @@ fn deal_card_to_player(
     mut deck_q: Query<(&mut Deck, &mut DealCard, &Shuffle)>,
     mut ev_ui: EventWriter<ReloadUiEvent>,
 ) {
-    // info!("Draw!!!");
     let (mut deck, mut deal_card, shuffle) = deck_q.get_single_mut().unwrap();
     if !deal_card.0 && shuffle.0 {
         info!("DEAL CARD!");
