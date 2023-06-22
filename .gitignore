@@ -1,1 +1,6 @@
 /target
+/client/target
+/server/target
+/shared/target
+
+.direnv
