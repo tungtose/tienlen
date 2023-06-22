@@ -7,7 +7,7 @@ use bevy_log::info;
 use naia_bevy_server::{
     events::{
         AuthEvents, ConnectEvent, DespawnEntityEvent, DisconnectEvent, ErrorEvent,
-        InsertComponentEvents, RemoveComponentEvents, SpawnEntityEvent, TickEvent,
+        InsertComponentEvents, MessageEvents, RemoveComponentEvents, SpawnEntityEvent, TickEvent,
         UpdateComponentEvents,
     },
     CommandsExt, Random, Server,
@@ -15,12 +15,14 @@ use naia_bevy_server::{
 
 use naia_bevy_demo_shared::{
     behavior as shared_behavior,
-    channels::{EntityAssignmentChannel, GameSystemChannel, PlayerCommandChannel},
+    channels::{
+        EntityAssignmentChannel, GameSystemChannel, PlayerActionChannel, PlayerCommandChannel,
+    },
     components::{
         player::{Host, Player},
         Color, ColorValue, Position, Shape, ShapeValue,
     },
-    messages::{Auth, Counter, EntityAssignment, KeyCommand},
+    messages::{Auth, Counter, EntityAssignment, Game, KeyCommand},
 };
 
 use crate::resources::Global;
@@ -182,6 +184,14 @@ pub fn error_events(mut event_reader: EventReader<ErrorEvent>) {
     }
 }
 
+pub fn message_events(mut server: Server, mut event_reader: EventReader<MessageEvents>) {
+    for events in event_reader.iter() {
+        for message in events.read::<PlayerActionChannel, Game>() {
+            info!("Got Start game event");
+        }
+    }
+}
+
 pub fn tick_events(
     mut server: Server,
     mut position_query: Query<&mut Position>,
@@ -198,6 +208,10 @@ pub fn tick_events(
 
         // All game logic should happen here, on a tick event
         let mut messages = server.receive_tick_buffer_messages(server_tick);
+
+        for (user_key, cmd) in messages.read::<PlayerActionChannel, Game>() {
+            info!("Got start game from HOST {:?}", cmd);
+        }
 
         for (_user_key, key_command) in messages.read::<PlayerCommandChannel, KeyCommand>() {
             let Some(entity) = &key_command.entity.get(&server) else {

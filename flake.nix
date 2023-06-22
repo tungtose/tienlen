@@ -51,9 +51,10 @@
           };
           LD_LIBRARY_PATH = "${lib.makeLibraryPath buildInputs}";
           shellHook = ''
+            alias run="cargo run"
             alias ls=exa
             alias find=fd
-            alias find="cargo build"
+            alias build="cargo build"
             alias web="cargo run --release --target wasm32-unknown-unknown"
           '';
         };

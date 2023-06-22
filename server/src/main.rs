@@ -37,6 +37,7 @@ fn main() {
                 events::connect_events,
                 events::disconnect_events,
                 events::error_events,
+                events::message_events,
                 events::tick_events,
                 events::spawn_entity_events,
                 events::despawn_entity_events,

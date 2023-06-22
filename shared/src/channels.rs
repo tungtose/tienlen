@@ -7,6 +7,9 @@ use naia_bevy_shared::{
 pub struct PlayerCommandChannel;
 
 #[derive(Channel)]
+pub struct PlayerActionChannel;
+
+#[derive(Channel)]
 pub struct GameSystemChannel;
 
 #[derive(Channel)]
@@ -21,6 +24,10 @@ impl ProtocolPlugin for ChannelsPlugin {
             .add_channel::<GameSystemChannel>(
                 ChannelDirection::ServerToClient,
                 ChannelMode::OrderedReliable(ReliableSettings::default()),
+            )
+            .add_channel::<PlayerActionChannel>(
+                ChannelDirection::ClientToServer,
+                ChannelMode::UnorderedReliable(ReliableSettings::default()),
             )
             .add_channel::<PlayerCommandChannel>(
                 ChannelDirection::ClientToServer,
