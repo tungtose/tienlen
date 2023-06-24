@@ -25,8 +25,9 @@ use naia_bevy_demo_shared::{
 
 use crate::{
     components::{Confirmed, Interp, LocalCursor, LocalPlayer, Predicted},
+    game::LocalStartGame,
     resources::{Global, OwnedEntity},
-    ui::{DrawPlayer, ReloadBar},
+    ui::ReloadBar,
 };
 
 const SQUARE_SIZE: f32 = 32.0;
@@ -97,7 +98,7 @@ pub fn message_events(
     position_query: Query<&Position>,
     player_query: Query<&Player>,
     mut bar_ev: EventWriter<ReloadBar>,
-    mut start_game_ev: EventWriter<DrawPlayer>,
+    mut start_game_ev: EventWriter<LocalStartGame>,
 ) {
     for events in event_reader.iter() {
         for message in events.read::<GameSystemChannel, Counter>() {
@@ -106,7 +107,7 @@ pub fn message_events(
 
         for _ in events.read::<GameSystemChannel, StartGame>() {
             info!("START GAME NOW!!!");
-            start_game_ev.send(DrawPlayer);
+            start_game_ev.send(LocalStartGame);
         }
 
         for message in events.read::<EntityAssignmentChannel, EntityAssignment>() {

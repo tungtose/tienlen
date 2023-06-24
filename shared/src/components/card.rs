@@ -1,7 +1,7 @@
 use std::cmp::Ordering;
 use std::slice::Iter;
 
-use bevy_ecs::component::Component;
+use bevy_ecs::prelude::Component;
 use serde::{Deserialize, Serialize};
 
 use super::{rank::Rank, suit::Suit};
