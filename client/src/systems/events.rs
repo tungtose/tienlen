@@ -20,13 +20,13 @@ use naia_bevy_demo_shared::{
     behavior as shared_behavior,
     channels::{EntityAssignmentChannel, GameSystemChannel, PlayerCommandChannel},
     components::{player::Player, Color, ColorValue, Position, Shape, ShapeValue},
-    messages::{Counter, EntityAssignment, KeyCommand},
+    messages::{Counter, EntityAssignment, KeyCommand, StartGame},
 };
 
 use crate::{
-    components::{Confirmed, Interp, LocalCursor, Predicted},
+    components::{Confirmed, Interp, LocalCursor, LocalPlayer, Predicted},
     resources::{Global, OwnedEntity},
-    ui::ReloadBar,
+    ui::{DrawPlayer, ReloadBar},
 };
 
 const SQUARE_SIZE: f32 = 32.0;
@@ -97,10 +97,16 @@ pub fn message_events(
     position_query: Query<&Position>,
     player_query: Query<&Player>,
     mut bar_ev: EventWriter<ReloadBar>,
+    mut start_game_ev: EventWriter<DrawPlayer>,
 ) {
     for events in event_reader.iter() {
         for message in events.read::<GameSystemChannel, Counter>() {
             info!("Counter from server: {:?}", message.as_string())
+        }
+
+        for _ in events.read::<GameSystemChannel, StartGame>() {
+            info!("START GAME NOW!!!");
+            start_game_ev.send(DrawPlayer);
         }
 
         for message in events.read::<EntityAssignmentChannel, EntityAssignment>() {
@@ -113,6 +119,7 @@ pub fn message_events(
                 match player_query.get(entity) {
                     Ok(_) => {
                         global.player_entity = Some(entity);
+                        commands.entity(entity).insert(LocalPlayer);
                         bar_ev.send(ReloadBar);
                     }
                     Err(err) => info!("Error: {}", err),

@@ -9,7 +9,7 @@ mod key_command;
 pub use auth::Auth;
 pub use counter::Counter;
 pub use entity_assignment::EntityAssignment;
-pub use game::Game;
+pub use game::StartGame;
 pub use key_command::KeyCommand;
 
 // Plugin
@@ -22,6 +22,6 @@ impl ProtocolPlugin for MessagesPlugin {
             .add_message::<EntityAssignment>()
             .add_message::<KeyCommand>()
             .add_message::<Counter>()
-            .add_message::<Game>();
+            .add_message::<StartGame>();
     }
 }

@@ -3,7 +3,7 @@ use naia_bevy_client::{events::ClientTickEvent, Client};
 use naia_bevy_demo_shared::{
     channels::{PlayerActionChannel, PlayerCommandChannel},
     components::{player::Host, Player},
-    messages::Game,
+    messages::StartGame,
 };
 
 use crate::resources::Global;
@@ -223,8 +223,7 @@ pub fn player_btn_click(
             Interaction::Clicked => {
                 if start_btn.is_some() {
                     info!("Clicked start!");
-                    let game_action = Game::new(true);
-                    client.send_message::<PlayerActionChannel, Game>(&game_action.clone());
+                    client.send_message::<PlayerActionChannel, StartGame>(&StartGame::default());
                     // ev_player.send(PlayerEvent(PlayerEventKind::Play));
                 }
                 if play_btn.is_some() {

@@ -46,7 +46,7 @@ pub fn run() {
                 events::update_component_events,
                 events::remove_component_events,
                 events::message_events,
-                // common::playable,
+                // common::test,
             )
                 .chain()
                 .in_set(ReceiveEvents),

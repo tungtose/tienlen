@@ -70,3 +70,9 @@
 
 - Found that P2P is hard for the initial implement -> switch to server-client approach -> using naia
     [x] naia naia naia learning & init
+
+
+### 23-6-2023
+
+- [x] Feat: Host able to start the game
+- [x] Feat: Server deal card to player

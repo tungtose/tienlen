@@ -3,7 +3,7 @@ use std::default::Default;
 use bevy::prelude::{ColorMaterial, Entity, Handle, Mesh, Resource};
 
 use naia_bevy_client::CommandHistory;
-use naia_bevy_demo_shared::messages::{Game, KeyCommand};
+use naia_bevy_demo_shared::messages::KeyCommand;
 
 pub struct OwnedEntity {
     pub confirmed: Entity,
@@ -24,7 +24,6 @@ pub struct Global {
     pub player_entity: Option<Entity>,
     pub owned_entity: Option<OwnedEntity>,
     pub cursor_entity: Option<Entity>,
-    pub queued_game_command: Option<Game>,
     pub queued_command: Option<KeyCommand>,
     pub command_history: CommandHistory<KeyCommand>,
     pub red: Handle<ColorMaterial>,
@@ -45,7 +44,6 @@ impl Default for Global {
             owned_entity: None,
             cursor_entity: None,
             queued_command: None,
-            queued_game_command: None,
             command_history: CommandHistory::default(),
             circle: Handle::default(),
             red: Handle::default(),
