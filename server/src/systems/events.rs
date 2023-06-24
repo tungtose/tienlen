@@ -20,9 +20,10 @@ use naia_bevy_demo_shared::{
     },
     components::{
         player::{Host, Player},
+        server_hand::ServerHand,
         Color, ColorValue, Position, Shape, ShapeValue,
     },
-    messages::{Auth, Counter, EntityAssignment, Game, KeyCommand},
+    messages::{Auth, Counter, EntityAssignment, KeyCommand, StartGame},
 };
 
 use crate::resources::Global;
@@ -184,10 +185,26 @@ pub fn error_events(mut event_reader: EventReader<ErrorEvent>) {
     }
 }
 
-pub fn message_events(mut server: Server, mut event_reader: EventReader<MessageEvents>) {
+pub fn message_events(
+    mut commands: Commands,
+    mut server: Server,
+    mut event_reader: EventReader<MessageEvents>,
+    mut global: ResMut<Global>,
+) {
+    let users_map = global.users_map.clone();
     for events in event_reader.iter() {
-        for message in events.read::<PlayerActionChannel, Game>() {
-            info!("Got Start game event");
+        for (_, _) in events.read::<PlayerActionChannel, StartGame>() {
+            for (user_key, entity) in users_map.iter() {
+                let cards_str = global.deck.deal_str(13);
+                let server_hand = ServerHand::new(cards_str);
+
+                info!("DEAL cards: {:?}", server_hand.cards.to_string());
+
+                commands.entity(*entity).insert(server_hand);
+
+                server
+                    .send_message::<GameSystemChannel, StartGame>(user_key, &StartGame::default());
+            }
         }
     }
 }
@@ -208,10 +225,6 @@ pub fn tick_events(
 
         // All game logic should happen here, on a tick event
         let mut messages = server.receive_tick_buffer_messages(server_tick);
-
-        for (user_key, cmd) in messages.read::<PlayerActionChannel, Game>() {
-            info!("Got start game from HOST {:?}", cmd);
-        }
 
         for (_user_key, key_command) in messages.read::<PlayerCommandChannel, KeyCommand>() {
             let Some(entity) = &key_command.entity.get(&server) else {

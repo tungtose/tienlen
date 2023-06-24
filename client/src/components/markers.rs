@@ -8,3 +8,6 @@ pub struct Confirmed;
 
 #[derive(Component)]
 pub struct LocalCursor;
+
+#[derive(Component)]
+pub struct LocalPlayer;

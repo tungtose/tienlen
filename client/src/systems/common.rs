@@ -1,33 +1,7 @@
 use bevy::prelude::*;
-use naia_bevy_demo_shared::components::{player::Host, Player};
+use naia_bevy_demo_shared::components::{player::Host, server_hand::ServerHand, Player};
 
-use crate::resources::Global;
-
-// pub fn playable(commands: Commands, player_q: Query<&Player>) -> bool {
-//     let total_player_num = player_q.iter().len();
-//
-//     let playable = {
-//         if total_player_num > 1 {
-//             return true;
-//         }
-//         false
-//     };
-//
-//     playable
-// }
-
-// pub fn playable(commands: Commands, player_q: Query<&Player>) {
-//     let total_player_num = player_q.iter().len();
-//
-//     let playable = {
-//         if total_player_num > 1 {
-//             return true;
-//         }
-//         false
-//     };
-//
-//     info!("CAN START? {}", playable);
-// }
+use crate::{components::LocalPlayer, resources::Global};
 
 pub fn playable(
     // commands: Commands,
@@ -42,13 +16,13 @@ pub fn playable(
             info!("THIS PLAY IS HOST!!!");
         }
     }
-
-    // let playable = {
-    //     if total_player_num > 1 {
-    //         true
-    //     }
-    //     false
-    // };
-
     info!("TOTAL PLAYER: {}", total_player_num);
+}
+
+pub fn test(hand_q: Query<&ServerHand, With<LocalPlayer>>) {
+    // for hand in hand_q.iter() {
+    //     let a = hand.cards.to_string();
+    //
+    //     info!("GOT HAND: {:?}", a);
+    // }
 }

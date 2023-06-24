@@ -1,10 +1,12 @@
 use std::fmt::{Display, Formatter, Result};
 use std::ops::AddAssign;
 
+use bevy_ecs::prelude::Component;
+
 use super::card::Card;
 use super::cards::Cards;
 
-#[derive(Clone)]
+#[derive(Clone, Component)]
 pub struct Hand {
     pub cards: Vec<Card>,
 }

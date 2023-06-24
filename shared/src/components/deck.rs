@@ -1,6 +1,7 @@
 use std::result::Result;
 use std::vec::Vec;
 
+use rand::{prelude::SliceRandom, thread_rng};
 use serde::{Deserialize, Serialize};
 
 use super::card::Card;
@@ -50,8 +51,14 @@ impl Deck {
 
     /// Creates a new `Deck` containing the specified cards
     pub fn from_cards(cards: &[Card]) -> Deck {
+        let mut rng = thread_rng();
+
+        let mut mut_cards = cards.to_vec();
+
+        mut_cards.shuffle(&mut rng);
+
         Deck {
-            cards: cards.to_vec(),
+            cards: mut_cards,
             dealt_cards: Vec::with_capacity(cards.len()),
         }
     }
@@ -113,6 +120,13 @@ impl Deck {
         result
     }
 
+    pub fn deal_str(&mut self, numcards: usize) -> String {
+        self.deal(numcards)
+            .iter()
+            .map(|c| c.to_str())
+            .collect::<String>()
+    }
+
     /// Deals one or more card straight to the `Hand`. Returns the number of cards dealt.
     pub fn deal_to_hand(&mut self, hand: &mut Hand, numcards: usize) -> usize {
         let mut dealt: usize = 0;
@@ -134,6 +148,11 @@ impl Deck {
         // Put cards back into undealt deck in reverse order
         self.cards.extend(self.dealt_cards.iter().rev());
         self.dealt_cards.clear();
+    }
+
+    /// shuffles
+    pub fn shuffle(&mut self) {
+        self.shuffle();
     }
 
     /// Resets and shuffles the deck

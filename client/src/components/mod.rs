@@ -2,4 +2,4 @@ mod interp;
 mod markers;
 
 pub use interp::Interp;
-pub use markers::{Confirmed, LocalCursor, Predicted};
+pub use markers::{Confirmed, LocalCursor, LocalPlayer, Predicted};

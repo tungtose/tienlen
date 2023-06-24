@@ -6,6 +6,7 @@ use crate::states::{GameState, MainState};
 
 pub mod assets;
 mod play_btn;
+pub mod player;
 pub mod table;
 
 pub struct UiPlugin;
@@ -13,6 +14,7 @@ impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<ReloadUiEvent>()
             .add_event::<ReloadBar>()
+            .add_event::<DrawPlayer>()
             .add_startup_system(assets::load_assets)
             .add_system(table::spawn_table.in_schedule(OnEnter(MainState::Lobby)))
             .add_system(table::draw_table.run_if(on_event::<ReloadUiEvent>()))
@@ -21,6 +23,7 @@ impl Plugin for UiPlugin {
             // .add_system(hand::card_click.in_set(OnUpdate(MainState::Game)))
             // .add_system(hand::card_click.run_if(in_state(MainState::Game)))
             .add_system(play_btn::spawn_play_btn.in_schedule(OnEnter(MainState::Lobby)))
+            .add_system(player::draw_player.run_if(on_event::<DrawPlayer>()))
             .add_system(play_btn::spawn_start_btn.run_if(on_event::<ReloadBar>()))
             .add_system(play_btn::player_btn_click.run_if(in_state(MainState::Lobby)));
         // .add_system(play_btn::update_turn_timer.run_if(in_state(MainState::Game)));
@@ -29,6 +32,7 @@ impl Plugin for UiPlugin {
 
 pub struct ReloadUiEvent;
 pub struct ReloadBar;
+pub struct DrawPlayer;
 
 #[derive(Resource)]
 pub struct UiAssets {
