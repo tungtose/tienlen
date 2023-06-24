@@ -76,3 +76,8 @@
 
 - [x] Feat: Host able to start the game
 - [x] Feat: Server deal card to player
+
+
+### 24-6-2023
+
+- [x] Feat: Player able to select the card

@@ -4,12 +4,13 @@ use bevy::{
     },
     DefaultPlugins,
 };
-
+use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use naia_bevy_client::{ClientConfig, Plugin as ClientPlugin, ReceiveEvents};
 use naia_bevy_demo_shared::protocol;
 
 use crate::{
     assets::AssetPlugin,
+    game::GamePlugin,
     states::MainState,
     systems::{common, events, init, input, sync},
     ui::UiPlugin,
@@ -26,9 +27,11 @@ pub fn run() {
         // Bevy Plugins
         .add_state::<MainState>()
         .add_plugins(DefaultPlugins)
+        .add_plugin(WorldInspectorPlugin::new())
         // Add Naia Client Plugin
         .add_plugin(ClientPlugin::new(ClientConfig::default(), protocol()))
         .add_plugin(UiPlugin)
+        .add_plugin(GamePlugin)
         .add_plugin(AssetPlugin)
         // Background Color
         .insert_resource(ClearColor(Color::BLACK))
