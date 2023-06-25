@@ -4,4 +4,4 @@ use naia_bevy_shared::Message;
 pub struct StartGame;
 
 #[derive(Message, Debug, Default)]
-pub struct PlayCard;
+pub struct PlayCard(pub String);

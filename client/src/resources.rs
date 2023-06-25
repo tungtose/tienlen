@@ -1,9 +1,9 @@
-use std::default::Default;
+use std::{collections::HashMap, default::Default};
 
 use bevy::prelude::{ColorMaterial, Entity, Handle, Mesh, Resource};
 
 use naia_bevy_client::CommandHistory;
-use naia_bevy_demo_shared::messages::KeyCommand;
+use naia_bevy_demo_shared::{components::card::Card, messages::KeyCommand};
 
 pub struct OwnedEntity {
     pub confirmed: Entity,
@@ -22,7 +22,7 @@ impl OwnedEntity {
 #[derive(Resource)]
 pub struct Global {
     pub player_entity: Option<Entity>,
-    pub player_cards: Vec<Entity>,
+    pub player_cards: HashMap<Entity, Card>,
     pub owned_entity: Option<OwnedEntity>,
     pub cursor_entity: Option<Entity>,
     pub queued_command: Option<KeyCommand>,
@@ -42,7 +42,7 @@ impl Default for Global {
     fn default() -> Self {
         Self {
             player_entity: None,
-            player_cards: vec![],
+            player_cards: HashMap::new(),
             owned_entity: None,
             cursor_entity: None,
             queued_command: None,
