@@ -4,11 +4,11 @@ use bevy::prelude::*;
 use naia_bevy_demo_shared::components::card::Card;
 
 use crate::{
-    components::LocalPlayer,
-    game::{ActiveCard, ActiveCards, PlayerEvent, SelectCardEvent},
+    game::{ActiveCards, SelectCardEvent},
+    resources::Global,
 };
 
-use super::{DrawPlayer, UiAssets};
+use super::UiAssets;
 
 const DECK_HEIGHT: f32 = 50.;
 const CARD_WIDTH: f32 = 32.;
@@ -115,8 +115,7 @@ pub fn draw_player(
     mut commands: Commands,
     card_assets: Res<UiAssets>,
     hand_container_query: Query<Entity, With<HandContainer>>,
-    card_entity_q: Query<Entity, With<Card>>,
-    card_q: Query<&Card>,
+    global: Res<Global>,
     active_cards_q: Query<&ActiveCards>,
 ) {
     clear_hand_ui(&mut commands, &hand_container_query);
@@ -124,15 +123,11 @@ pub fn draw_player(
     let hand_container = create_hand_container(&mut commands, Vec2::from_array([0., 300.]));
 
     let active_cards = active_cards_q.get_single().unwrap();
-    info!("Before draw loop: {:?}", card_entity_q.iter().len());
 
-    for card_entity in card_entity_q.iter() {
-        info!("Inside the loop");
-        let card = card_q.get(card_entity).unwrap();
-        info!("rendering card: {:?}", card);
+    for (card_entity, card) in global.player_cards.iter() {
         let handle = card_assets.cards.get(&card.name()).unwrap();
 
-        let is_active = active_cards.is_active(card);
+        let is_active = active_cards.is_active(card_entity);
 
         let card_ui = get_card(
             &mut commands,
@@ -141,7 +136,7 @@ pub fn draw_player(
             handle,
         );
 
-        commands.entity(card_ui).insert(CardButton(card_entity));
+        commands.entity(card_ui).insert(CardButton(*card_entity));
 
         commands.entity(hand_container).add_child(card_ui);
     }

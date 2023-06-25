@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 
 use bevy_ecs::{entity::Entity, prelude::Resource};
 
@@ -9,6 +9,7 @@ use naia_bevy_server::{RoomKey, UserKey};
 pub struct Global {
     pub counter: Counter,
     pub deck: Deck,
+    pub table: VecDeque<String>,
     pub users_map: HashMap<UserKey, Entity>,
     pub main_room_key: RoomKey,
     pub user_to_square_map: HashMap<UserKey, Entity>,

@@ -23,7 +23,7 @@ use naia_bevy_demo_shared::{
         server_hand::ServerHand,
         Color, ColorValue, Position, Shape, ShapeValue,
     },
-    messages::{Auth, Counter, EntityAssignment, KeyCommand, StartGame},
+    messages::{Auth, Counter, EntityAssignment, KeyCommand, PlayCard, StartGame},
 };
 
 use crate::resources::Global;
@@ -191,9 +191,9 @@ pub fn message_events(
     mut event_reader: EventReader<MessageEvents>,
     mut global: ResMut<Global>,
 ) {
-    let users_map = global.users_map.clone();
     for events in event_reader.iter() {
         for (_, _) in events.read::<PlayerActionChannel, StartGame>() {
+            let users_map = global.users_map.clone();
             for (user_key, entity) in users_map.iter() {
                 let cards_str = global.deck.deal_str(13);
                 let server_hand = ServerHand::new(cards_str);
@@ -206,6 +206,13 @@ pub fn message_events(
                     .send_message::<GameSystemChannel, StartGame>(user_key, &StartGame::default());
             }
         }
+
+        events
+            .read::<PlayerActionChannel, PlayCard>()
+            .into_iter()
+            .for_each(|(user_key, cards)| {
+                info!("Got the message: {:?}", cards);
+            });
     }
 }
 
