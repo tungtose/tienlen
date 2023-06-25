@@ -26,7 +26,7 @@ impl Plugin for GamePlugin {
 
 pub struct LocalStartGame;
 
-pub struct SelectCardEvent(pub Entity);
+pub struct SelectCardEvent(pub usize);
 
 pub enum PlayerEventKind {
     Play,
@@ -38,17 +38,17 @@ pub struct PlayerEvent(pub PlayerEventKind);
 pub struct ActiveCard(pub bool);
 
 #[derive(Component)]
-pub struct ActiveCards(HashMap<Entity, Card>);
+pub struct ActiveCards(HashMap<usize, Card>);
 
 impl ActiveCards {
-    pub fn is_active(&self, entity: &Entity) -> bool {
-        self.0.contains_key(entity)
+    pub fn is_active(&self, key: &usize) -> bool {
+        self.0.contains_key(key)
     }
-    pub fn make_active(&mut self, entity: &Entity, card: &Card) {
-        if self.0.contains_key(entity) {
-            self.0.remove(entity);
+    pub fn make_active(&mut self, key: &usize, card: &Card) {
+        if self.0.contains_key(key) {
+            self.0.remove(key);
         } else {
-            self.0.insert(*entity, *card);
+            self.0.insert(*key, *card);
         }
     }
 
@@ -83,17 +83,16 @@ fn local_init(mut commands: Commands) {
 pub fn select_card(
     mut active_cards_q: Query<&mut ActiveCards>,
     card_q: Query<&Card>,
+    global: Res<Global>,
     mut draw_player_ev: EventWriter<DrawPlayer>,
     mut select_card_ev: EventReader<SelectCardEvent>,
 ) {
     for event in select_card_ev.iter() {
-        let entity = event.0;
-        if let Ok(card) = card_q.get(entity) {
-            active_cards_q
-                .get_single_mut()
-                .unwrap()
-                .make_active(&entity, &card);
-        }
+        let card = global.player_cards2.get(&event.0).unwrap();
+        active_cards_q
+            .get_single_mut()
+            .unwrap()
+            .make_active(&event.0, card);
         draw_player_ev.send(DrawPlayer);
     }
 }
@@ -149,6 +148,7 @@ pub fn spawn_player(
         if let Ok(card) = card_rs {
             let card_entity = commands.spawn(card).id();
             global.player_cards.insert(card_entity, card);
+            global.player_cards2.insert(card.ordinal(), card);
             // commands.entity(player_entity).add_child(card_entity);
         } else {
             info!("SPAWN CARD ERROR: {}", card_str);
