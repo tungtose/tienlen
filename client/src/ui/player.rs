@@ -3,7 +3,10 @@ use std::collections::HashMap;
 use bevy::prelude::*;
 use naia_bevy_demo_shared::components::card::Card;
 
-use crate::{components::LocalPlayer, game::ActiveCard};
+use crate::{
+    components::LocalPlayer,
+    game::{ActiveCard, ActiveCards, PlayerEvent, SelectCardEvent},
+};
 
 use super::{DrawPlayer, UiAssets};
 
@@ -81,19 +84,20 @@ pub fn get_card(
 
 pub fn card_click(
     mut interactions: Query<(&Interaction, &CardButton), Changed<Interaction>>,
-    mut active_card_q: Query<&mut ActiveCard>,
-    mut draw_player_ev: EventWriter<DrawPlayer>,
+    mut select_card_ev: EventWriter<SelectCardEvent>,
 ) {
     for (interaction, button) in interactions.iter_mut() {
         match *interaction {
             Interaction::Clicked => {
                 info!("clicking on: {:?}", button.0);
-                let mut active = active_card_q.get_mut(button.0).unwrap();
 
-                active.0 = !active.0;
-
+                select_card_ev.send(SelectCardEvent(button.0));
+                // let mut active = active_card_q.get_mut(button.0).unwrap();
+                //
+                // active.0 = !active.0;
+                //
                 info!("Start DRAWING NOW!!!");
-                draw_player_ev.send(DrawPlayer);
+                // draw_player_ev.send(DrawPlayer);
             }
             Interaction::Hovered => {}
             Interaction::None => {}
@@ -112,20 +116,28 @@ pub fn draw_player(
     card_assets: Res<UiAssets>,
     hand_container_query: Query<Entity, With<HandContainer>>,
     card_entity_q: Query<Entity, With<Card>>,
-    card_q: Query<(&Card, &ActiveCard)>,
+    card_q: Query<&Card>,
+    active_cards_q: Query<&ActiveCards>,
 ) {
     clear_hand_ui(&mut commands, &hand_container_query);
 
     let hand_container = create_hand_container(&mut commands, Vec2::from_array([0., 300.]));
 
+    let active_cards = active_cards_q.get_single().unwrap();
+    info!("Before draw loop: {:?}", card_entity_q.iter().len());
+
     for card_entity in card_entity_q.iter() {
-        let (card, active_card) = card_q.get(card_entity).unwrap();
+        info!("Inside the loop");
+        let card = card_q.get(card_entity).unwrap();
+        info!("rendering card: {:?}", card);
         let handle = card_assets.cards.get(&card.name()).unwrap();
+
+        let is_active = active_cards.is_active(card);
 
         let card_ui = get_card(
             &mut commands,
             Size::new(Val::Px(CARD_WIDTH), Val::Px(CARD_HEIGHT)),
-            active_card.0,
+            is_active,
             handle,
         );
 

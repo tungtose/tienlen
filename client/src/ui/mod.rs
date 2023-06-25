@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use bevy::prelude::*;
 
-use crate::states::{GameState, MainState};
+use crate::states::MainState;
 
 pub mod assets;
 mod play_btn;
@@ -15,7 +15,6 @@ impl Plugin for UiPlugin {
         app.add_event::<ReloadUiEvent>()
             .add_event::<ReloadBar>()
             .add_event::<DrawPlayer>()
-            .add_event::<SpawnPlayer>()
             .add_event::<UpdateCard>()
             .add_startup_system(assets::load_assets)
             .add_system(table::spawn_table.in_schedule(OnEnter(MainState::Lobby)))
@@ -39,7 +38,6 @@ impl Plugin for UiPlugin {
 pub struct ReloadUiEvent;
 pub struct ReloadBar;
 pub struct DrawPlayer;
-pub struct SpawnPlayer;
 pub struct UpdateCard;
 
 #[derive(Resource)]

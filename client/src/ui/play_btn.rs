@@ -6,7 +6,10 @@ use naia_bevy_demo_shared::{
     messages::StartGame,
 };
 
-use crate::resources::Global;
+use crate::{
+    game::{PlayerEvent, PlayerEventKind},
+    resources::Global,
+};
 
 use super::UiAssets;
 
@@ -216,7 +219,7 @@ pub fn player_btn_click(
         (Changed<Interaction>, With<Button>),
     >,
     mut client: Client,
-    // mut ev_player: EventWriter<PlayerEvent>,
+    mut player_ev: EventWriter<PlayerEvent>,
 ) {
     for (interaction, (start_btn, play_btn, skip_btn)) in &mut interaction_query {
         match *interaction {
@@ -228,6 +231,7 @@ pub fn player_btn_click(
                 }
                 if play_btn.is_some() {
                     info!("Clicked play!");
+                    player_ev.send(PlayerEvent(PlayerEventKind::Play))
                     // ev_player.send(PlayerEvent(PlayerEventKind::Play));
                 }
                 if skip_btn.is_some() {
