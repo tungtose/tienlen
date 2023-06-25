@@ -1,4 +1,7 @@
-use std::{collections::HashMap, default::Default};
+use std::{
+    collections::{BTreeMap, HashMap},
+    default::Default,
+};
 
 use bevy::prelude::{ColorMaterial, Entity, Handle, Mesh, Resource};
 
@@ -49,6 +52,7 @@ impl PlayerCards {
 pub struct Global {
     pub player_entity: Option<Entity>,
     pub player_cards: HashMap<Entity, Card>,
+    pub player_cards2: BTreeMap<usize, Card>,
     pub owned_entity: Option<OwnedEntity>,
     pub cursor_entity: Option<Entity>,
     pub queued_command: Option<KeyCommand>,
@@ -69,6 +73,7 @@ impl Default for Global {
         Self {
             player_entity: None,
             player_cards: HashMap::new(),
+            player_cards2: BTreeMap::new(),
             owned_entity: None,
             cursor_entity: None,
             queued_command: None,
