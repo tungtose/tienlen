@@ -22,6 +22,7 @@ impl OwnedEntity {
 #[derive(Resource)]
 pub struct Global {
     pub player_entity: Option<Entity>,
+    pub player_cards: Vec<Entity>,
     pub owned_entity: Option<OwnedEntity>,
     pub cursor_entity: Option<Entity>,
     pub queued_command: Option<KeyCommand>,
@@ -41,6 +42,7 @@ impl Default for Global {
     fn default() -> Self {
         Self {
             player_entity: None,
+            player_cards: vec![],
             owned_entity: None,
             cursor_entity: None,
             queued_command: None,

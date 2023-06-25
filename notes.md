@@ -81,3 +81,10 @@
 ### 24-6-2023
 
 - [x] Feat: Player able to select the card
+
+
+### 25-6-2023
+
+- [] Feat: Player able to play the card
+    + [] Despawn the card on the player hand ui
+    + [] Show card on the global table
