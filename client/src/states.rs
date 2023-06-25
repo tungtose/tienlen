@@ -16,9 +16,9 @@ pub enum GameState {
     TurnUpdate,
 }
 
-#[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
-pub enum TurnSet {
-    Logic,
-    Animation,
-    Tick,
-}
+// #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
+// pub enum TurnSet {
+//     Logic,
+//     Animation,
+//     Tick,
+// }

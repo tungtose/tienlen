@@ -2,6 +2,7 @@ use std::fmt::{Display, Formatter, Result};
 use std::ops::AddAssign;
 
 use bevy_ecs::prelude::Component;
+use log::info;
 
 use super::card::Card;
 use super::cards::Cards;
@@ -70,6 +71,19 @@ impl Hand {
         }
     }
 
+    pub fn from_str(cards_str: &String) -> Hand {
+        let cards = cards_str
+            .split(",")
+            .map(|c_str| {
+                Card::from_str(c_str).unwrap_or_else(|_| {
+                    panic!("Not a known card {}", c_str);
+                })
+            })
+            .collect::<Vec<Card>>();
+
+        Hand { cards }
+    }
+
     /// Constructs a `Hand` from a slice of strings with abbreviated card rank / suit values
     pub fn from_strings(card_slice: &[&str]) -> Hand {
         let cards = card_slice
@@ -135,5 +149,14 @@ impl Hand {
         } else {
             false
         }
+    }
+
+    pub fn sort(&mut self) {
+        self.sort_suit_ascending_rank();
+    }
+
+    pub fn check_combination(&self) -> bool {
+        info!("DBBBBB");
+        self.is_in_combination()
     }
 }

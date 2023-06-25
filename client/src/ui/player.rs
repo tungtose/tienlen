@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
 use bevy::prelude::*;
-use naia_bevy_demo_shared::components::card::Card;
 
 use crate::{
     game::{ActiveCards, SelectCardEvent},

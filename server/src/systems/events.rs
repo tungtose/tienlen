@@ -19,6 +19,7 @@ use naia_bevy_demo_shared::{
         EntityAssignmentChannel, GameSystemChannel, PlayerActionChannel, PlayerCommandChannel,
     },
     components::{
+        hand::Hand,
         player::{Host, Player},
         server_hand::ServerHand,
         Color, ColorValue, Position, Shape, ShapeValue,
@@ -210,8 +211,9 @@ pub fn message_events(
         events
             .read::<PlayerActionChannel, PlayCard>()
             .into_iter()
-            .for_each(|(user_key, cards)| {
-                info!("Got the message: {:?}", cards);
+            .for_each(|(_user_key, cards_str)| {
+                let hand = Hand::from_str(&cards_str.0);
+                info!("HAND: {}", hand);
             });
     }
 }

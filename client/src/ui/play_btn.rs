@@ -1,9 +1,7 @@
 use bevy::prelude::*;
-use naia_bevy_client::{events::ClientTickEvent, Client};
+use naia_bevy_client::Client;
 use naia_bevy_demo_shared::{
-    channels::{PlayerActionChannel, PlayerCommandChannel},
-    components::{player::Host, Player},
-    messages::StartGame,
+    channels::PlayerActionChannel, components::player::Host, messages::StartGame,
 };
 
 use crate::{
