@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 use bevy::prelude::*;
 use naia_bevy_client::Client;
@@ -30,7 +30,6 @@ pub struct SelectCardEvent(pub Entity);
 
 pub enum PlayerEventKind {
     Play,
-    Skip,
 }
 
 pub struct PlayerEvent(pub PlayerEventKind);
@@ -72,13 +71,6 @@ impl ActiveCards {
             .join(",")
     }
 
-    pub fn to_hand(&mut self) -> Hand {
-        let cards = self.to_vec();
-        self.clear();
-
-        Hand { cards }
-    }
-
     pub fn clear(&mut self) {
         self.0.clear();
     }
@@ -90,7 +82,7 @@ fn local_init(mut commands: Commands) {
 
 pub fn select_card(
     mut active_cards_q: Query<&mut ActiveCards>,
-    mut card_q: Query<&Card>,
+    card_q: Query<&Card>,
     mut draw_player_ev: EventWriter<DrawPlayer>,
     mut select_card_ev: EventReader<SelectCardEvent>,
 ) {
@@ -113,10 +105,19 @@ pub fn play_card(
 ) {
     info!("Play Card!");
     let mut active_cards_map = active_cards_q.get_single_mut().unwrap();
+    info!("Play Card! 2");
+    // let hand = active_cards_map.to_hand();
+    //
 
-    let mut cards = active_cards_map.to_string();
+    let cards = active_cards_map.to_string();
+    let hand = Hand::from_str(&cards);
+
+    if !hand.check_combination() {
+        info!("hand {} not in combination", hand);
+        return;
+    }
+
     active_cards_map.clear();
-
     client.send_message::<PlayerActionChannel, PlayCard>(&PlayCard(cards));
 
     draw_player_ev.send(DrawPlayer);
@@ -141,8 +142,6 @@ pub fn spawn_player(
         .collect::<Vec<String>>();
 
     let sl: Vec<&str> = hand_str.iter().map(|str| str.as_str()).collect();
-
-    // let player_entity = player_q.get_single().unwrap();
 
     for card_str in sl {
         let card_rs = Card::from_str(card_str);

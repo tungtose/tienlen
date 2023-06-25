@@ -3,7 +3,7 @@ use naia_bevy_demo_shared::components::{player::Host, server_hand::ServerHand, P
 
 use crate::{components::LocalPlayer, resources::Global};
 
-pub fn playable(
+pub fn _playable(
     // commands: Commands,
     player_q: Query<&Player>,
     host_q: Query<&Host>,
@@ -19,7 +19,7 @@ pub fn playable(
     info!("TOTAL PLAYER: {}", total_player_num);
 }
 
-pub fn test(hand_q: Query<&ServerHand, With<LocalPlayer>>) {
+pub fn _test(_hand_q: Query<&ServerHand, With<LocalPlayer>>) {
     // for hand in hand_q.iter() {
     //     let a = hand.cards.to_string();
     //

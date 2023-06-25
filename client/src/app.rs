@@ -12,7 +12,7 @@ use crate::{
     assets::AssetPlugin,
     game::GamePlugin,
     states::MainState,
-    systems::{common, events, init, input, sync},
+    systems::{events, init, input, sync},
     ui::UiPlugin,
 };
 

@@ -1,7 +1,9 @@
 use rand;
 use std::cmp::Ordering;
 
-use super::{card::Card, hand::Hand, rank::Rank, suit::Suit};
+use crate::components::hand::Hand;
+
+use super::{card::Card, rank::Rank, suit::Suit};
 use rand::{prelude::SliceRandom, thread_rng};
 
 #[test]
@@ -115,14 +117,14 @@ fn sort_suit_ascending_rank(cards: &mut [Card]) {
 }
 
 /// Sorts the slice by rank(high to low) and then suit
-fn sort_suit_descending_rank(cards: &mut [Card]) {
+fn sort_suit_descending_rank(_cards: &mut [Card]) {
     // Reverse sort (since default is low to high)
     // cards.sort_by(|a, b| a.cmp_suit_then_desc_rank(b));
     todo!()
 }
 
 /// Sorts the slice by rank(high to low) and then suit
-fn sort_descending_rank_suit(cards: &mut [Card]) {
+fn sort_descending_rank_suit(_cards: &mut [Card]) {
     // Reverse sort (since default is low to high)
     todo!()
     // cards.sort_by(|a, b| a.cmp_desc_rank_then_suit(b));

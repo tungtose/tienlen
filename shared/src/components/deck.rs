@@ -151,7 +151,7 @@ impl Deck {
     }
 
     /// shuffles
-    pub fn shuffle(&mut self) {
+    pub fn shuff(&mut self) {
         self.shuffle();
     }
 
