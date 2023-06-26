@@ -57,6 +57,10 @@ impl ActiveCards {
         }
     }
 
+    pub fn keys(&self) -> Vec<&usize> {
+        self.0.keys().clone().collect::<Vec<&usize>>()
+    }
+
     pub fn to_vec(&mut self) -> Vec<Card> {
         let cards = {
             let mut cards_vec = vec![];
@@ -68,12 +72,21 @@ impl ActiveCards {
         cards
     }
 
-    pub fn to_string(&mut self) -> String {
-        self.to_vec()
+    pub fn to_string(&mut self) -> Result<String, &'static str> {
+        if self.is_empty() {
+            return Err("Not have any active card");
+        }
+
+        Ok(self
+            .to_vec()
             .iter()
             .map(|card| card.to_str())
             .collect::<Vec<String>>()
-            .join(",")
+            .join(","))
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
     }
 
     pub fn clear(&mut self) {
@@ -105,17 +118,25 @@ pub fn play_card(
     mut active_cards_q: Query<&mut ActiveCards>,
     mut client: Client,
     mut draw_player_ev: EventWriter<DrawPlayer>,
+    mut global: ResMut<Global>,
 ) {
     info!("Play Card!");
     let mut active_cards_map = active_cards_q.get_single_mut().unwrap();
 
-    let cards = active_cards_map.to_string();
+    let Ok(cards) = active_cards_map.to_string() else {
+        return
+    };
+
     let hand = Hand::from_str(&cards);
 
     if !hand.check_combination() {
         info!("hand {} not in thirteen combination", hand);
         return;
     }
+
+    active_cards_map.keys().iter().for_each(|key| {
+        global.player_cards.remove(key);
+    });
 
     active_cards_map.clear();
     client.send_message::<PlayerActionChannel, PlayCard>(&PlayCard(cards));
@@ -125,15 +146,17 @@ pub fn play_card(
 }
 
 pub fn spawn_player(
-    // mut commands: Commands,
     hand_q: Query<&ServerHand, With<LocalPlayer>>,
-    // player_q: Query<Entity, With<LocalPlayer>>,
     mut global: ResMut<Global>,
     mut draw_player_ev: EventWriter<DrawPlayer>,
 ) {
-    let hand_str = hand_q
+    let Ok(server_hand) = hand_q
         .get_single()
-        .unwrap()
+         else {
+        return;
+    };
+
+    let hand_str = server_hand
         .cards
         .chars()
         .collect::<Vec<char>>()

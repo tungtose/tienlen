@@ -18,7 +18,7 @@ impl Plugin for UiPlugin {
             .add_event::<UpdateCard>()
             .add_startup_system(assets::load_assets)
             .add_system(table::spawn_table.in_schedule(OnEnter(MainState::Lobby)))
-            .add_system(table::draw_table.run_if(on_event::<ReloadUiEvent>()))
+            .add_system(table::draw_table.run_if(in_state(MainState::Lobby)))
             // .add_system(hand::draw_player.run_if(on_event::<ReloadUiEvent>()))
             // .add_system(hand::draw_player.in_schedule(OnEnter(GameState::PlayerInput)))
             // .add_system(hand::card_click.in_set(OnUpdate(MainState::Game)))
