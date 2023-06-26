@@ -123,7 +123,7 @@ pub fn draw_player(
 
     let active_cards = active_cards_q.get_single().unwrap();
 
-    for (card_entity, card) in global.player_cards2.iter() {
+    for (card_entity, card) in global.player_cards.iter() {
         let handle = card_assets.cards.get(&card.name()).unwrap();
 
         let is_active = active_cards.is_active(card_entity);

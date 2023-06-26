@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use bevy::prelude::*;
 use naia_bevy_client::Client;
@@ -20,7 +20,6 @@ impl Plugin for GamePlugin {
             .add_system(spawn_player.run_if(on_event::<LocalStartGame>()))
             .add_system(play_card.run_if(on_event::<PlayerEvent>()))
             .add_system(select_card.run_if(on_event::<SelectCardEvent>()));
-        // .add_system(active_cards.run_if(on_event::<PlayerEvent>()));
     }
 }
 
@@ -38,7 +37,13 @@ pub struct PlayerEvent(pub PlayerEventKind);
 pub struct ActiveCard(pub bool);
 
 #[derive(Component)]
-pub struct ActiveCards(HashMap<usize, Card>);
+pub struct ActiveCards(BTreeMap<usize, Card>);
+
+impl Default for ActiveCards {
+    fn default() -> Self {
+        Self(BTreeMap::new())
+    }
+}
 
 impl ActiveCards {
     pub fn is_active(&self, key: &usize) -> bool {
@@ -66,7 +71,7 @@ impl ActiveCards {
     pub fn to_string(&mut self) -> String {
         self.to_vec()
             .iter()
-            .map(|c| c.to_str())
+            .map(|card| card.to_str())
             .collect::<Vec<String>>()
             .join(",")
     }
@@ -77,18 +82,17 @@ impl ActiveCards {
 }
 
 fn local_init(mut commands: Commands) {
-    commands.spawn(ActiveCards(HashMap::new()));
+    commands.spawn(ActiveCards::default());
 }
 
 pub fn select_card(
     mut active_cards_q: Query<&mut ActiveCards>,
-    card_q: Query<&Card>,
     global: Res<Global>,
     mut draw_player_ev: EventWriter<DrawPlayer>,
     mut select_card_ev: EventReader<SelectCardEvent>,
 ) {
     for event in select_card_ev.iter() {
-        let card = global.player_cards2.get(&event.0).unwrap();
+        let card = global.player_cards.get(&event.0).unwrap();
         active_cards_q
             .get_single_mut()
             .unwrap()
@@ -104,15 +108,12 @@ pub fn play_card(
 ) {
     info!("Play Card!");
     let mut active_cards_map = active_cards_q.get_single_mut().unwrap();
-    info!("Play Card! 2");
-    // let hand = active_cards_map.to_hand();
-    //
 
     let cards = active_cards_map.to_string();
     let hand = Hand::from_str(&cards);
 
     if !hand.check_combination() {
-        info!("hand {} not in combination", hand);
+        info!("hand {} not in thirteen combination", hand);
         return;
     }
 
@@ -124,7 +125,7 @@ pub fn play_card(
 }
 
 pub fn spawn_player(
-    mut commands: Commands,
+    // mut commands: Commands,
     hand_q: Query<&ServerHand, With<LocalPlayer>>,
     // player_q: Query<Entity, With<LocalPlayer>>,
     mut global: ResMut<Global>,
@@ -146,10 +147,8 @@ pub fn spawn_player(
         let card_rs = Card::from_str(card_str);
 
         if let Ok(card) = card_rs {
-            let card_entity = commands.spawn(card).id();
-            global.player_cards.insert(card_entity, card);
-            global.player_cards2.insert(card.ordinal(), card);
-            // commands.entity(player_entity).add_child(card_entity);
+            // commands.spawn(card).id();
+            global.player_cards.insert(card.ordinal(), card);
         } else {
             info!("SPAWN CARD ERROR: {}", card_str);
         }
