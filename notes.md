@@ -88,3 +88,13 @@
 - [x] Feat: Player able to play the card
     + [x] Despawn the card on the player hand ui
     + [x] Show card on the global table
+
+
+### 26-6-2023
+
+- [x] Feat: Player able to play the card
+    + [x] Despawn the card on the player hand ui
+    + [x] Show card on the global table
+
+- [] Bug: Crash when play no card
+

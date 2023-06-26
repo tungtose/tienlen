@@ -9,6 +9,7 @@ pub mod suit;
 
 pub mod player;
 pub mod server_hand;
+pub mod table;
 pub use player::Player;
 
 mod color;
@@ -20,7 +21,7 @@ pub use position::Position;
 mod shape;
 pub use shape::{Shape, ShapeValue};
 
-use self::{player::Host, server_hand::ServerHand};
+pub use {player::Host, server_hand::ServerHand, table::Table};
 
 // Plugin
 pub struct ComponentsPlugin;
@@ -33,6 +34,7 @@ impl ProtocolPlugin for ComponentsPlugin {
             .add_component::<Shape>()
             .add_component::<Player>()
             .add_component::<ServerHand>()
+            .add_component::<Table>()
             .add_component::<Host>();
     }
 }

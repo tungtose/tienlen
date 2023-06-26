@@ -22,6 +22,7 @@ use naia_bevy_demo_shared::{
         hand::Hand,
         player::{Host, Player},
         server_hand::ServerHand,
+        table::Table,
         Color, ColorValue, Position, Shape, ShapeValue,
     },
     messages::{Auth, Counter, EntityAssignment, KeyCommand, PlayCard, StartGame},
@@ -191,10 +192,23 @@ pub fn message_events(
     mut server: Server,
     mut event_reader: EventReader<MessageEvents>,
     mut global: ResMut<Global>,
+    mut table_q: Query<&mut Table>,
 ) {
     for events in event_reader.iter() {
         for (_, _) in events.read::<PlayerActionChannel, StartGame>() {
             let users_map = global.users_map.clone();
+            let server_table = Table::new("".to_string());
+
+            let server_table_entity = commands
+                .spawn_empty()
+                .enable_replication(&mut server)
+                .insert(server_table)
+                .id();
+
+            server
+                .room_mut(&global.main_room_key)
+                .add_entity(&server_table_entity);
+
             for (user_key, entity) in users_map.iter() {
                 let cards_str = global.deck.deal_str(13);
                 let server_hand = ServerHand::new(cards_str);
@@ -214,6 +228,18 @@ pub fn message_events(
             .for_each(|(_user_key, cards_str)| {
                 let hand = Hand::from_str(&cards_str.0);
                 info!("HAND: {}", hand);
+                if !hand.check_combination() {
+                    // TODO: Should send an error messsage
+                    return;
+                }
+
+                let mut table = table_q.get_single_mut().unwrap();
+                shared_behavior::update_table(&hand.to_string(), &mut table);
+
+                info!("Updated table!");
+
+                // Put the hand to table
+                global.table.push_back(hand);
             });
     }
 }

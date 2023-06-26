@@ -2,14 +2,17 @@ use std::collections::{HashMap, VecDeque};
 
 use bevy_ecs::{entity::Entity, prelude::Resource};
 
-use naia_bevy_demo_shared::{components::deck::Deck, messages::Counter};
+use naia_bevy_demo_shared::{
+    components::{deck::Deck, hand::Hand},
+    messages::Counter,
+};
 use naia_bevy_server::{RoomKey, UserKey};
 
 #[derive(Resource)]
 pub struct Global {
     pub counter: Counter,
     pub deck: Deck,
-    pub table: VecDeque<String>,
+    pub table: VecDeque<Hand>,
     pub users_map: HashMap<UserKey, Entity>,
     pub main_room_key: RoomKey,
     pub user_to_square_map: HashMap<UserKey, Entity>,
