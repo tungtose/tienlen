@@ -22,38 +22,13 @@ impl OwnedEntity {
     }
 }
 
-pub struct PlayerCards(HashMap<Entity, Card>);
-
-impl PlayerCards {
-    // pub fn new(str: String) -> Self {
-    // let hand_str = str
-    //     .chars()
-    //     .collect::<Vec<char>>()
-    //     .chunks(2)
-    //     .map(|c| c.iter().collect::<String>())
-    //     .collect::<Vec<String>>();
-    //
-    // let sl: Vec<&str> = hand_str.iter().map(|str| str.as_str()).collect();
-    // let rs: HashMap<Entity, Card>= HashMap::new();
-    //
-    // for card_str in sl {
-    //     let card_rs = Card::from_str(card_str);
-    //
-    //     if let Ok(card) = card_rs {
-    //         rs.pushjksh
-    //     } else {
-    //         info!("SPAWN CARD ERROR: {}", card_str);
-    //     }
-    // }
-    // }
-}
-
 #[derive(Resource)]
 pub struct Global {
     pub player_entity: Option<Entity>,
     pub player_cards: BTreeMap<usize, Card>,
     pub owned_entity: Option<OwnedEntity>,
     pub cursor_entity: Option<Entity>,
+    // pub all_cards_map: BTreeMap<usize, Card>,
     pub queued_command: Option<KeyCommand>,
     pub command_history: CommandHistory<KeyCommand>,
     pub red: Handle<ColorMaterial>,
@@ -69,9 +44,16 @@ pub struct Global {
 
 impl Default for Global {
     fn default() -> Self {
+        // let mut all_cards_map: BTreeMap<usize, Card> = BTreeMap::new();
+        //
+        // Card::all_cards().iter().for_each(|card| {
+        //     all_cards_map.insert(card.ordinal(), *card).unwrap();
+        // });
+
         Self {
             player_entity: None,
             player_cards: BTreeMap::new(),
+            // all_cards_map,
             owned_entity: None,
             cursor_entity: None,
             queued_command: None,

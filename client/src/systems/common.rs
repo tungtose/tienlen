@@ -14,8 +14,8 @@ pub fn _playable(player_q: Query<&Player>, host_q: Query<&Host>, global: Res<Glo
     info!("TOTAL PLAYER: {}", total_player_num);
 }
 
-pub fn test(table_q: Query<&Table>) {
-    for table in table_q.iter() {
-        info!("GOT Table: {}", table.cards.to_string());
-    }
+pub fn _test(_table_q: Query<&Table>) {
+    // for table in table_q.iter() {
+    //     // info!("GOT Table: {}", table.cards.to_string());
+    // }
 }

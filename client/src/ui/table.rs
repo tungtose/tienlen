@@ -1,5 +1,7 @@
 use bevy::{prelude::*, window::PrimaryWindow};
-use naia_bevy_demo_shared::components::card::Card;
+use naia_bevy_demo_shared::components::{card::Card, hand::Hand, Table};
+
+use crate::resources::Global;
 
 use super::UiAssets;
 
@@ -15,7 +17,6 @@ pub struct TableCardContainer;
 #[derive(Component, Default)]
 pub struct TableCards {
     pub cards: Vec<Entity>,
-    pub last_cards: Vec<Entity>,
 }
 
 #[derive(Component)]
@@ -24,20 +25,16 @@ pub struct TableCard;
 const DECK_HEIGHT: f32 = 50.;
 const CARD_WIDTH: f32 = 32.;
 const CARD_HEIGHT: f32 = 48.;
+const CARD_MARGIN: f32 = 2.;
 
-pub fn get_card_button(
-    commands: &mut Commands,
-    size: Size,
-    margin: UiRect,
-    image: &Handle<Image>,
-) -> Entity {
+pub fn get_card_button(commands: &mut Commands, size: Size, image: &Handle<Image>) -> Entity {
     commands
         .spawn((
             TableCard,
             ImageBundle {
                 style: Style {
                     size,
-                    margin,
+                    margin: UiRect::all(Val::Px(CARD_MARGIN)),
                     justify_content: JustifyContent::Center,
                     align_items: AlignItems::Center,
                     ..Default::default()
@@ -53,27 +50,42 @@ pub fn draw_table(
     mut commands: Commands,
     table_card_container_query: Query<Entity, With<TableCardContainer>>,
     res: Res<UiAssets>,
-    table_cards_query: Query<&TableCards>,
-    card_query: Query<&Card>,
+    server_table_q: Query<&Table>,
 ) {
     clear_table_cards(&mut commands, &table_card_container_query);
 
-    let table_card_container = table_card_container_query.get_single().unwrap();
+    let Ok(table_card_container) = table_card_container_query.get_single() else {
+        return;
+    };
 
-    let table_cards = table_cards_query.get_single().unwrap();
+    let table_server = server_table_q.get_single();
 
-    for card_entity in table_cards.cards.as_slice() {
-        let card = card_query.get(*card_entity).unwrap();
+    let table_str: String;
+
+    match table_server {
+        Ok(table) => {
+            table_str = table.cards.to_string();
+        }
+        _ => {
+            table_str = "".to_string();
+        }
+    }
+
+    if table_str.is_empty() {
+        return;
+    }
+
+    let hand = Hand::from_str(&table_str);
+
+    for card in hand.cards {
         let handle = res.cards.get(&card.name()).unwrap();
-
-        let card_button = get_card_button(
+        let card_ui = get_card_button(
             &mut commands,
             Size::new(Val::Px(CARD_WIDTH), Val::Px(CARD_HEIGHT)),
-            UiRect::all(Val::Px(4.)),
             handle,
         );
 
-        commands.entity(table_card_container).add_child(card_button);
+        commands.entity(table_card_container).add_child(card_ui);
     }
 }
 
@@ -141,10 +153,7 @@ pub fn spawn_table(
         .add_child(table_bg)
         .insert(TableContainer);
 
-    let table_cards = TableCards {
-        cards: vec![],
-        last_cards: vec![],
-    };
+    let table_cards = TableCards { cards: vec![] };
 
     commands.spawn(table_cards);
 
