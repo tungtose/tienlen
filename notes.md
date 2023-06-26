@@ -85,6 +85,6 @@
 
 ### 25-6-2023
 
-- [] Feat: Player able to play the card
-    + [] Despawn the card on the player hand ui
-    + [] Show card on the global table
+- [x] Feat: Player able to play the card
+    + [x] Despawn the card on the player hand ui
+    + [x] Show card on the global table
