@@ -7,7 +7,10 @@ use naia_bevy_server::{transport::webrtc, Server};
 
 use crate::resources::Global;
 
-use naia_bevy_demo_shared::{components::deck::Deck, messages::Counter};
+use naia_bevy_demo_shared::{
+    components::{deck::Deck, Table},
+    messages::Counter,
+};
 
 pub fn init(mut commands: Commands, mut server: Server) {
     info!("Naia Bevy Server Demo is running");

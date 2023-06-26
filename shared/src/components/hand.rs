@@ -97,6 +97,14 @@ impl Hand {
         Hand { cards }
     }
 
+    pub fn to_string(&mut self) -> String {
+        self.cards
+            .iter()
+            .map(|c| c.to_str())
+            .collect::<Vec<String>>()
+            .join(",")
+    }
+
     /// Adds one `Card` to the `Hand`
     pub fn push_card(&mut self, card: Card) {
         self.cards.push(card);

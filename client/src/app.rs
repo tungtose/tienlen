@@ -12,7 +12,7 @@ use crate::{
     assets::AssetPlugin,
     game::GamePlugin,
     states::MainState,
-    systems::{events, init, input, sync},
+    systems::{common, events, init, input, sync},
     ui::UiPlugin,
 };
 
@@ -48,8 +48,8 @@ pub fn run() {
                 events::insert_component_events,
                 events::update_component_events,
                 events::remove_component_events,
+                common::test,
                 events::message_events,
-                // common::test,
             )
                 .chain()
                 .in_set(ReceiveEvents),

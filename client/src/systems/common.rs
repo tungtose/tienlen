@@ -1,14 +1,9 @@
 use bevy::prelude::*;
-use naia_bevy_demo_shared::components::{player::Host, server_hand::ServerHand, Player};
+use naia_bevy_demo_shared::components::{player::Host, table::Table, Player};
 
-use crate::{components::LocalPlayer, resources::Global};
+use crate::resources::Global;
 
-pub fn _playable(
-    // commands: Commands,
-    player_q: Query<&Player>,
-    host_q: Query<&Host>,
-    global: Res<Global>,
-) {
+pub fn _playable(player_q: Query<&Player>, host_q: Query<&Host>, global: Res<Global>) {
     let total_player_num = player_q.iter().len();
 
     if let Some(entity) = global.player_entity {
@@ -19,10 +14,8 @@ pub fn _playable(
     info!("TOTAL PLAYER: {}", total_player_num);
 }
 
-pub fn _test(_hand_q: Query<&ServerHand, With<LocalPlayer>>) {
-    // for hand in hand_q.iter() {
-    //     let a = hand.cards.to_string();
-    //
-    //     info!("GOT HAND: {:?}", a);
-    // }
+pub fn test(table_q: Query<&Table>) {
+    for table in table_q.iter() {
+        info!("GOT Table: {}", table.cards.to_string());
+    }
 }
