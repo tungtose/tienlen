@@ -96,5 +96,10 @@
     + [x] Despawn the card on the player hand ui
     + [x] Show card on the global table
 
-- [] Bug: Crash when play no card
+- [x] Bug: Crash when play no card
 
+
+### 27-6-2023
+- [] Feat: Turn System
+    + [x] Highligh player turn (must rewrite later)
+    + [x] Update player turn (must rewrite later)

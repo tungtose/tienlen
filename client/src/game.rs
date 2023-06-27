@@ -8,7 +8,7 @@ use naia_bevy_demo_shared::{
     messages::PlayCard,
 };
 
-use crate::{components::LocalPlayer, resources::Global, ui::DrawPlayer};
+use crate::{components::LocalPlayer, resources::Global, states::MainState, ui::DrawPlayer};
 
 pub struct GamePlugin;
 impl Plugin for GamePlugin {
@@ -146,6 +146,7 @@ pub fn play_card(
 }
 
 pub fn spawn_player(
+    mut next_state: ResMut<NextState<MainState>>,
     hand_q: Query<&ServerHand, With<LocalPlayer>>,
     mut global: ResMut<Global>,
     mut draw_player_ev: EventWriter<DrawPlayer>,
@@ -158,10 +159,8 @@ pub fn spawn_player(
 
     let hand_str = server_hand
         .cards
-        .chars()
-        .collect::<Vec<char>>()
-        .chunks(2)
-        .map(|c| c.iter().collect::<String>())
+        .split(",")
+        .map(|c| c.to_string())
         .collect::<Vec<String>>();
 
     let sl: Vec<&str> = hand_str.iter().map(|str| str.as_str()).collect();
@@ -176,6 +175,6 @@ pub fn spawn_player(
             info!("SPAWN CARD ERROR: {}", card_str);
         }
     }
-
+    next_state.set(MainState::Game);
     draw_player_ev.send(DrawPlayer);
 }

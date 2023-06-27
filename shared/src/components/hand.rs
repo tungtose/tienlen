@@ -1,3 +1,4 @@
+use std::cmp::Ordering;
 use std::fmt::{Display, Formatter, Result};
 use std::ops::AddAssign;
 
@@ -157,6 +158,14 @@ impl Hand {
         } else {
             false
         }
+    }
+
+    pub fn contain_3_c(&self) -> bool {
+        let three_spade = Card::make_3C();
+        !self
+            .cards
+            .iter()
+            .all(|card| three_spade.cmp(card) != Ordering::Equal)
     }
 
     pub fn sort(&mut self) {

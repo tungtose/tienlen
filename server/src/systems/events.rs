@@ -1,5 +1,7 @@
 use bevy_ecs::{
     event::EventReader,
+    prelude::Entity,
+    query::With,
     system::{Commands, Query, ResMut},
 };
 use bevy_log::info;
@@ -20,7 +22,7 @@ use naia_bevy_demo_shared::{
     },
     components::{
         hand::Hand,
-        player::{Host, Player},
+        player::{Active, Host, Player},
         server_hand::ServerHand,
         table::Table,
         Color, ColorValue, Position, Shape, ShapeValue,
@@ -73,11 +75,12 @@ pub fn connect_events(
             .insert(player)
             .id();
 
-        if global.users_map.len() == 0 {
+        if player_num == 0 {
             commands.entity(entity).insert(Host);
         }
 
         global.users_map.insert(*user_key, entity);
+        global.players_map.insert(player_num, entity);
 
         server.room_mut(&global.main_room_key).add_entity(&entity);
 
@@ -132,6 +135,7 @@ pub fn connect_events(
 
         global.user_to_square_map.insert(*user_key, entity);
         global.square_to_user_map.insert(entity, *user_key);
+        global.total_player += 1;
 
         // Send an Entity Assignment message to the User that owns the Square
         let mut assignment_message = EntityAssignment::new(true);
@@ -193,39 +197,57 @@ pub fn message_events(
     mut event_reader: EventReader<MessageEvents>,
     mut global: ResMut<Global>,
     mut table_q: Query<&mut Table>,
+    mut player_q: Query<&mut Player>,
 ) {
     for events in event_reader.iter() {
         for (_, _) in events.read::<PlayerActionChannel, StartGame>() {
             let users_map = global.users_map.clone();
-            let server_table = Table::new("".to_string());
 
+            // Add the table component to the room
+            let server_table = Table::new("".to_string());
             let server_table_entity = commands
                 .spawn_empty()
                 .enable_replication(&mut server)
                 .insert(server_table)
                 .id();
 
+            let mut is_decided_first_play = false;
+
             server
                 .room_mut(&global.main_room_key)
                 .add_entity(&server_table_entity);
 
+            // Draw card to players and start the game
             for (user_key, entity) in users_map.iter() {
-                let cards_str = global.deck.deal_str(13);
-                let server_hand = ServerHand::new(cards_str);
+                let hand = Hand {
+                    cards: global.deck.deal(13),
+                };
 
-                info!("DEAL cards: {:?}", server_hand.cards.to_string());
+                // Calculate what player can play at first
+                // if hand.contain_3_c() {
+                //     info!("Player {:?}, take the first play", *p.pos);
+                //     is_decided_first_play = true;
+                //     commands.entity(*entity).insert(Active);
+                // }
+
+                let cards_str = hand.to_string();
+                let server_hand = ServerHand::new(cards_str);
 
                 commands.entity(*entity).insert(server_hand);
 
                 server
                     .send_message::<GameSystemChannel, StartGame>(user_key, &StartGame::default());
             }
+
+            if !is_decided_first_play {
+                // TODO: decide who take the first turn!
+            }
         }
 
         events
             .read::<PlayerActionChannel, PlayCard>()
             .into_iter()
-            .for_each(|(_user_key, cards_str)| {
+            .for_each(|(user_key, cards_str)| {
                 let hand = Hand::from_str(&cards_str.0);
                 info!("HAND: {}", hand);
                 if !hand.check_combination() {
@@ -233,13 +255,31 @@ pub fn message_events(
                     return;
                 }
 
+                // Update cards on the table
                 let mut table = table_q.get_single_mut().unwrap();
-                shared_behavior::update_table(&hand.to_string(), &mut table);
+                *table.cards = hand.to_string();
 
-                info!("Updated table!");
-
-                // Put the hand to table
+                // Keep track the history of the card being played
                 global.table.push_back(hand);
+
+                // TODO: update turn
+                let total_player = global.total_player;
+                let cur_active_pos = global.cur_active_pos;
+
+                let next_active_pos = (cur_active_pos + 1) % total_player;
+
+                info!(
+                    "total: {:?}, cur: {:?}, next: {:?}",
+                    total_player, cur_active_pos, next_active_pos
+                );
+
+                for mut player in player_q.iter_mut() {
+                    *player.active = false;
+                    if next_active_pos == *player.pos {
+                        *player.active = true;
+                        global.cur_active_pos = next_active_pos;
+                    }
+                }
             });
     }
 }

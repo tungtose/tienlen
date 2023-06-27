@@ -1,8 +1,10 @@
 use std::collections::HashMap;
 
 use bevy::prelude::*;
+use naia_bevy_demo_shared::components::{Active, Player};
 
 use crate::{
+    components::LocalPlayer,
     game::{ActiveCards, SelectCardEvent},
     resources::Global,
 };
@@ -29,7 +31,14 @@ pub struct CardHandleImageMap {
     pub map: HashMap<Entity, Handle<Image>>,
 }
 
-fn create_hand_container(commands: &mut Commands, pos: Vec2) -> Entity {
+fn create_hand_container(commands: &mut Commands, pos: Vec2, active: bool) -> Entity {
+    let background_color = {
+        if active {
+            BackgroundColor(Color::DARK_GREEN)
+        } else {
+            BackgroundColor(Color::NONE)
+        }
+    };
     let hand_container = commands
         .spawn((
             HandContainer,
@@ -42,6 +51,7 @@ fn create_hand_container(commands: &mut Commands, pos: Vec2) -> Entity {
                     size: Size::new(Val::Percent(100.), Val::Px(DECK_HEIGHT)),
                     ..Default::default()
                 },
+                background_color,
                 ..Default::default()
             },
         ))
@@ -116,10 +126,18 @@ pub fn draw_player(
     hand_container_query: Query<Entity, With<HandContainer>>,
     global: Res<Global>,
     active_cards_q: Query<&ActiveCards>,
+    player_q: Query<&Player, With<LocalPlayer>>,
 ) {
+    let Ok(player) = player_q.get_single() else {
+        return;
+    };
+
+    info!("active: {:?}, pos: {:?}", *player.active, *player.pos);
+
     clear_hand_ui(&mut commands, &hand_container_query);
 
-    let hand_container = create_hand_container(&mut commands, Vec2::from_array([0., 300.]));
+    let hand_container =
+        create_hand_container(&mut commands, Vec2::from_array([0., 300.]), *player.active);
 
     let active_cards = active_cards_q.get_single().unwrap();
 
