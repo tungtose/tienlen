@@ -5,3 +5,8 @@ pub struct StartGame;
 
 #[derive(Message, Debug, Default)]
 pub struct PlayCard(pub String);
+
+#[derive(Message, Debug, Default)]
+pub struct UpdateTurn {
+    // play
+}

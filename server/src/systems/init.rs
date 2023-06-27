@@ -38,13 +38,17 @@ pub fn init(mut commands: Commands, mut server: Server) {
     let table = VecDeque::new();
 
     let counter = Counter::new(0.);
+    let players_map = HashMap::new();
 
     // Init Global Resource
     let global = Global {
         counter,
         deck,
         table,
+        players_map,
         main_room_key,
+        total_player: 0,
+        cur_active_pos: 0,
         users_map: HashMap::new(),
         user_to_square_map: HashMap::new(),
         user_to_cursor_map: HashMap::new(),

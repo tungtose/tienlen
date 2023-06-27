@@ -29,6 +29,13 @@ impl Card {
         return self.rank.cmp(&other.rank);
     }
 
+    pub fn make_3C() -> Card {
+        Card {
+            suit: Suit::Clubs,
+            rank: Rank::Three,
+        }
+    }
+
     pub fn cmp_rank_suit(&self, other: &Card) -> Ordering {
         let cmp_rank_result: Ordering = self.rank.cmp(&other.rank);
         let cmp_suit_result: Ordering = self.suit.cmp(&other.suit);
