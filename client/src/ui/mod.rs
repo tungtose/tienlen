@@ -8,6 +8,7 @@ pub mod assets;
 mod play_btn;
 pub mod player;
 pub mod table;
+pub mod timer;
 
 pub struct UiPlugin;
 impl Plugin for UiPlugin {
@@ -29,6 +30,7 @@ impl Plugin for UiPlugin {
                     .before(player::draw_player),
             )
             // .add_system(player::draw_player.run_if(on_event::<DrawPlayer>()))
+            .add_system(timer::draw_counter.run_if(in_state(MainState::Game)))
             .add_system(player::draw_player.run_if(in_state(MainState::Game)))
             .add_system(play_btn::spawn_start_btn.run_if(on_event::<ReloadBar>()))
             .add_system(play_btn::player_btn_click.run_if(in_state(MainState::Lobby)))

@@ -1,7 +1,5 @@
 use bevy::{prelude::*, window::PrimaryWindow};
-use naia_bevy_demo_shared::components::{card::Card, hand::Hand, Table};
-
-use crate::resources::Global;
+use naia_bevy_demo_shared::components::{hand::Hand, Table};
 
 use super::UiAssets;
 

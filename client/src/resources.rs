@@ -1,7 +1,4 @@
-use std::{
-    collections::{BTreeMap, HashMap},
-    default::Default,
-};
+use std::{collections::BTreeMap, default::Default};
 
 use bevy::prelude::{ColorMaterial, Entity, Handle, Mesh, Resource};
 

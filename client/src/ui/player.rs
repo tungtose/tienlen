@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use bevy::prelude::*;
-use naia_bevy_demo_shared::components::{Active, Player};
+use naia_bevy_demo_shared::components::Player;
 
 use crate::{
     components::LocalPlayer,

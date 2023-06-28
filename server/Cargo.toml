@@ -8,6 +8,7 @@ publish = false
 [dependencies]
 naia-bevy-demo-shared = { path = "../shared" }
 bevy_app = { version = "0.10", default-features=false }
+bevy_time = { version = "0.10", default-features=false }
 bevy_core = { version = "0.10", default-features=false }
 bevy_ecs = { version = "0.10", default-features=false }
 bevy_log = { version = "0.10", default-features=false }
