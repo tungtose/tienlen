@@ -10,6 +10,7 @@ pub mod suit;
 pub mod player;
 pub mod server_hand;
 pub mod table;
+pub mod timer;
 pub use player::Player;
 
 mod color;
@@ -25,6 +26,7 @@ pub use {
     player::{Active, Host},
     server_hand::ServerHand,
     table::Table,
+    timer::Timer,
 };
 
 // Plugin
@@ -40,6 +42,7 @@ impl ProtocolPlugin for ComponentsPlugin {
             .add_component::<Active>()
             .add_component::<ServerHand>()
             .add_component::<Table>()
+            .add_component::<Timer>()
             .add_component::<Host>();
     }
 }

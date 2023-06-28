@@ -175,24 +175,24 @@ pub fn spawn_play_btn(mut commands: Commands, res: Res<UiAssets>) {
         })
         .id();
 
-    let timmer = commands
-        .spawn((
-            SkipTurnTimerText,
-            TextBundle::from_section(
-                "00",
-                TextStyle {
-                    font: res.font.clone(),
-                    font_size: 32.0,
-                    color: Color::RED,
-                },
-            ),
-        ))
-        .id();
-
+    // let timmer = commands
+    //     .spawn((
+    //         SkipTurnTimerText,
+    //         TextBundle::from_section(
+    //             "00",
+    //             TextStyle {
+    //                 font: res.font.clone(),
+    //                 font_size: 32.0,
+    //                 color: Color::RED,
+    //             },
+    //         ),
+    //     ))
+    //     .id();
+    //
     commands
         .entity(play_container)
         .add_child(skip_btn)
-        .add_child(timmer)
+        // .add_child(timmer)
         .add_child(play_btn);
 }
 

@@ -1,7 +1,5 @@
 use bevy_ecs::{
     event::EventReader,
-    prelude::Entity,
-    query::With,
     system::{Commands, Query, ResMut},
 };
 use bevy_log::info;
@@ -22,10 +20,10 @@ use naia_bevy_demo_shared::{
     },
     components::{
         hand::Hand,
-        player::{Active, Host, Player},
+        player::{Host, Player},
         server_hand::ServerHand,
         table::Table,
-        Color, ColorValue, Position, Shape, ShapeValue,
+        Color, ColorValue, Position, Shape, ShapeValue, Timer,
     },
     messages::{Auth, Counter, EntityAssignment, KeyCommand, PlayCard, StartGame},
 };
@@ -213,9 +211,18 @@ pub fn message_events(
 
             let mut is_decided_first_play = false;
 
+            let server_timer = Timer::default();
+
+            let server_timer_entity = commands
+                .spawn_empty()
+                .enable_replication(&mut server)
+                .insert(server_timer)
+                .id();
+
             server
                 .room_mut(&global.main_room_key)
-                .add_entity(&server_table_entity);
+                .add_entity(&server_table_entity)
+                .add_entity(&server_timer_entity);
 
             // Draw card to players and start the game
             for (user_key, entity) in users_map.iter() {
@@ -284,10 +291,18 @@ pub fn message_events(
     }
 }
 
+// pub fn counter(
+//     mut timer_query: Query<&mut Timer>,
+//     global: ResMut<Global>,
+// ) {
+//
+// }
+
 pub fn tick_events(
     mut server: Server,
     mut position_query: Query<&mut Position>,
-    // mut global: ResMut<Global>,
+    mut timer_query: Query<&mut Timer>,
+    mut global: ResMut<Global>,
     mut tick_reader: EventReader<TickEvent>,
 ) {
     let mut has_ticked = false;
@@ -295,8 +310,13 @@ pub fn tick_events(
     for TickEvent(server_tick) in tick_reader.iter() {
         has_ticked = true;
 
-        // global.counter.incr_counter();
-        // info!("counter in tick: {:?}", global.counter);
+        let update_timer = global.counter.self_check();
+
+        if update_timer {
+            if let Ok(mut timer) = timer_query.get_single_mut() {
+                timer.decr_counter();
+            }
+        }
 
         // All game logic should happen here, on a tick event
         let mut messages = server.receive_tick_buffer_messages(server_tick);
