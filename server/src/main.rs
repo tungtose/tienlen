@@ -2,6 +2,7 @@ use bevy_app::{App, ScheduleRunnerPlugin, ScheduleRunnerSettings};
 use bevy_core::{FrameCountPlugin, TaskPoolPlugin, TypeRegistrationPlugin};
 use bevy_ecs::schedule::IntoSystemConfigs;
 use bevy_log::{info, LogPlugin};
+use bevy_time::TimePlugin;
 use std::time::Duration;
 
 use naia_bevy_demo_shared::protocol;
@@ -12,6 +13,8 @@ mod systems;
 
 use systems::{events, init};
 
+use crate::systems::common;
+
 fn main() {
     info!("Naia Bevy Server Demo starting up");
 
@@ -19,6 +22,7 @@ fn main() {
     App::default()
         // Plugins
         .add_plugin(TaskPoolPlugin::default())
+        .add_plugin(TimePlugin::default())
         .add_plugin(TypeRegistrationPlugin::default())
         .add_plugin(FrameCountPlugin::default())
         .insert_resource(
@@ -30,6 +34,9 @@ fn main() {
         .add_plugin(ServerPlugin::new(ServerConfig::default(), protocol()))
         // Startup System
         .add_startup_system(init)
+        // Test
+        .add_startup_system(common::set_up_counter)
+        .add_systems((common::countdown, common::run_out_countdow).chain())
         // Receive Server Events
         .add_systems(
             (

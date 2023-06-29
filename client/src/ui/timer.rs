@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use naia_bevy_demo_shared::components::Timer;
+use naia_bevy_demo_shared::components::timer::Counter;
 
 use super::UiAssets;
 
@@ -43,7 +43,7 @@ fn clear_counter(commands: &mut Commands, query: &Query<Entity, With<TimerContai
 
 pub fn draw_counter(
     mut commands: Commands,
-    timer_q: Query<&Timer>,
+    timer_q: Query<&Counter>,
     res: Res<UiAssets>,
     timer_container_query: Query<Entity, With<TimerContainer>>,
 ) {
