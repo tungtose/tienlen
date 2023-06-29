@@ -23,7 +23,7 @@ impl Counter {
 
     pub fn self_check(&mut self) -> bool {
         self.incr_counter();
-        info!("Cur global counter: {}", self.0);
+        // info!("Cur global counter: {}", self.0);
 
         if self.0 > 60. {
             self.0 = 0.;

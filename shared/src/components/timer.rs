@@ -2,19 +2,34 @@ use bevy_ecs::prelude::Component;
 use naia_bevy_shared::{Property, Replicate};
 
 #[derive(Replicate, Component)]
-pub struct Timer {
+pub struct Counter {
     pub counter: Property<f32>,
 }
 
-impl Default for Timer {
+const TIMEOUT: f32 = 10.;
+
+impl Default for Counter {
     fn default() -> Self {
-        Self::new_complete(10.)
+        Self::new_complete(TIMEOUT)
     }
 }
 
-impl Timer {
+impl Counter {
     pub fn new(counter: f32) -> Self {
         Self::new_complete(counter)
+    }
+
+    pub fn check_over(&mut self) -> bool {
+        if *self.counter < 0. {
+            *self.counter = TIMEOUT;
+            return true;
+        }
+
+        false
+    }
+
+    pub fn recount(&mut self) {
+        *self.counter = TIMEOUT;
     }
 
     pub fn as_string(&self) -> String {

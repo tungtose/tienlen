@@ -23,9 +23,9 @@ use naia_bevy_demo_shared::{
         player::{Host, Player},
         server_hand::ServerHand,
         table::Table,
-        Color, ColorValue, Position, Shape, ShapeValue, Timer,
+        Color, ColorValue, Counter, Position, Shape, ShapeValue,
     },
-    messages::{Auth, Counter, EntityAssignment, KeyCommand, PlayCard, StartGame},
+    messages::{Auth, EntityAssignment, KeyCommand, PlayCard, StartGame},
 };
 
 use crate::resources::Global;
@@ -143,8 +143,6 @@ pub fn connect_events(
             user_key,
             &assignment_message,
         );
-
-        server.send_message::<GameSystemChannel, Counter>(user_key, &global.counter);
     }
 }
 
@@ -196,6 +194,7 @@ pub fn message_events(
     mut global: ResMut<Global>,
     mut table_q: Query<&mut Table>,
     mut player_q: Query<&mut Player>,
+    mut counter_q: Query<&mut Counter>,
 ) {
     for events in event_reader.iter() {
         for (_, _) in events.read::<PlayerActionChannel, StartGame>() {
@@ -211,18 +210,18 @@ pub fn message_events(
 
             let mut is_decided_first_play = false;
 
-            let server_timer = Timer::default();
+            let server_counter = Counter::default();
 
-            let server_timer_entity = commands
+            let server_counter_entity = commands
                 .spawn_empty()
                 .enable_replication(&mut server)
-                .insert(server_timer)
+                .insert(server_counter)
                 .id();
 
             server
                 .room_mut(&global.main_room_key)
                 .add_entity(&server_table_entity)
-                .add_entity(&server_timer_entity);
+                .add_entity(&server_counter_entity);
 
             // Draw card to players and start the game
             for (user_key, entity) in users_map.iter() {
@@ -262,6 +261,17 @@ pub fn message_events(
                     return;
                 }
 
+                // Check if is their turn?
+                let cur_player_entity = global.users_map.get(&user_key).unwrap();
+
+                let cur_player = player_q.get(*cur_player_entity).unwrap();
+
+                if !*cur_player.active {
+                    // TODO: This player is not active!!!
+                    info!("This player is not active!!!");
+                    return;
+                }
+
                 // Update cards on the table
                 let mut table = table_q.get_single_mut().unwrap();
                 *table.cards = hand.to_string();
@@ -287,36 +297,24 @@ pub fn message_events(
                         global.cur_active_pos = next_active_pos;
                     }
                 }
+
+                // reset counter
+                if let Ok(mut counter) = counter_q.get_single_mut() {
+                    counter.recount();
+                }
             });
     }
 }
 
-// pub fn counter(
-//     mut timer_query: Query<&mut Timer>,
-//     global: ResMut<Global>,
-// ) {
-//
-// }
-
 pub fn tick_events(
     mut server: Server,
     mut position_query: Query<&mut Position>,
-    mut timer_query: Query<&mut Timer>,
-    mut global: ResMut<Global>,
     mut tick_reader: EventReader<TickEvent>,
 ) {
     let mut has_ticked = false;
 
     for TickEvent(server_tick) in tick_reader.iter() {
         has_ticked = true;
-
-        let update_timer = global.counter.self_check();
-
-        if update_timer {
-            if let Ok(mut timer) = timer_query.get_single_mut() {
-                timer.decr_counter();
-            }
-        }
 
         // All game logic should happen here, on a tick event
         let mut messages = server.receive_tick_buffer_messages(server_tick);

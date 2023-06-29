@@ -21,11 +21,8 @@ pub fn spawn_start_btn(
     mut commands: Commands,
     host_query: Query<&Host>,
     res: Res<UiAssets>,
-    play_container_query: Query<Entity, With<PlayContainer>>,
     global: Res<Global>,
 ) {
-    let play_container = play_container_query.get_single().unwrap();
-
     let mut is_host: bool = false;
 
     if let Some(player_entity) = global.player_entity {
@@ -39,6 +36,20 @@ pub fn spawn_start_btn(
     if !is_host {
         return;
     }
+
+    let container = commands
+        .spawn((NodeBundle {
+            style: Style {
+                position_type: PositionType::Absolute,
+                position: UiRect::top(Val::Px(100.)),
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                size: Size::new(Val::Percent(100.), Val::Px(100.)),
+                ..Default::default()
+            },
+            ..Default::default()
+        },))
+        .id();
 
     let start_btn = commands
         .spawn(ButtonBundle {
@@ -78,10 +89,18 @@ pub fn spawn_start_btn(
         })
         .id();
 
-    commands.entity(play_container).add_child(start_btn);
+    commands.entity(container).add_child(start_btn);
 }
 
-pub fn spawn_play_btn(mut commands: Commands, res: Res<UiAssets>) {
+pub fn spawn_play_btn(
+    mut commands: Commands,
+    res: Res<UiAssets>,
+    player_container_q: Query<Entity, With<PlayContainer>>,
+) {
+    for player_container_entity in player_container_q.iter() {
+        commands.entity(player_container_entity).despawn_recursive();
+    }
+
     let play_container = commands
         .spawn((
             PlayContainer,
@@ -175,24 +194,9 @@ pub fn spawn_play_btn(mut commands: Commands, res: Res<UiAssets>) {
         })
         .id();
 
-    // let timmer = commands
-    //     .spawn((
-    //         SkipTurnTimerText,
-    //         TextBundle::from_section(
-    //             "00",
-    //             TextStyle {
-    //                 font: res.font.clone(),
-    //                 font_size: 32.0,
-    //                 color: Color::RED,
-    //             },
-    //         ),
-    //     ))
-    //     .id();
-    //
     commands
         .entity(play_container)
         .add_child(skip_btn)
-        // .add_child(timmer)
         .add_child(play_btn);
 }
 
@@ -230,7 +234,6 @@ pub fn player_btn_click(
                 if play_btn.is_some() {
                     info!("Clicked play!");
                     player_ev.send(PlayerEvent(PlayerEventKind::Play))
-                    // ev_player.send(PlayerEvent(PlayerEventKind::Play));
                 }
                 if skip_btn.is_some() {
                     info!("Clicked skip!");
