@@ -23,7 +23,7 @@ impl Plugin for UiPlugin {
             // .add_system(hand::draw_player.run_if(on_event::<ReloadUiEvent>()))
             // .add_system(hand::draw_player.in_schedule(OnEnter(GameState::PlayerInput)))
             // .add_system(hand::card_click.in_set(OnUpdate(MainState::Game)))
-            .add_system(play_btn::spawn_play_btn.in_schedule(OnEnter(MainState::Lobby)))
+            .add_system(play_btn::spawn_play_btn.run_if(in_state(MainState::Game)))
             .add_system(
                 player::card_click
                     .run_if(in_state(MainState::Game))
