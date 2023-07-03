@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use naia_bevy_client::Client;
 use naia_bevy_demo_shared::{
     channels::PlayerActionChannel,
-    components::{card::Card, hand::Hand, server_hand::ServerHand},
+    components::{card::Card, hand::Hand, server_hand::ServerHand, Player},
     messages::PlayCard,
 };
 
@@ -27,11 +27,7 @@ pub struct LocalStartGame;
 
 pub struct SelectCardEvent(pub usize);
 
-pub enum PlayerEventKind {
-    Play,
-}
-
-pub struct PlayerEvent(pub PlayerEventKind);
+pub struct PlayerEvent;
 
 #[derive(Component)]
 pub struct ActiveCard(pub bool);
@@ -119,7 +115,17 @@ pub fn play_card(
     mut client: Client,
     mut draw_player_ev: EventWriter<DrawPlayer>,
     mut global: ResMut<Global>,
+    player_q: Query<&Player, With<LocalPlayer>>,
 ) {
+    // Check if is valid to play
+    let Ok(player) = player_q.get_single() else {
+        return;
+    };
+
+    if !*player.active {
+        return;
+    }
+
     info!("Play Card!");
     let mut active_cards_map = active_cards_q.get_single_mut().unwrap();
 

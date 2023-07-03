@@ -1,13 +1,12 @@
 use bevy::prelude::*;
 use naia_bevy_client::Client;
 use naia_bevy_demo_shared::{
-    channels::PlayerActionChannel, components::player::Host, messages::StartGame,
+    channels::PlayerActionChannel,
+    components::{player::Host, Player},
+    messages::StartGame,
 };
 
-use crate::{
-    game::{PlayerEvent, PlayerEventKind},
-    resources::Global,
-};
+use crate::{components::LocalPlayer, game::PlayerEvent, resources::Global};
 
 use super::UiAssets;
 
@@ -96,10 +95,23 @@ pub fn spawn_play_btn(
     mut commands: Commands,
     res: Res<UiAssets>,
     player_container_q: Query<Entity, With<PlayContainer>>,
+    player_q: Query<&Player, With<LocalPlayer>>,
 ) {
+    info!("Spawn Play BTN!!!");
+
+    let Ok(player) = player_q.get_single() else {
+        return;
+    };
+
     for player_container_entity in player_container_q.iter() {
         commands.entity(player_container_entity).despawn_recursive();
     }
+
+    let show_player_control = if *player.active {
+        Visibility::Visible
+    } else {
+        Visibility::Hidden
+    };
 
     let play_container = commands
         .spawn((
@@ -113,6 +125,7 @@ pub fn spawn_play_btn(
                     size: Size::new(Val::Percent(100.), Val::Px(CONTAINER_HEIGHT)),
                     ..Default::default()
                 },
+                visibility: show_player_control,
                 ..Default::default()
             },
         ))
@@ -138,7 +151,6 @@ pub fn spawn_play_btn(
                         align_items: AlignItems::Center,
                         ..default()
                     },
-
                     background_color: NORMAL_BUTTON.into(),
                     ..default()
                 })
@@ -229,15 +241,13 @@ pub fn player_btn_click(
                 if start_btn.is_some() {
                     info!("Clicked start!");
                     client.send_message::<PlayerActionChannel, StartGame>(&StartGame::default());
-                    // ev_player.send(PlayerEvent(PlayerEventKind::Play));
                 }
                 if play_btn.is_some() {
                     info!("Clicked play!");
-                    player_ev.send(PlayerEvent(PlayerEventKind::Play))
+                    player_ev.send(PlayerEvent)
                 }
                 if skip_btn.is_some() {
                     info!("Clicked skip!");
-                    // ev_player.send(PlayerEvent(PlayerEventKind::Skip));
                 }
             }
             _ => {}
