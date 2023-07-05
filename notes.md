@@ -100,6 +100,11 @@
 
 
 ### 27-6-2023
-- [] Feat: Turn System
+- [x] Feat: Turn System
     + [x] Highligh player turn (must rewrite later)
     + [x] Update player turn (must rewrite later)
+
+
+
+### 5-7-2023
+- [] Feat: Game system

@@ -1,5 +1,12 @@
+use std::time::Duration;
+
 use bevy::{prelude::*, window::PrimaryWindow};
 use naia_bevy_demo_shared::components::{hand::Hand, Table};
+
+const DECK_HEIGHT: f32 = 50.;
+const CARD_WIDTH: f32 = 32.;
+const CARD_HEIGHT: f32 = 48.;
+const CARD_MARGIN: f32 = 2.;
 
 use super::UiAssets;
 
@@ -20,10 +27,81 @@ pub struct TableCards {
 #[derive(Component)]
 pub struct TableCard;
 
-const DECK_HEIGHT: f32 = 50.;
-const CARD_WIDTH: f32 = 32.;
-const CARD_HEIGHT: f32 = 48.;
-const CARD_MARGIN: f32 = 2.;
+#[derive(Component)]
+pub struct StatusContainer;
+
+#[derive(Component)]
+pub struct Status(pub String);
+
+#[derive(Component)]
+pub struct CounterConfig {
+    /// How often to spawn a new bomb? (repeating timer)
+    timer: Timer,
+}
+
+impl Status {
+    fn make_empty(&mut self) {
+        self.0.clear();
+    }
+    fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
+}
+
+impl Default for Status {
+    fn default() -> Self {
+        Self("".to_string())
+    }
+}
+
+pub fn delete_status(
+    mut commands: Commands,
+    mut status_q: Query<&mut Status>,
+    mut counter_q: Query<(Entity, &mut CounterConfig)>,
+    status_container_q: Query<Entity, With<StatusContainer>>,
+    time: Res<Time>,
+) {
+    for (entity, mut counter) in counter_q.iter_mut() {
+        counter.timer.tick(time.delta());
+
+        if counter.timer.finished() {
+            let mut status = status_q.get_single_mut().unwrap();
+            status.make_empty();
+            commands.entity(entity).despawn();
+
+            let status_container = status_container_q.get_single().unwrap();
+
+            commands.entity(status_container).despawn_descendants();
+        }
+    }
+}
+
+pub fn draw_status(
+    mut commands: Commands,
+    mut status_q: Query<&mut Status>,
+    status_container_q: Query<Entity, With<StatusContainer>>,
+    res: Res<UiAssets>,
+) {
+    let status = status_q.get_single_mut().unwrap();
+
+    let status_container = status_container_q.get_single().unwrap();
+
+    let status_text = commands
+        .spawn(TextBundle::from_section(
+            status.0.clone(),
+            TextStyle {
+                font: res.font.clone(),
+                font_size: 16.0,
+                color: Color::rgb(0.9, 0.9, 0.9),
+            },
+        ))
+        .id();
+
+    commands.entity(status_container).add_child(status_text);
+    commands.spawn(CounterConfig {
+        timer: Timer::new(Duration::from_secs(3), TimerMode::Once),
+    });
+}
 
 pub fn get_card_button(commands: &mut Commands, size: Size, image: &Handle<Image>) -> Entity {
     commands
@@ -118,6 +196,21 @@ pub fn spawn_table(
         ))
         .id();
 
+    let status_container = commands
+        .spawn((
+            StatusContainer,
+            NodeBundle {
+                style: Style {
+                    justify_content: JustifyContent::Center,
+                    align_items: AlignItems::Center,
+                    size: Size::new(Val::Percent(100.), Val::Px(DECK_HEIGHT)),
+                    ..Default::default()
+                },
+                ..Default::default()
+            },
+        ))
+        .id();
+
     let table_bg = commands
         .spawn(ImageBundle {
             image: UiImage::new(assets.board.clone()),
@@ -130,6 +223,7 @@ pub fn spawn_table(
             },
             ..default()
         })
+        .add_child(status_container)
         .add_child(cards_container)
         .id();
 
@@ -152,7 +246,9 @@ pub fn spawn_table(
         .insert(TableContainer);
 
     let table_cards = TableCards { cards: vec![] };
+    let status = Status::default();
 
+    commands.spawn(status);
     commands.spawn(table_cards);
 
     info!("SPAWNED TABLE!!!");
