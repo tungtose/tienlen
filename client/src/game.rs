@@ -8,7 +8,12 @@ use naia_bevy_demo_shared::{
     messages::PlayCard,
 };
 
-use crate::{components::LocalPlayer, resources::Global, states::MainState, ui::DrawPlayer};
+use crate::{
+    components::LocalPlayer,
+    resources::Global,
+    states::MainState,
+    ui::{table::Status, DrawPlayer, DrawStatus},
+};
 
 pub struct GamePlugin;
 impl Plugin for GamePlugin {
@@ -114,7 +119,9 @@ pub fn play_card(
     mut active_cards_q: Query<&mut ActiveCards>,
     mut client: Client,
     mut draw_player_ev: EventWriter<DrawPlayer>,
+    mut draw_status_ev: EventWriter<DrawStatus>,
     mut global: ResMut<Global>,
+    mut status_q: Query<&mut Status>,
     player_q: Query<&Player, With<LocalPlayer>>,
 ) {
     // Check if is valid to play
@@ -130,6 +137,11 @@ pub fn play_card(
     let mut active_cards_map = active_cards_q.get_single_mut().unwrap();
 
     let Ok(cards) = active_cards_map.to_string() else {
+        let mut status = status_q.get_single_mut().unwrap();
+
+        status.0 = "Please select any cards".to_string();
+        draw_status_ev.send(DrawStatus);
+        
         return
     };
 
