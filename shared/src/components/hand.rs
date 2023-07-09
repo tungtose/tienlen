@@ -1,20 +1,19 @@
 use std::cmp::Ordering;
-use std::fmt::{Display, Formatter, Result};
+use std::fmt::{Display, Formatter, Result as FmtResut};
 use std::ops::AddAssign;
 
 use bevy_ecs::prelude::Component;
-use log::info;
 
 use super::card::Card;
 use super::cards::Cards;
 
-#[derive(Clone, Component)]
+#[derive(Clone, Component, PartialEq, Eq, PartialOrd)]
 pub struct Hand {
     pub cards: Vec<Card>,
 }
 
 impl Display for Hand {
-    fn fmt(&self, f: &mut Formatter) -> Result {
+    fn fmt(&self, f: &mut Formatter) -> FmtResut {
         let mut result = String::with_capacity(self.cards.len() * 3);
         self.cards.iter().enumerate().for_each(|(i, card)| {
             result.push_str(&card.to_str());
@@ -41,6 +40,12 @@ impl<'a> AddAssign<&'a Hand> for Hand {
 impl AddAssign<Card> for Hand {
     fn add_assign(&mut self, rhs: Card) {
         self.push_card(rhs);
+    }
+}
+
+impl Ord for Hand {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.highest_value().cmp(other.highest_value())
     }
 }
 
@@ -126,6 +131,11 @@ impl Hand {
         self.cards.len()
     }
 
+    /// Returns the highest value card of the hand
+    pub fn highest_value(&self) -> &Card {
+        self.cards.iter().max().unwrap()
+    }
+
     /// Clears the `Hand` (makes it empty)
     pub fn clear(&mut self) {
         self.cards.clear();
@@ -173,7 +183,6 @@ impl Hand {
     }
 
     pub fn check_combination(&self) -> bool {
-        info!("DBBBBB");
         self.is_in_combination()
     }
 }

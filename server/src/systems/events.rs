@@ -1,3 +1,5 @@
+use std::cmp::Ordering;
+
 use bevy_ecs::{
     event::EventReader,
     system::{Commands, Query, ResMut},
@@ -277,6 +279,13 @@ pub fn message_events(
                 *table.cards = hand.to_string();
 
                 // Keep track the history of the card being played
+                if let Some(last_played_hand) = global.table.back() {
+                    info!("In the check lasted {} \n {}", last_played_hand, hand);
+                    if last_played_hand.cmp(&hand) == Ordering::Greater {
+                        info!("Less!!!")
+                    }
+                }
+
                 global.table.push_back(hand);
 
                 // TODO: update turn
