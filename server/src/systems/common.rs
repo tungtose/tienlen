@@ -25,8 +25,7 @@ pub fn countdown(
         if let Ok(mut counter) = countdown_q.get_single_mut() {
             counter.decr_counter();
         }
-
-        info!("One sec pass!");
+        // info!("One sec pass!");
     }
 }
 

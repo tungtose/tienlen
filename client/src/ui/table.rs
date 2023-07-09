@@ -43,9 +43,6 @@ impl Status {
     fn make_empty(&mut self) {
         self.0.clear();
     }
-    fn is_empty(&self) -> bool {
-        self.0.is_empty()
-    }
 }
 
 impl Default for Status {
@@ -203,6 +200,7 @@ pub fn spawn_table(
                 style: Style {
                     justify_content: JustifyContent::Center,
                     align_items: AlignItems::Center,
+                    flex_direction: FlexDirection::Column,
                     size: Size::new(Val::Percent(100.), Val::Px(DECK_HEIGHT)),
                     ..Default::default()
                 },
@@ -217,8 +215,10 @@ pub fn spawn_table(
             style: Style {
                 position_type: PositionType::Relative,
                 justify_content: JustifyContent::Center,
+                flex_direction: FlexDirection::Column,
                 align_items: AlignItems::Center,
                 size: Size::new(Val::Px(600.), Val::Px(300.)),
+                padding: UiRect::bottom(Val::Px(100.)),
                 ..Default::default()
             },
             ..default()

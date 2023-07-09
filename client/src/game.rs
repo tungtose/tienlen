@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use naia_bevy_client::Client;
 use naia_bevy_demo_shared::{
     channels::PlayerActionChannel,
-    components::{card::Card, hand::Hand, server_hand::ServerHand, Player},
+    components::{card::Card, hand::Hand, server_hand::ServerHand, Player, Table},
     messages::PlayCard,
 };
 
@@ -118,9 +118,9 @@ pub fn select_card(
 pub fn play_card(
     mut active_cards_q: Query<&mut ActiveCards>,
     mut client: Client,
-    mut draw_player_ev: EventWriter<DrawPlayer>,
+    // mut draw_player_ev: EventWriter<DrawPlayer>,
+    // mut global: ResMut<Global>,
     mut draw_status_ev: EventWriter<DrawStatus>,
-    mut global: ResMut<Global>,
     mut status_q: Query<&mut Status>,
     player_q: Query<&Player, With<LocalPlayer>>,
 ) {
@@ -130,6 +130,7 @@ pub fn play_card(
     };
 
     if !*player.active {
+        // Not your turn now
         return;
     }
 
@@ -152,14 +153,14 @@ pub fn play_card(
         return;
     }
 
-    active_cards_map.keys().iter().for_each(|key| {
-        global.player_cards.remove(key);
-    });
-
-    active_cards_map.clear();
+    // active_cards_map.keys().iter().for_each(|key| {
+    //     global.player_cards.remove(key);
+    // });
+    //
+    // active_cards_map.clear();
     client.send_message::<PlayerActionChannel, PlayCard>(&PlayCard(cards));
 
-    draw_player_ev.send(DrawPlayer);
+    // draw_player_ev.send(DrawPlayer);
     info!("Sended Cards");
 }
 

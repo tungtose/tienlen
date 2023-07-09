@@ -3,12 +3,14 @@ use naia_bevy_shared::{Protocol, ProtocolPlugin};
 mod auth;
 mod counter;
 mod entity_assignment;
+pub mod error;
 mod game;
 mod key_command;
 
 pub use auth::Auth;
 pub use counter::Counter;
 pub use entity_assignment::EntityAssignment;
+pub use error::ErrorCode;
 pub use game::{PlayCard, StartGame};
 pub use key_command::KeyCommand;
 
@@ -23,6 +25,7 @@ impl ProtocolPlugin for MessagesPlugin {
             .add_message::<KeyCommand>()
             .add_message::<Counter>()
             .add_message::<StartGame>()
-            .add_message::<PlayCard>();
+            .add_message::<PlayCard>()
+            .add_message::<ErrorCode>();
     }
 }
