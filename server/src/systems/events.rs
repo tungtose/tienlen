@@ -197,6 +197,7 @@ pub fn message_events(
     mut table_q: Query<&mut Table>,
     mut player_q: Query<&mut Player>,
     mut counter_q: Query<&mut Counter>,
+    mut serverhand_q: Query<&mut ServerHand>,
 ) {
     for events in event_reader.iter() {
         for (_, _) in events.read::<PlayerActionChannel, StartGame>() {
@@ -210,7 +211,7 @@ pub fn message_events(
                 .insert(server_table)
                 .id();
 
-            let mut is_decided_first_play = false;
+            let is_decided_first_play = false;
 
             let server_counter = Counter::default();
 
@@ -256,9 +257,9 @@ pub fn message_events(
             .read::<PlayerActionChannel, PlayCard>()
             .into_iter()
             .for_each(|(user_key, cards_str)| {
-                let hand = Hand::from_str(&cards_str.0);
-                info!("HAND: {}", hand);
-                if !hand.check_combination() {
+                let put_hand = Hand::from_str(&cards_str.0);
+                info!("HAND: {}", put_hand);
+                if !put_hand.check_combination() {
                     // TODO: Should send an error messsage
                     return;
                 }
@@ -276,17 +277,42 @@ pub fn message_events(
 
                 // Update cards on the table
                 let mut table = table_q.get_single_mut().unwrap();
-                *table.cards = hand.to_string();
+                *table.cards = put_hand.to_string();
 
                 // Keep track the history of the card being played
                 if let Some(last_played_hand) = global.table.back() {
-                    info!("In the check lasted {} \n {}", last_played_hand, hand);
-                    if last_played_hand.cmp(&hand) == Ordering::Greater {
+                    info!("In the check lasted {} \n {}", last_played_hand, put_hand);
+                    if last_played_hand.cmp(&put_hand) == Ordering::Greater {
                         info!("Less!!!")
                     }
                 }
 
-                global.table.push_back(hand);
+                // Update cards of the player
+                if let Ok(mut server_hand) = serverhand_q.get_mut(*cur_player_entity) {
+                    info!("Update the card now:");
+                    let hand_str = server_hand.cards.clone();
+                    let mut player_hand = Hand::from(hand_str);
+                    info!("server hand after 1: {}", player_hand.to_string());
+                    info!("put hands: {}", put_hand.to_string());
+                    // info!("put hands cards: {}", put_hand.car());
+
+                    // remove cards
+                    player_hand.remove_cards(put_hand.cards.as_slice());
+
+                    info!("server hand after 2: {}", player_hand.to_string());
+                    *server_hand.cards = player_hand.to_string();
+
+                    info!("server hand after: {}", player_hand.to_string());
+
+                    server.send_message::<GameSystemChannel, PlayCard>(
+                        &user_key,
+                        &PlayCard::default(),
+                    );
+
+                    info!("server hand after Sended!");
+                }
+
+                global.table.push_back(put_hand);
 
                 // TODO: update turn
                 let total_player = global.total_player;

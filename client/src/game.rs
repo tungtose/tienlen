@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use naia_bevy_client::Client;
 use naia_bevy_demo_shared::{
     channels::PlayerActionChannel,
-    components::{card::Card, hand::Hand, server_hand::ServerHand, Player, Table},
+    components::{card::Card, hand::Hand, server_hand::ServerHand, Player},
     messages::PlayCard,
 };
 
@@ -20,15 +20,18 @@ impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<LocalStartGame>()
             .add_event::<PlayerEvent>()
+            .add_event::<UpdatePlayerCards>()
             .add_event::<SelectCardEvent>()
             .add_startup_system(local_init)
             .add_system(spawn_player.run_if(on_event::<LocalStartGame>()))
+            .add_system(update_player_cards.run_if(on_event::<UpdatePlayerCards>()))
             .add_system(play_card.run_if(on_event::<PlayerEvent>()))
             .add_system(select_card.run_if(on_event::<SelectCardEvent>()));
     }
 }
 
 pub struct LocalStartGame;
+pub struct UpdatePlayerCards;
 
 pub struct SelectCardEvent(pub usize);
 
@@ -37,14 +40,14 @@ pub struct PlayerEvent;
 #[derive(Component)]
 pub struct ActiveCard(pub bool);
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct ActiveCards(BTreeMap<usize, Card>);
 
-impl Default for ActiveCards {
-    fn default() -> Self {
-        Self(BTreeMap::new())
-    }
-}
+// impl Default for ActiveCards {
+//     fn default() -> Self {
+//         Self(BTreeMap::new())
+//     }
+// }
 
 impl ActiveCards {
     pub fn is_active(&self, key: &usize) -> bool {
@@ -164,6 +167,49 @@ pub fn play_card(
     info!("Sended Cards");
 }
 
+pub fn update_player_cards(
+    hand_q: Query<&ServerHand, With<LocalPlayer>>,
+    mut global: ResMut<Global>,
+    mut draw_player_ev: EventWriter<DrawPlayer>,
+    mut active_cards_q: Query<&mut ActiveCards>,
+) {
+    let Ok(server_hand) = hand_q
+        .get_single()
+         else {
+        return;
+    };
+
+    let hand_str = server_hand
+        .cards
+        .split(',')
+        .map(|c| c.to_string())
+        .collect::<Vec<String>>();
+
+    let sl: Vec<&str> = hand_str.iter().map(|str| str.as_str()).collect();
+
+    info!("Vec Update: {:?}", sl);
+
+    global.player_cards.clear();
+
+    for card_str in sl {
+        let card_rs = Card::from_str(card_str);
+
+        if let Ok(card) = card_rs {
+            global.player_cards.insert(card.ordinal(), card);
+        } else {
+            info!("SPAWN CARD ERROR: {}", card_str);
+        }
+    }
+
+    let mut active_cards_map = active_cards_q.get_single_mut().unwrap();
+    active_cards_map.keys().iter().for_each(|key| {
+        global.player_cards.remove(key);
+    });
+    active_cards_map.clear();
+
+    draw_player_ev.send(DrawPlayer);
+}
+
 pub fn spawn_player(
     mut next_state: ResMut<NextState<MainState>>,
     hand_q: Query<&ServerHand, With<LocalPlayer>>,
@@ -178,7 +224,7 @@ pub fn spawn_player(
 
     let hand_str = server_hand
         .cards
-        .split(",")
+        .split(',')
         .map(|c| c.to_string())
         .collect::<Vec<String>>();
 

@@ -6,12 +6,20 @@ use serde::{Deserialize, Serialize};
 
 use super::{rank::Rank, suit::Suit};
 
-#[derive(
-    Component, Copy, Clone, Hash, PartialEq, Eq, PartialOrd, Debug, Serialize, Deserialize, Default,
-)]
+#[derive(Component, Copy, Clone, Hash, PartialEq, Eq, Debug, Serialize, Deserialize, Default)]
 pub struct Card {
     pub rank: Rank,
     pub suit: Suit,
+}
+
+impl PartialOrd for Card {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        match self.rank.partial_cmp(&other.rank) {
+            Some(core::cmp::Ordering::Equal) => {}
+            ord => return ord,
+        }
+        self.suit.partial_cmp(&other.suit)
+    }
 }
 
 impl Ord for Card {

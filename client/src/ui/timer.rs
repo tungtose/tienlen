@@ -74,5 +74,5 @@ pub fn draw_counter(
 
     commands.entity(container).add_child(timer_entity);
 
-    info!("Counter: {:?}", *server_timer.counter);
+    // info!("Counter: {:?}", *server_timer.counter);
 }

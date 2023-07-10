@@ -20,12 +20,12 @@ use naia_bevy_demo_shared::{
     behavior as shared_behavior,
     channels::{EntityAssignmentChannel, GameSystemChannel, PlayerCommandChannel},
     components::{player::Player, Color, ColorValue, Position, Shape, ShapeValue},
-    messages::{Counter, EntityAssignment, KeyCommand, StartGame},
+    messages::{Counter, EntityAssignment, KeyCommand, PlayCard, StartGame},
 };
 
 use crate::{
     components::{Confirmed, Interp, LocalCursor, LocalPlayer, Predicted},
-    game::LocalStartGame,
+    game::{LocalStartGame, UpdatePlayerCards},
     resources::{Global, OwnedEntity},
     ui::ReloadBar,
 };
@@ -95,10 +95,11 @@ pub fn message_events(
     client: Client,
     mut global: ResMut<Global>,
     mut event_reader: EventReader<MessageEvents>,
-    position_query: Query<&Position>,
+    // position_query: Query<&Position>,
     player_query: Query<&Player>,
     mut bar_ev: EventWriter<ReloadBar>,
     mut start_game_ev: EventWriter<LocalStartGame>,
+    mut update_player_cards_ev: EventWriter<UpdatePlayerCards>,
 ) {
     for events in event_reader.iter() {
         for message in events.read::<GameSystemChannel, Counter>() {
@@ -108,6 +109,11 @@ pub fn message_events(
         for _ in events.read::<GameSystemChannel, StartGame>() {
             info!("START GAME NOW!!!");
             start_game_ev.send(LocalStartGame);
+        }
+
+        for _ in events.read::<GameSystemChannel, PlayCard>() {
+            info!("Play Card From Server!!!");
+            update_player_cards_ev.send(UpdatePlayerCards)
         }
 
         for message in events.read::<EntityAssignmentChannel, EntityAssignment>() {
@@ -124,40 +130,6 @@ pub fn message_events(
                         bar_ev.send(ReloadBar);
                     }
                     Err(err) => info!("Error: {}", err),
-                }
-                // Here we create a local copy of the Player entity, to use for client-side prediction
-                if let Ok(position) = position_query.get(entity) {
-                    let prediction_entity = commands
-                        .entity(entity)
-                        .duplicate() // copies all Replicate components as well
-                        .insert(SpriteBundle {
-                            sprite: Sprite {
-                                custom_size: Some(Vec2::new(SQUARE_SIZE, SQUARE_SIZE)),
-                                color: BevyColor::WHITE,
-                                ..Default::default()
-                            },
-                            transform: Transform::from_xyz(0.0, 0.0, 1.0),
-                            ..Default::default()
-                        })
-                        // insert interpolation component
-                        .insert(Interp::new(*position.x, *position.y))
-                        // mark as predicted
-                        .insert(Predicted)
-                        .id();
-
-                    global.owned_entity = Some(OwnedEntity::new(entity, prediction_entity));
-                }
-            } else {
-                let mut disowned: bool = false;
-                if let Some(owned_entity) = &global.owned_entity {
-                    if owned_entity.confirmed == entity {
-                        commands.entity(owned_entity.predicted).despawn();
-                        disowned = true;
-                    }
-                }
-                if disowned {
-                    info!("removed ownership of entity");
-                    global.owned_entity = None;
                 }
             }
         }

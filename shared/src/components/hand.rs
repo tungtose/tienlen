@@ -3,11 +3,13 @@ use std::fmt::{Display, Formatter, Result as FmtResut};
 use std::ops::AddAssign;
 
 use bevy_ecs::prelude::Component;
+use log::info;
+use naia_bevy_shared::Property;
 
 use super::card::Card;
 use super::cards::Cards;
 
-#[derive(Clone, Component, PartialEq, Eq, PartialOrd)]
+#[derive(Clone, Component, PartialEq, Eq)]
 pub struct Hand {
     pub cards: Vec<Card>,
 }
@@ -43,6 +45,12 @@ impl AddAssign<Card> for Hand {
     }
 }
 
+impl PartialOrd for Hand {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        self.cards.partial_cmp(&other.cards)
+    }
+}
+
 impl Ord for Hand {
     fn cmp(&self, other: &Self) -> Ordering {
         self.highest_value().cmp(other.highest_value())
@@ -56,6 +64,21 @@ impl Cards for Hand {
 
     fn mut_cards(&mut self) -> &mut [Card] {
         self.cards.as_mut_slice()
+    }
+}
+
+impl From<Property<String>> for Hand {
+    fn from(cards_str: Property<String>) -> Self {
+        let cards = cards_str
+            .split(',')
+            .map(|c_str| {
+                Card::from_str(c_str).unwrap_or_else(|_| {
+                    panic!("Not a known card {}", c_str);
+                })
+            })
+            .collect::<Vec<Card>>();
+
+        Self { cards }
     }
 }
 
@@ -103,6 +126,7 @@ impl Hand {
         Hand { cards }
     }
 
+    #[allow(clippy::inherent_to_string_shadow_display)]
     pub fn to_string(&mut self) -> String {
         self.cards
             .iter()
@@ -149,6 +173,7 @@ impl Hand {
     /// Removes the first instance of every matching card from the `Hand`
     pub fn remove_cards(&mut self, cards: &[Card]) {
         for c in cards {
+            info!("removing cards: {:?}", c.to_str());
             let _ = self.remove_card(c);
         }
     }
