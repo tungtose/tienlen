@@ -3,7 +3,12 @@ use std::time::Duration;
 use bevy_ecs::system::{Commands, Query, Res, ResMut, Resource};
 use bevy_log::info;
 use bevy_time::{Time, Timer, TimerMode};
-use naia_bevy_demo_shared::components::{timer::Counter, Player};
+use naia_bevy_demo_shared::{
+    channels::GameSystemChannel,
+    components::{timer::Counter, Player},
+    messages::UpdateTurn,
+};
+use naia_bevy_server::Server;
 
 use crate::resources::Global;
 
@@ -30,9 +35,10 @@ pub fn countdown(
 }
 
 pub fn run_out_countdow(
-    mut countdown_q: Query<&mut Counter>,
     mut global: ResMut<Global>,
+    mut countdown_q: Query<&mut Counter>,
     mut player_q: Query<&mut Player>,
+    mut server: Server,
 ) {
     if let Ok(mut counter) = countdown_q.get_single_mut() {
         let is_over = counter.check_over();
@@ -54,6 +60,14 @@ pub fn run_out_countdow(
                     *player.active = true;
                     global.cur_active_pos = next_active_pos;
                 }
+            }
+
+            // FIXME:
+            for (user_key, _) in global.users_map.iter() {
+                server.send_message::<GameSystemChannel, UpdateTurn>(
+                    user_key,
+                    &UpdateTurn::default(),
+                );
             }
         }
     }
