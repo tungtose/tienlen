@@ -22,6 +22,7 @@ pub enum Rank {
     Ace,
 }
 
+#[allow(clippy::derive_ord_xor_partial_ord)]
 impl Ord for Rank {
     fn cmp(&self, other: &Rank) -> Ordering {
         let self_ord = self.ordinal();

@@ -41,12 +41,6 @@ pub struct Global {
 
 impl Default for Global {
     fn default() -> Self {
-        // let mut all_cards_map: BTreeMap<usize, Card> = BTreeMap::new();
-        //
-        // Card::all_cards().iter().for_each(|card| {
-        //     all_cards_map.insert(card.ordinal(), *card).unwrap();
-        // });
-
         Self {
             player_entity: None,
             player_cards: BTreeMap::new(),
