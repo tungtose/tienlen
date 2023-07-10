@@ -121,8 +121,6 @@ pub fn select_card(
 pub fn play_card(
     mut active_cards_q: Query<&mut ActiveCards>,
     mut client: Client,
-    // mut draw_player_ev: EventWriter<DrawPlayer>,
-    // mut global: ResMut<Global>,
     mut draw_status_ev: EventWriter<DrawStatus>,
     mut status_q: Query<&mut Status>,
     player_q: Query<&Player, With<LocalPlayer>>,
@@ -155,15 +153,7 @@ pub fn play_card(
         info!("hand {} not in thirteen combination", hand);
         return;
     }
-
-    // active_cards_map.keys().iter().for_each(|key| {
-    //     global.player_cards.remove(key);
-    // });
-    //
-    // active_cards_map.clear();
     client.send_message::<PlayerActionChannel, PlayCard>(&PlayCard(cards));
-
-    // draw_player_ev.send(DrawPlayer);
     info!("Sended Cards");
 }
 
@@ -173,32 +163,17 @@ pub fn update_player_cards(
     mut draw_player_ev: EventWriter<DrawPlayer>,
     mut active_cards_q: Query<&mut ActiveCards>,
 ) {
-    let Ok(server_hand) = hand_q
-        .get_single()
-         else {
+    let Ok(server_hand) = hand_q.get_single() else {
         return;
     };
 
-    let hand_str = server_hand
-        .cards
-        .split(',')
-        .map(|c| c.to_string())
-        .collect::<Vec<String>>();
-
-    let sl: Vec<&str> = hand_str.iter().map(|str| str.as_str()).collect();
-
-    info!("Vec Update: {:?}", sl);
+    let hand_str = server_hand.cards.clone();
+    let hand = Hand::from(hand_str);
 
     global.player_cards.clear();
 
-    for card_str in sl {
-        let card_rs = Card::from_str(card_str);
-
-        if let Ok(card) = card_rs {
-            global.player_cards.insert(card.ordinal(), card);
-        } else {
-            info!("SPAWN CARD ERROR: {}", card_str);
-        }
+    for card in hand.cards.as_slice() {
+        global.player_cards.insert(card.ordinal(), *card);
     }
 
     let mut active_cards_map = active_cards_q.get_single_mut().unwrap();
@@ -222,24 +197,13 @@ pub fn spawn_player(
         return;
     };
 
-    let hand_str = server_hand
-        .cards
-        .split(',')
-        .map(|c| c.to_string())
-        .collect::<Vec<String>>();
+    let hand_str = server_hand.cards.clone();
+    let hand = Hand::from(hand_str);
 
-    let sl: Vec<&str> = hand_str.iter().map(|str| str.as_str()).collect();
-
-    for card_str in sl {
-        let card_rs = Card::from_str(card_str);
-
-        if let Ok(card) = card_rs {
-            // commands.spawn(card).id();
-            global.player_cards.insert(card.ordinal(), card);
-        } else {
-            info!("SPAWN CARD ERROR: {}", card_str);
-        }
+    for card in hand.cards.as_slice() {
+        global.player_cards.insert(card.ordinal(), *card);
     }
+
     next_state.set(MainState::Game);
     draw_player_ev.send(DrawPlayer);
 }

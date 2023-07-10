@@ -20,7 +20,7 @@ use naia_bevy_demo_shared::{
     behavior as shared_behavior,
     channels::{EntityAssignmentChannel, GameSystemChannel, PlayerCommandChannel},
     components::{player::Player, Color, ColorValue, Position, Shape, ShapeValue},
-    messages::{Counter, EntityAssignment, KeyCommand, PlayCard, StartGame},
+    messages::{Counter, EntityAssignment, KeyCommand, StartGame, UpdateTurn},
 };
 
 use crate::{
@@ -111,7 +111,7 @@ pub fn message_events(
             start_game_ev.send(LocalStartGame);
         }
 
-        for _ in events.read::<GameSystemChannel, PlayCard>() {
+        for _ in events.read::<GameSystemChannel, UpdateTurn>() {
             info!("Play Card From Server!!!");
             update_player_cards_ev.send(UpdatePlayerCards)
         }

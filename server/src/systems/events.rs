@@ -27,7 +27,7 @@ use naia_bevy_demo_shared::{
         table::Table,
         Color, ColorValue, Counter, Position, Shape, ShapeValue,
     },
-    messages::{Auth, EntityAssignment, KeyCommand, PlayCard, StartGame},
+    messages::{Auth, EntityAssignment, KeyCommand, PlayCard, StartGame, UpdateTurn},
 };
 
 use crate::resources::Global;
@@ -304,10 +304,12 @@ pub fn message_events(
 
                     info!("server hand after: {}", player_hand.to_string());
 
-                    server.send_message::<GameSystemChannel, PlayCard>(
-                        &user_key,
-                        &PlayCard::default(),
-                    );
+                    for (u_key, _) in global.users_map.iter() {
+                        server.send_message::<GameSystemChannel, UpdateTurn>(
+                            u_key,
+                            &UpdateTurn::default(),
+                        );
+                    }
 
                     info!("server hand after Sended!");
                 }
