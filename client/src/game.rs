@@ -4,15 +4,15 @@ use bevy::prelude::*;
 use naia_bevy_client::Client;
 use naia_bevy_demo_shared::{
     channels::PlayerActionChannel,
-    components::{card::Card, hand::Hand, server_hand::ServerHand, Player},
-    messages::PlayCard,
+    components::{card::Card, hand::Hand, server_hand::ServerHand},
+    messages::{PlayCard, SkipTurn},
 };
 
 use crate::{
     components::LocalPlayer,
     resources::Global,
     states::MainState,
-    ui::{table::Status, DrawPlayer, DrawStatus},
+    ui::{DrawPlayer, DrawStatus},
 };
 
 pub struct GamePlugin;
@@ -20,12 +20,14 @@ impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<LocalStartGame>()
             .add_event::<PlayerEvent>()
+            .add_event::<SkipTurnEvent>()
             .add_event::<UpdatePlayerCards>()
             .add_event::<SelectCardEvent>()
             .add_startup_system(local_init)
             .add_system(spawn_player.run_if(on_event::<LocalStartGame>()))
             .add_system(update_player_cards.run_if(on_event::<UpdatePlayerCards>()))
             .add_system(play_card.run_if(on_event::<PlayerEvent>()))
+            .add_system(skip_turn.run_if(on_event::<SkipTurnEvent>()))
             .add_system(select_card.run_if(on_event::<SelectCardEvent>()));
     }
 }
@@ -36,6 +38,7 @@ pub struct UpdatePlayerCards;
 pub struct SelectCardEvent(pub usize);
 
 pub struct PlayerEvent;
+pub struct SkipTurnEvent;
 
 #[derive(Component)]
 pub struct ActiveCard(pub bool);
@@ -118,42 +121,33 @@ pub fn select_card(
     }
 }
 
+pub fn skip_turn(mut client: Client) {
+    client.send_message::<PlayerActionChannel, SkipTurn>(&SkipTurn::default());
+}
+
 pub fn play_card(
     mut active_cards_q: Query<&mut ActiveCards>,
     mut client: Client,
     mut draw_status_ev: EventWriter<DrawStatus>,
-    mut status_q: Query<&mut Status>,
-    player_q: Query<&Player, With<LocalPlayer>>,
 ) {
-    // Check if is valid to play
-    let Ok(player) = player_q.get_single() else {
-        return;
-    };
-
-    if !*player.active {
-        // Not your turn now
-        return;
-    }
-
     info!("Play Card!");
     let mut active_cards_map = active_cards_q.get_single_mut().unwrap();
 
     let Ok(cards) = active_cards_map.to_string() else {
-        let mut status = status_q.get_single_mut().unwrap();
-
-        status.0 = "Please select any cards".to_string();
-        draw_status_ev.send(DrawStatus);
-        
-        return
+        draw_status_ev.send(DrawStatus("Please select any cards".to_string()));
+        return;
     };
 
     let hand = Hand::from_str(&cards);
 
     if !hand.check_combination() {
-        info!("hand {} not in thirteen combination", hand);
+        draw_status_ev.send(DrawStatus(
+            "Your hand is not in any combination!".to_string(),
+        ));
         return;
     }
     client.send_message::<PlayerActionChannel, PlayCard>(&PlayCard(cards));
+
     info!("Sended Cards");
 }
 

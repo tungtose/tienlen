@@ -38,7 +38,7 @@ pub fn run_out_countdow(
     mut global: ResMut<Global>,
     mut countdown_q: Query<&mut Counter>,
     mut player_q: Query<&mut Player>,
-    mut server: Server,
+    // mut server: Server,
 ) {
     if let Ok(mut counter) = countdown_q.get_single_mut() {
         let is_over = counter.check_over();
@@ -63,12 +63,12 @@ pub fn run_out_countdow(
             }
 
             // FIXME:
-            for (user_key, _) in global.users_map.iter() {
-                server.send_message::<GameSystemChannel, UpdateTurn>(
-                    user_key,
-                    &UpdateTurn::default(),
-                );
-            }
+            // for (user_key, _) in global.users_map.iter() {
+            //     server.send_message::<GameSystemChannel, UpdateTurn>(
+            //         user_key,
+            //         &UpdateTurn::default(),
+            //     );
+            // }
         }
     }
 }

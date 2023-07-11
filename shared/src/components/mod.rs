@@ -7,10 +7,12 @@ pub mod hand;
 pub mod rank;
 pub mod suit;
 
+mod cache;
 pub mod player;
 pub mod server_hand;
 pub mod table;
 pub mod timer;
+pub use cache::Cache;
 pub use player::Player;
 
 mod color;

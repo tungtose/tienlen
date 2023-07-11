@@ -10,4 +10,7 @@ pub struct UpdatePlayerCards;
 pub struct PlayCard(pub String);
 
 #[derive(Message, Debug, Default)]
+pub struct SkipTurn;
+
+#[derive(Message, Debug, Default)]
 pub struct UpdateTurn;

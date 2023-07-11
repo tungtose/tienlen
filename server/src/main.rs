@@ -51,8 +51,6 @@ fn main() {
                 events::insert_component_events,
                 events::update_component_events,
                 events::remove_component_events,
-                // common::countdown,
-                // common::run_out_countdow,
             )
                 .chain()
                 .in_set(ReceiveEvents),

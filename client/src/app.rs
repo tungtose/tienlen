@@ -1,10 +1,8 @@
 use bevy::{
-    prelude::{
-        App, ClearColor, Color, IntoSystemConfig, IntoSystemConfigs, IntoSystemSetConfig, SystemSet,
-    },
-    DefaultPlugins,
+    prelude::*,
+    window::{Window, WindowPlugin},
 };
-use bevy_inspector_egui::quick::WorldInspectorPlugin;
+// use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use naia_bevy_client::{ClientConfig, Plugin as ClientPlugin, ReceiveEvents};
 use naia_bevy_demo_shared::protocol;
 
@@ -26,8 +24,17 @@ pub fn run() {
     App::default()
         // Bevy Plugins
         .add_state::<MainState>()
-        .add_plugins(DefaultPlugins)
-        .add_plugin(WorldInspectorPlugin::new())
+        .add_plugins(DefaultPlugins.set(WindowPlugin {
+            primary_window: Some(Window {
+                title: "thirteen".into(),
+                resolution: (800., 500.).into(),
+                fit_canvas_to_parent: true,
+                prevent_default_event_handling: false,
+                ..default()
+            }),
+            ..default()
+        }))
+        // .add_plugin(WorldInspectorPlugin::new())
         // Add Naia Client Plugin
         .add_plugin(ClientPlugin::new(ClientConfig::default(), protocol()))
         .add_plugin(UiPlugin)

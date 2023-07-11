@@ -54,7 +54,7 @@ pub fn draw_counter(
         return;
     };
 
-    let container = create_timer_container(&mut commands, (0., 200.));
+    let container = create_timer_container(&mut commands, (0., 20.));
 
     let timer_string = server_timer.as_string();
 

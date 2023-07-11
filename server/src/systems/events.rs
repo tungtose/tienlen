@@ -27,7 +27,10 @@ use naia_bevy_demo_shared::{
         table::Table,
         Color, ColorValue, Counter, Position, Shape, ShapeValue,
     },
-    messages::{Auth, EntityAssignment, KeyCommand, PlayCard, StartGame, UpdateTurn},
+    messages::{
+        error::GameError, Auth, EntityAssignment, ErrorCode, KeyCommand, PlayCard, SkipTurn,
+        StartGame, UpdateTurn,
+    },
 };
 
 use crate::resources::Global;
@@ -189,6 +192,7 @@ pub fn error_events(mut event_reader: EventReader<ErrorEvent>) {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn message_events(
     mut commands: Commands,
     mut server: Server,
@@ -253,56 +257,72 @@ pub fn message_events(
             }
         }
 
+        for (_, _) in events.read::<PlayerActionChannel, SkipTurn>().into_iter() {
+            for (user_key, _) in global.users_map.iter() {
+                todo!()
+            }
+        }
+
         events
             .read::<PlayerActionChannel, PlayCard>()
             .into_iter()
             .for_each(|(user_key, cards_str)| {
                 let put_hand = Hand::from_str(&cards_str.0);
                 info!("HAND: {}", put_hand);
+
                 if !put_hand.check_combination() {
-                    // TODO: Should send an error messsage
+                    server.send_message::<GameSystemChannel, ErrorCode>(
+                        &user_key,
+                        &ErrorCode::from(GameError::WrongCombination),
+                    );
                     return;
                 }
 
                 // Check if is their turn?
                 let cur_player_entity = global.users_map.get(&user_key).unwrap();
-
                 let cur_player = player_q.get(*cur_player_entity).unwrap();
 
                 if !*cur_player.active {
-                    // TODO: This player is not active!!!
                     info!("This player is not active!!!");
+                    server.send_message::<GameSystemChannel, ErrorCode>(
+                        &user_key,
+                        &ErrorCode::from(GameError::WrongTurn),
+                    );
                     return;
+                }
+
+                if let Some(last_played_hand) = global.table.back() {
+                    info!("In the check lasted {} \n {}", last_played_hand, put_hand);
+                    if last_played_hand.len() != put_hand.len() {
+                        server.send_message::<GameSystemChannel, ErrorCode>(
+                            &user_key,
+                            &ErrorCode::from(GameError::WrongCombination),
+                        );
+
+                        return;
+                    }
+
+                    if last_played_hand.cmp(&put_hand) == Ordering::Greater {
+                        server.send_message::<GameSystemChannel, ErrorCode>(
+                            &user_key,
+                            &ErrorCode::from(GameError::InvalidCards),
+                        );
+
+                        return;
+                    }
                 }
 
                 // Update cards on the table
                 let mut table = table_q.get_single_mut().unwrap();
                 *table.cards = put_hand.to_string();
 
-                // Keep track the history of the card being played
-                if let Some(last_played_hand) = global.table.back() {
-                    info!("In the check lasted {} \n {}", last_played_hand, put_hand);
-                    if last_played_hand.cmp(&put_hand) == Ordering::Greater {
-                        info!("Less!!!")
-                    }
-                }
-
                 // Update cards of the player
                 if let Ok(mut server_hand) = serverhand_q.get_mut(*cur_player_entity) {
-                    info!("Update the card now:");
                     let hand_str = server_hand.cards.clone();
                     let mut player_hand = Hand::from(hand_str);
-                    info!("server hand after 1: {}", player_hand.to_string());
-                    info!("put hands: {}", put_hand.to_string());
-                    // info!("put hands cards: {}", put_hand.car());
-
                     // remove cards
                     player_hand.remove_cards(put_hand.cards.as_slice());
-
-                    info!("server hand after 2: {}", player_hand.to_string());
                     *server_hand.cards = player_hand.to_string();
-
-                    info!("server hand after: {}", player_hand.to_string());
 
                     for (u_key, _) in global.users_map.iter() {
                         server.send_message::<GameSystemChannel, UpdateTurn>(
@@ -314,6 +334,7 @@ pub fn message_events(
                     info!("server hand after Sended!");
                 }
 
+                // Keep track the history of the card being played
                 global.table.push_back(put_hand);
 
                 // TODO: update turn

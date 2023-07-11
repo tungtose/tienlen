@@ -6,7 +6,11 @@ use naia_bevy_demo_shared::{
     messages::StartGame,
 };
 
-use crate::{components::LocalPlayer, game::PlayerEvent, resources::Global};
+use crate::{
+    components::LocalPlayer,
+    game::{PlayerEvent, SkipTurnEvent},
+    resources::Global,
+};
 
 use super::UiAssets;
 
@@ -119,7 +123,7 @@ pub fn spawn_play_btn(
             NodeBundle {
                 style: Style {
                     position_type: PositionType::Absolute,
-                    position: UiRect::bottom(Val::Px(70.)),
+                    position: UiRect::bottom(Val::Px(40.)),
                     justify_content: JustifyContent::SpaceAround,
                     align_items: AlignItems::Center,
                     size: Size::new(Val::Percent(100.), Val::Px(CONTAINER_HEIGHT)),
@@ -224,6 +228,7 @@ pub struct PlayBtn;
 #[derive(Component)]
 pub struct SkipBtn;
 
+#[allow(clippy::type_complexity)]
 pub fn player_btn_click(
     mut interaction_query: Query<
         (
@@ -234,23 +239,22 @@ pub fn player_btn_click(
     >,
     mut client: Client,
     mut player_ev: EventWriter<PlayerEvent>,
+    mut skip_ev: EventWriter<SkipTurnEvent>,
 ) {
     for (interaction, (start_btn, play_btn, skip_btn)) in &mut interaction_query {
-        match *interaction {
-            Interaction::Clicked => {
-                if start_btn.is_some() {
-                    info!("Clicked start!");
-                    client.send_message::<PlayerActionChannel, StartGame>(&StartGame::default());
-                }
-                if play_btn.is_some() {
-                    info!("Clicked play!");
-                    player_ev.send(PlayerEvent)
-                }
-                if skip_btn.is_some() {
-                    info!("Clicked skip!");
-                }
+        if let Interaction::Clicked = *interaction {
+            if start_btn.is_some() {
+                info!("Clicked start!");
+                client.send_message::<PlayerActionChannel, StartGame>(&StartGame::default());
             }
-            _ => {}
+            if play_btn.is_some() {
+                info!("Clicked play!");
+                player_ev.send(PlayerEvent)
+            }
+            if skip_btn.is_some() {
+                info!("Clicked skip!");
+                skip_ev.send(SkipTurnEvent)
+            }
         }
     }
 }
