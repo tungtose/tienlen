@@ -40,7 +40,7 @@ impl Plugin for UiPlugin {
 pub struct ReloadUiEvent;
 pub struct ReloadBar;
 pub struct DrawPlayer;
-pub struct DrawStatus;
+pub struct DrawStatus(pub String);
 pub struct UpdateCard;
 
 #[derive(Resource)]

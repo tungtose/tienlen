@@ -8,7 +8,7 @@ const CARD_WIDTH: f32 = 32.;
 const CARD_HEIGHT: f32 = 48.;
 const CARD_MARGIN: f32 = 2.;
 
-use super::UiAssets;
+use super::{DrawPlayer, DrawStatus, UiAssets};
 
 #[derive(Component)]
 pub struct TableBg;
@@ -53,7 +53,7 @@ impl Default for Status {
 
 pub fn delete_status(
     mut commands: Commands,
-    mut status_q: Query<&mut Status>,
+    // mut status_q: Query<&mut Status>,
     mut counter_q: Query<(Entity, &mut CounterConfig)>,
     status_container_q: Query<Entity, With<StatusContainer>>,
     time: Res<Time>,
@@ -62,8 +62,6 @@ pub fn delete_status(
         counter.timer.tick(time.delta());
 
         if counter.timer.finished() {
-            let mut status = status_q.get_single_mut().unwrap();
-            status.make_empty();
             commands.entity(entity).despawn();
 
             let status_container = status_container_q.get_single().unwrap();
@@ -75,29 +73,34 @@ pub fn delete_status(
 
 pub fn draw_status(
     mut commands: Commands,
-    mut status_q: Query<&mut Status>,
+    // mut status_q: Query<&mut Status>,
+    mut status_ev: EventReader<DrawStatus>,
     status_container_q: Query<Entity, With<StatusContainer>>,
     res: Res<UiAssets>,
 ) {
-    let status = status_q.get_single_mut().unwrap();
-
+    // let status = status_q.get_single_mut().unwrap();
+    //
     let status_container = status_container_q.get_single().unwrap();
 
-    let status_text = commands
-        .spawn(TextBundle::from_section(
-            status.0.clone(),
-            TextStyle {
-                font: res.font.clone(),
-                font_size: 16.0,
-                color: Color::rgb(0.9, 0.9, 0.9),
-            },
-        ))
-        .id();
+    for d_status in status_ev.iter() {
+        let msg = d_status.0.clone();
 
-    commands.entity(status_container).add_child(status_text);
-    commands.spawn(CounterConfig {
-        timer: Timer::new(Duration::from_secs(3), TimerMode::Once),
-    });
+        let status_text = commands
+            .spawn(TextBundle::from_section(
+                msg,
+                TextStyle {
+                    font: res.font.clone(),
+                    font_size: 16.0,
+                    color: Color::rgb(0.9, 0.9, 0.9),
+                },
+            ))
+            .id();
+
+        commands.entity(status_container).add_child(status_text);
+        commands.spawn(CounterConfig {
+            timer: Timer::new(Duration::from_secs(3), TimerMode::Once),
+        });
+    }
 }
 
 pub fn get_card_button(commands: &mut Commands, size: Size, image: &Handle<Image>) -> Entity {
@@ -173,11 +176,9 @@ pub fn clear_table_cards(
 
 pub fn spawn_table(
     mut commands: Commands,
-    window_query: Query<&Window, With<PrimaryWindow>>,
     assets: Res<UiAssets>,
+    mut draw_player_ev: EventWriter<DrawPlayer>,
 ) {
-    let window = window_query.get_single().unwrap();
-
     let cards_container = commands
         .spawn((
             TableCardContainer,
@@ -233,7 +234,7 @@ pub fn spawn_table(
             NodeBundle {
                 style: Style {
                     position_type: PositionType::Absolute,
-                    position: UiRect::bottom(Val::Px(window.height() / 2.)),
+                    position: UiRect::top(Val::Px(80.)),
                     justify_content: JustifyContent::Center,
                     align_items: AlignItems::Center,
                     size: Size::new(Val::Percent(100.), Val::Px(300.)),
@@ -251,5 +252,6 @@ pub fn spawn_table(
     commands.spawn(status);
     commands.spawn(table_cards);
 
+    draw_player_ev.send(DrawPlayer);
     info!("SPAWNED TABLE!!!");
 }

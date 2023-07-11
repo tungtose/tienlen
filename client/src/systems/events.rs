@@ -20,14 +20,16 @@ use naia_bevy_demo_shared::{
     behavior as shared_behavior,
     channels::{EntityAssignmentChannel, GameSystemChannel, PlayerCommandChannel},
     components::{player::Player, Color, ColorValue, Position, Shape, ShapeValue},
-    messages::{Counter, EntityAssignment, KeyCommand, StartGame, UpdateTurn},
+    messages::{
+        Counter, EntityAssignment, ErrorCode, GameError, KeyCommand, StartGame, UpdateTurn,
+    },
 };
 
 use crate::{
     components::{Confirmed, Interp, LocalCursor, LocalPlayer, Predicted},
     game::{LocalStartGame, UpdatePlayerCards},
     resources::{Global, OwnedEntity},
-    ui::ReloadBar,
+    ui::{DrawStatus, ReloadBar},
 };
 
 const SQUARE_SIZE: f32 = 32.0;
@@ -90,6 +92,7 @@ pub fn disconnect_events(mut event_reader: EventReader<DisconnectEvent>) {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn message_events(
     mut commands: Commands,
     client: Client,
@@ -99,6 +102,7 @@ pub fn message_events(
     player_query: Query<&Player>,
     mut bar_ev: EventWriter<ReloadBar>,
     mut start_game_ev: EventWriter<LocalStartGame>,
+    mut draw_status_ev: EventWriter<DrawStatus>,
     mut update_player_cards_ev: EventWriter<UpdatePlayerCards>,
 ) {
     for events in event_reader.iter() {
@@ -109,6 +113,23 @@ pub fn message_events(
         for _ in events.read::<GameSystemChannel, StartGame>() {
             info!("START GAME NOW!!!");
             start_game_ev.send(LocalStartGame);
+        }
+
+        for error_code in events.read::<GameSystemChannel, ErrorCode>() {
+            info!("START GAME NOW!!!");
+            let game_error = GameError::from(error_code);
+            match game_error {
+                GameError::InvalidCards => {
+                    draw_status_ev.send(DrawStatus("Your cards are week!".to_string()));
+                }
+                GameError::WrongCombination => {
+                    draw_status_ev.send(DrawStatus(
+                        "Your cards are not the same combination".to_string(),
+                    ));
+                }
+                GameError::WrongTurn => todo!(),
+                GameError::UnknownError => todo!(),
+            }
         }
 
         for _ in events.read::<GameSystemChannel, UpdateTurn>() {

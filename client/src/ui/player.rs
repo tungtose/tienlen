@@ -9,7 +9,7 @@ use crate::{
     resources::Global,
 };
 
-use super::UiAssets;
+use super::{table::TableContainer, UiAssets};
 
 const DECK_HEIGHT: f32 = 50.;
 const CARD_WIDTH: f32 = 32.;
@@ -31,7 +31,7 @@ pub struct CardHandleImageMap {
     pub map: HashMap<Entity, Handle<Image>>,
 }
 
-fn create_hand_container(commands: &mut Commands, pos: Vec2, active: bool) -> Entity {
+fn create_hand_container(commands: &mut Commands, active: bool) -> Entity {
     let background_color = {
         if active {
             BackgroundColor(Color::DARK_GREEN)
@@ -45,7 +45,7 @@ fn create_hand_container(commands: &mut Commands, pos: Vec2, active: bool) -> En
             NodeBundle {
                 style: Style {
                     position_type: PositionType::Absolute,
-                    position: UiRect::bottom(Val::Px(pos.y)),
+                    position: UiRect::bottom(Val::Px(0.)),
                     justify_content: JustifyContent::Center,
                     align_items: AlignItems::Center,
                     size: Size::new(Val::Percent(100.), Val::Px(DECK_HEIGHT)),
@@ -124,20 +124,24 @@ pub fn draw_player(
     mut commands: Commands,
     card_assets: Res<UiAssets>,
     hand_container_query: Query<Entity, With<HandContainer>>,
+    table_container_query: Query<Entity, With<TableContainer>>,
     global: Res<Global>,
     active_cards_q: Query<&ActiveCards>,
-    player_q: Query<&Player, With<LocalPlayer>>,
+    // player_q: Query<&Player, With<LocalPlayer>>,
 ) {
-    let Ok(player) = player_q.get_single() else {
+    // let Ok(player) = player_q.get_single() else {
+    //     return;
+    // };
+
+    // info!("active: {:?}, pos: {:?}", *player.active, *player.pos);
+
+    let Ok(table_container_entity) = table_container_query.get_single() else {
         return;
     };
 
-    info!("active: {:?}, pos: {:?}", *player.active, *player.pos);
-
     clear_hand_ui(&mut commands, &hand_container_query);
 
-    let hand_container =
-        create_hand_container(&mut commands, Vec2::from_array([0., 300.]), *player.active);
+    let hand_container = create_hand_container(&mut commands, false);
 
     let active_cards = active_cards_q.get_single().unwrap();
 
@@ -157,4 +161,8 @@ pub fn draw_player(
 
         commands.entity(hand_container).add_child(card_ui);
     }
+
+    commands
+        .entity(table_container_entity)
+        .add_child(hand_container);
 }
