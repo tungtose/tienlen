@@ -33,8 +33,7 @@ impl Counter {
     }
 
     pub fn as_string(&self) -> String {
-        let str = self.counter.floor().to_string();
-        str
+        self.counter.floor().to_string()
     }
 
     pub fn decr_counter(&mut self) {

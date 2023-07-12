@@ -1,14 +1,8 @@
 use std::time::Duration;
 
 use bevy_ecs::system::{Commands, Query, Res, ResMut, Resource};
-use bevy_log::info;
 use bevy_time::{Time, Timer, TimerMode};
-use naia_bevy_demo_shared::{
-    channels::GameSystemChannel,
-    components::{timer::Counter, Player},
-    messages::UpdateTurn,
-};
-use naia_bevy_server::Server;
+use naia_bevy_demo_shared::components::{timer::Counter, turn::Turn, Player};
 
 use crate::resources::Global;
 
@@ -30,7 +24,6 @@ pub fn countdown(
         if let Ok(mut counter) = countdown_q.get_single_mut() {
             counter.decr_counter();
         }
-        // info!("One sec pass!");
     }
 }
 
@@ -38,21 +31,15 @@ pub fn run_out_countdow(
     mut global: ResMut<Global>,
     mut countdown_q: Query<&mut Counter>,
     mut player_q: Query<&mut Player>,
-    // mut server: Server,
+    mut turn_q: Query<&mut Turn>,
 ) {
     if let Ok(mut counter) = countdown_q.get_single_mut() {
         let is_over = counter.check_over();
         if is_over {
-            // Update turn
             // FIXME: refactor!!!
-            let total_player = global.total_player;
-            let cur_active_pos = global.cur_active_pos;
+            let mut turn = turn_q.get_single_mut().unwrap();
 
-            let next_active_pos = (cur_active_pos + 1) % total_player;
-            info!(
-                "total: {:?}, cur: {:?}, next: {:?}",
-                total_player, cur_active_pos, next_active_pos
-            );
+            let next_active_pos = turn.skip_turn().unwrap();
 
             for mut player in player_q.iter_mut() {
                 *player.active = false;
@@ -61,14 +48,6 @@ pub fn run_out_countdow(
                     global.cur_active_pos = next_active_pos;
                 }
             }
-
-            // FIXME:
-            // for (user_key, _) in global.users_map.iter() {
-            //     server.send_message::<GameSystemChannel, UpdateTurn>(
-            //         user_key,
-            //         &UpdateTurn::default(),
-            //     );
-            // }
         }
     }
 }
