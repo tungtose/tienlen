@@ -25,6 +25,7 @@ use naia_bevy_demo_shared::{
         player::{Host, Player},
         server_hand::ServerHand,
         table::Table,
+        turn::Turn,
         Color, ColorValue, Counter, Position, Shape, ShapeValue,
     },
     messages::{
@@ -200,12 +201,14 @@ pub fn message_events(
     mut global: ResMut<Global>,
     mut table_q: Query<&mut Table>,
     mut player_q: Query<&mut Player>,
+    mut turn_q: Query<&mut Turn>,
     mut counter_q: Query<&mut Counter>,
     mut serverhand_q: Query<&mut ServerHand>,
 ) {
     for events in event_reader.iter() {
         for (_, _) in events.read::<PlayerActionChannel, StartGame>() {
             let users_map = global.users_map.clone();
+            let total_player = global.total_player;
 
             // Add the table component to the room
             let server_table = Table::new("".to_string());
@@ -215,8 +218,6 @@ pub fn message_events(
                 .insert(server_table)
                 .id();
 
-            let is_decided_first_play = false;
-
             let server_counter = Counter::default();
 
             let server_counter_entity = commands
@@ -225,10 +226,15 @@ pub fn message_events(
                 .insert(server_counter)
                 .id();
 
+            let turn = Turn::new(total_player);
+
+            commands.spawn_empty().insert(turn);
+
             server
                 .room_mut(&global.main_room_key)
                 .add_entity(&server_table_entity)
                 .add_entity(&server_counter_entity);
+            // .add_entity(&turn_entity);
 
             // Draw card to players and start the game
             for (user_key, entity) in users_map.iter() {
@@ -251,16 +257,19 @@ pub fn message_events(
                 server
                     .send_message::<GameSystemChannel, StartGame>(user_key, &StartGame::default());
             }
-
-            if !is_decided_first_play {
-                // TODO: decide who take the first turn!
-            }
         }
 
         for (_, _) in events.read::<PlayerActionChannel, SkipTurn>().into_iter() {
-            for (user_key, _) in global.users_map.iter() {
-                todo!()
-            }
+            let mut turn = turn_q.get_single_mut().unwrap();
+            if let Some(next_player) = turn.skip_turn() {
+                for mut player in player_q.iter_mut() {
+                    *player.active = false;
+                    if next_player == *player.pos {
+                        *player.active = true;
+                    }
+                }
+                info!("TURN AFTER SKIP: {:?}", turn);
+            };
         }
 
         events
@@ -281,6 +290,8 @@ pub fn message_events(
                 // Check if is their turn?
                 let cur_player_entity = global.users_map.get(&user_key).unwrap();
                 let cur_player = player_q.get(*cur_player_entity).unwrap();
+
+                info!("Player: {:?}", *cur_player.pos);
 
                 if !*cur_player.active {
                     info!("This player is not active!!!");
@@ -337,28 +348,24 @@ pub fn message_events(
                 // Keep track the history of the card being played
                 global.table.push_back(put_hand);
 
-                // TODO: update turn
-                let total_player = global.total_player;
-                let cur_active_pos = global.cur_active_pos;
+                // Handle Turn:
+                let mut turn = turn_q.get_single_mut().unwrap();
 
-                let next_active_pos = (cur_active_pos + 1) % total_player;
+                if let Some(next_player) = turn.next_turn() {
+                    info!("next_player: {}", next_player);
 
-                info!(
-                    "total: {:?}, cur: {:?}, next: {:?}",
-                    total_player, cur_active_pos, next_active_pos
-                );
+                    info!("db: {:?}", turn);
 
-                for mut player in player_q.iter_mut() {
-                    *player.active = false;
-                    if next_active_pos == *player.pos {
-                        *player.active = true;
-                        global.cur_active_pos = next_active_pos;
+                    for mut player in player_q.iter_mut() {
+                        *player.active = false;
+                        if next_player == *player.pos {
+                            *player.active = true;
+                        }
                     }
-                }
 
-                // reset counter
-                if let Ok(mut counter) = counter_q.get_single_mut() {
-                    counter.recount();
+                    if let Ok(mut counter) = counter_q.get_single_mut() {
+                        counter.recount();
+                    }
                 }
             });
     }

@@ -1,5 +1,7 @@
 use bevy::prelude::*;
-use naia_bevy_demo_shared::components::timer::Counter;
+use naia_bevy_demo_shared::components::{timer::Counter, Player};
+
+use crate::components::LocalPlayer;
 
 use super::UiAssets;
 
@@ -24,6 +26,7 @@ fn create_timer_container(commands: &mut Commands, pos: (f32, f32)) -> Entity {
                     position: UiRect::top(Val::Px(pos.1)),
                     justify_content: JustifyContent::Center,
                     align_items: AlignItems::Center,
+                    flex_direction: FlexDirection::Column,
                     size: Size::new(Val::Percent(100.), Val::Px(TIMER_CONTAINER_HEIGHT)),
                     ..Default::default()
                 },
@@ -46,6 +49,7 @@ pub fn draw_counter(
     timer_q: Query<&Counter>,
     res: Res<UiAssets>,
     timer_container_query: Query<Entity, With<TimerContainer>>,
+    player_q: Query<&Player, With<LocalPlayer>>,
 ) {
     clear_counter(&mut commands, &timer_container_query);
 
@@ -57,6 +61,23 @@ pub fn draw_counter(
     let container = create_timer_container(&mut commands, (0., 20.));
 
     let timer_string = server_timer.as_string();
+
+    let p = player_q.get_single().unwrap();
+    let pos = *p.pos.clone();
+
+    let player_entity = commands
+        .spawn((
+            SkipTurnTimerText,
+            TextBundle::from_section(
+                pos.to_string(),
+                TextStyle {
+                    font: res.font.clone(),
+                    font_size: 32.0,
+                    color: Color::RED,
+                },
+            ),
+        ))
+        .id();
 
     let timer_entity = commands
         .spawn((
@@ -72,7 +93,10 @@ pub fn draw_counter(
         ))
         .id();
 
-    commands.entity(container).add_child(timer_entity);
+    commands
+        .entity(container)
+        .add_child(timer_entity)
+        .add_child(player_entity);
 
     // info!("Counter: {:?}", *server_timer.counter);
 }
