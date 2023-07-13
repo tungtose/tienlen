@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use bevy::{prelude::*, window::PrimaryWindow};
+use bevy::prelude::*;
 use naia_bevy_demo_shared::components::{hand::Hand, Table};
 
 const DECK_HEIGHT: f32 = 50.;
@@ -31,29 +31,13 @@ pub struct TableCard;
 pub struct StatusContainer;
 
 #[derive(Component)]
-pub struct Status(pub String);
-
-#[derive(Component)]
 pub struct CounterConfig {
     /// How often to spawn a new bomb? (repeating timer)
     timer: Timer,
 }
 
-impl Status {
-    fn make_empty(&mut self) {
-        self.0.clear();
-    }
-}
-
-impl Default for Status {
-    fn default() -> Self {
-        Self("".to_string())
-    }
-}
-
 pub fn delete_status(
     mut commands: Commands,
-    // mut status_q: Query<&mut Status>,
     mut counter_q: Query<(Entity, &mut CounterConfig)>,
     status_container_q: Query<Entity, With<StatusContainer>>,
     time: Res<Time>,
@@ -73,13 +57,10 @@ pub fn delete_status(
 
 pub fn draw_status(
     mut commands: Commands,
-    // mut status_q: Query<&mut Status>,
     mut status_ev: EventReader<DrawStatus>,
     status_container_q: Query<Entity, With<StatusContainer>>,
     res: Res<UiAssets>,
 ) {
-    // let status = status_q.get_single_mut().unwrap();
-    //
     let status_container = status_container_q.get_single().unwrap();
 
     for d_status in status_ev.iter() {
@@ -247,9 +228,6 @@ pub fn spawn_table(
         .insert(TableContainer);
 
     let table_cards = TableCards { cards: vec![] };
-    let status = Status::default();
-
-    commands.spawn(status);
     commands.spawn(table_cards);
 
     draw_player_ev.send(DrawPlayer);

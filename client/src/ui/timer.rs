@@ -16,14 +16,14 @@ pub struct SkipTurnTimerText;
 
 const TIMER_CONTAINER_HEIGHT: f32 = 48.;
 
-fn create_timer_container(commands: &mut Commands, pos: (f32, f32)) -> Entity {
+fn create_timer_container(commands: &mut Commands) -> Entity {
     let timer_container = commands
         .spawn((
             TimerContainer,
             NodeBundle {
                 style: Style {
                     position_type: PositionType::Absolute,
-                    position: UiRect::top(Val::Px(pos.1)),
+                    position: UiRect::bottom(Val::Px(20.)),
                     justify_content: JustifyContent::Center,
                     align_items: AlignItems::Center,
                     flex_direction: FlexDirection::Column,
@@ -58,7 +58,7 @@ pub fn draw_counter(
         return;
     };
 
-    let container = create_timer_container(&mut commands, (0., 20.));
+    let container = create_timer_container(&mut commands);
 
     let timer_string = server_timer.as_string();
 
@@ -97,6 +97,4 @@ pub fn draw_counter(
         .entity(container)
         .add_child(timer_entity)
         .add_child(player_entity);
-
-    // info!("Counter: {:?}", *server_timer.counter);
 }
