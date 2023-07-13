@@ -1,6 +1,7 @@
 use std::time::Duration;
 
 use bevy_ecs::system::{Commands, Query, Res, ResMut, Resource};
+use bevy_log::info;
 use bevy_time::{Time, Timer, TimerMode};
 use naia_bevy_demo_shared::components::{timer::Counter, turn::Turn, Player};
 
@@ -38,8 +39,9 @@ pub fn run_out_countdow(
         if is_over {
             // FIXME: refactor!!!
             let mut turn = turn_q.get_single_mut().unwrap();
-
-            let next_active_pos = turn.skip_turn().unwrap();
+            let Some(next_active_pos) = turn.skip_turn() else {
+                return;
+            };
 
             for mut player in player_q.iter_mut() {
                 *player.active = false;

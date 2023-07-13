@@ -47,6 +47,9 @@ impl Turn {
     }
 
     pub fn skip_turn(&mut self) -> Option<usize> {
+        if self.total_player == 1 {
+            return self.current_active_player();
+        }
         self.pool.pop_front().unwrap();
         self.recalculate_turn();
 
