@@ -1,7 +1,6 @@
 use std::time::Duration;
 
 use bevy_ecs::system::{Commands, Query, Res, ResMut, Resource};
-use bevy_log::info;
 use bevy_time::{Time, Timer, TimerMode};
 use naia_bevy_demo_shared::components::{timer::Counter, turn::Turn, Player};
 
