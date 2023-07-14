@@ -12,6 +12,8 @@ pub mod player;
 pub mod table;
 pub mod timer;
 
+const FIXED_TIMESTEP: f32 = 0.5;
+
 pub struct UiPlugin;
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
@@ -24,6 +26,9 @@ impl Plugin for UiPlugin {
             .add_startup_system(assets::load_assets)
             .add_system(foreign_player::spawn_foreign_player.run_if(on_event::<LocalStartGame>()))
             .add_system(foreign_player::circle_cooldown_update.run_if(in_state(MainState::Game)))
+            .add_system(foreign_player::animatetext_update.in_schedule(CoreSchedule::FixedUpdate))
+            .insert_resource(FixedTime::new_from_secs(FIXED_TIMESTEP))
+            // .add_system(foreign_player::animatetext_update.run_if(in_state(MainState::Game)))
             .add_system(table::spawn_table.in_schedule(OnEnter(MainState::Game)))
             .add_system(table::draw_table.run_if(in_state(MainState::Game)))
             .add_system(table::draw_status.run_if(on_event::<DrawStatus>()))
@@ -53,4 +58,6 @@ pub struct UiAssets {
     pub font: Handle<Font>,
     pub cards: HashMap<String, Handle<Image>>,
     pub board: Handle<Image>,
+    pub avatars: HashMap<String, Handle<Image>>,
+    // pub avatars: Handle<Image>,
 }
