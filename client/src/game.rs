@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use naia_bevy_client::Client;
 use naia_bevy_demo_shared::{
     channels::PlayerActionChannel,
-    components::{card::Card, hand::Hand, server_hand::ServerHand},
+    components::{card::Card, hand::Hand, server_hand::ServerHand, Player},
     messages::{PlayCard, SkipTurn},
 };
 

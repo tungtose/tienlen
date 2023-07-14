@@ -127,14 +127,7 @@ pub fn draw_player(
     table_container_query: Query<Entity, With<TableContainer>>,
     global: Res<Global>,
     active_cards_q: Query<&ActiveCards>,
-    // player_q: Query<&Player, With<LocalPlayer>>,
 ) {
-    // let Ok(player) = player_q.get_single() else {
-    //     return;
-    // };
-
-    // info!("active: {:?}, pos: {:?}", *player.active, *player.pos);
-
     let Ok(table_container_entity) = table_container_query.get_single() else {
         return;
     };

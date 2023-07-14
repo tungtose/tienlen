@@ -219,6 +219,7 @@ pub fn spawn_table(
                     justify_content: JustifyContent::Center,
                     align_items: AlignItems::Center,
                     size: Size::new(Val::Percent(100.), Val::Px(300.)),
+
                     ..Default::default()
                 },
                 ..Default::default()
