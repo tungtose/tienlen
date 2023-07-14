@@ -13,7 +13,13 @@ pub fn load_assets(
     asset_list.0.push(font.clone_untyped());
 
     let board = asset_server.load("cards/tables/table_blue.png");
+    let circle_avatar_1 = asset_server.load("avatars/c1.png");
     asset_list.0.push(board.clone_untyped());
+
+    let mut avatars = HashMap::new();
+
+    asset_list.0.push(circle_avatar_1.clone_untyped());
+    avatars.insert("circle_1".to_string(), circle_avatar_1);
 
     let mut cards = HashMap::new();
     let all_cards: &[Card] = Card::all_cards();
@@ -24,5 +30,10 @@ pub fn load_assets(
         cards.insert(card.name(), handle);
     }
 
-    commands.insert_resource(UiAssets { cards, font, board });
+    commands.insert_resource(UiAssets {
+        cards,
+        font,
+        board,
+        avatars,
+    });
 }

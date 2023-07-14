@@ -1,11 +1,16 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, text::Text2dBounds};
 use bevy_prototype_lyon::prelude::*;
 use naia_bevy_demo_shared::components::Player;
 
 use crate::components::LocalPlayer;
 
+use super::UiAssets;
+
 #[derive(Component)]
 pub struct ForeignPlayer;
+
+#[derive(Component)]
+pub struct AnimateText;
 
 #[derive(Component)]
 pub struct CircleSetting {
@@ -88,8 +93,22 @@ pub fn circle_cooldown_update(
     }
 }
 
+pub fn animatetext_update(
+    mut text_q: Query<&mut Visibility, (With<AnimateText>, With<Text>)>,
+    // time: Res<Time>,
+) {
+    for mut vis in text_q.iter_mut() {
+        match *vis {
+            Visibility::Hidden => *vis = Visibility::Visible,
+            Visibility::Visible => *vis = Visibility::Hidden,
+            Visibility::Inherited => *vis = Visibility::Visible,
+        }
+    }
+}
+
 pub fn spawn_foreign_player(
     mut commands: Commands,
+    res: Res<UiAssets>,
     players_q: Query<&Player, Without<LocalPlayer>>,
     local_player_q: Query<&Player, With<LocalPlayer>>,
 ) {
@@ -167,18 +186,54 @@ pub fn spawn_foreign_player(
         path_builder.close();
         let path = path_builder.build();
 
-        let color = Color::with_a(Color::GRAY, 0.07);
+        let color = Color::with_a(Color::MIDNIGHT_BLUE, 0.7);
 
-        commands.spawn((
-            cir_setting,
-            ForeignPlayer,
-            ShapeBundle {
-                path,
-                // transform: Transform::from_xyz(0., 0., 0.),
-                ..default()
-            },
-            Stroke::new(Color::RED, 5.),
-            Fill::color(color),
-        ));
+        let text_style = TextStyle {
+            font: res.font.clone(),
+            font_size: 15.0,
+            color: Color::WHITE,
+        };
+
+        commands
+            .spawn((
+                cir_setting,
+                ForeignPlayer,
+                ShapeBundle {
+                    path,
+                    transform: Transform::from_translation(Vec3::Z),
+                    ..default()
+                },
+                // Stroke::new(Color::RED, 2.),
+                Fill::color(color),
+            ))
+            .with_children(|builder| {
+                builder.spawn(SpriteBundle {
+                    texture: res.avatars.get("circle_1").unwrap().clone(),
+                    transform: Transform::from_xyz(pos.x, pos.y, 0.),
+                    sprite: Sprite {
+                        custom_size: Some(Vec2::new(55., 55.)),
+                        ..default()
+                    },
+                    ..default()
+                });
+            })
+            .with_children(|builder| {
+                builder.spawn((
+                    AnimateText,
+                    Text2dBundle {
+                        text: Text::from_section("Tung To".to_string(), text_style)
+                            .with_alignment(TextAlignment::Left),
+                        text_2d_bounds: Text2dBounds {
+                            size: Vec2::new(100., 30.),
+                        },
+                        transform: Transform::from_translation(Vec3::from_array([
+                            pos.x,
+                            pos.y - 35.,
+                            1.,
+                        ])),
+                        ..default()
+                    },
+                ));
+            });
     }
 }
