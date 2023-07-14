@@ -26,9 +26,9 @@ use naia_bevy_demo_shared::{
 };
 
 use crate::{
-    components::{Confirmed, Interp, LocalCursor, LocalPlayer, Predicted},
+    components::{Confirmed, Interp, LocalCursor, LocalPlayer},
     game::{LocalStartGame, UpdatePlayerCards},
-    resources::{Global, OwnedEntity},
+    resources::Global,
     ui::{DrawStatus, ReloadBar},
 };
 
@@ -111,12 +111,10 @@ pub fn message_events(
         }
 
         for _ in events.read::<GameSystemChannel, StartGame>() {
-            info!("START GAME NOW!!!");
             start_game_ev.send(LocalStartGame);
         }
 
         for error_code in events.read::<GameSystemChannel, ErrorCode>() {
-            info!("START GAME NOW!!!");
             let game_error = GameError::from(error_code);
             match game_error {
                 GameError::InvalidCards => {

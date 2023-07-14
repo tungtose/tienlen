@@ -1,10 +1,12 @@
 use std::collections::HashMap;
 
 use bevy::prelude::*;
+use bevy_prototype_lyon::prelude::ShapePlugin;
 
-use crate::states::MainState;
+use crate::{game::LocalStartGame, states::MainState};
 
 pub mod assets;
+pub mod foreign_player;
 mod play_btn;
 pub mod player;
 pub mod table;
@@ -18,7 +20,10 @@ impl Plugin for UiPlugin {
             .add_event::<DrawPlayer>()
             .add_event::<UpdateCard>()
             .add_event::<DrawStatus>()
+            .add_plugin(ShapePlugin)
             .add_startup_system(assets::load_assets)
+            .add_system(foreign_player::spawn_foreign_player.run_if(on_event::<LocalStartGame>()))
+            .add_system(foreign_player::circle_cooldown_update.run_if(in_state(MainState::Game)))
             .add_system(table::spawn_table.in_schedule(OnEnter(MainState::Game)))
             .add_system(table::draw_table.run_if(in_state(MainState::Game)))
             .add_system(table::draw_status.run_if(on_event::<DrawStatus>()))

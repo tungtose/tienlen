@@ -10,7 +10,7 @@ use crate::{
     assets::AssetPlugin,
     game::GamePlugin,
     states::MainState,
-    systems::{common, events, init, input, sync},
+    systems::{common, events, init, input, my_cursor_system, sync},
     ui::UiPlugin,
 };
 
@@ -44,6 +44,7 @@ pub fn run() {
         .insert_resource(ClearColor(Color::BLACK))
         // Startup System
         .add_startup_system(init)
+        .add_system(my_cursor_system)
         // Receive Client Events
         .add_systems(
             (
