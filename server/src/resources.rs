@@ -14,6 +14,7 @@ pub struct Global {
     pub deck: Deck,
     pub time: f32,
     pub table: VecDeque<Hand>,
+    pub allow_free_combo: bool,
     pub users_map: HashMap<UserKey, Entity>,
     pub players_map: HashMap<usize, Entity>,
     pub total_player: usize,

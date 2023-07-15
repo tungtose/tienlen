@@ -41,6 +41,7 @@ pub fn init(mut commands: Commands, mut server: Server) {
     let global = Global {
         counter,
         time: 0.,
+        allow_free_combo: true,
         deck,
         table,
         players_map,
