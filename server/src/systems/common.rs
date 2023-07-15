@@ -44,7 +44,7 @@ pub fn run_out_countdow(
         if is_over {
             // FIXME: refactor!!!
             let mut turn = turn_q.get_single_mut().unwrap();
-            let Some(next_active_pos) = turn.skip_turn() else {
+            let (_, Some(next_active_pos)) = turn.skip_turn() else {
                 return;
             };
 

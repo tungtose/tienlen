@@ -262,9 +262,9 @@ pub fn message_events(
 
         for (_, _) in events.read::<PlayerActionChannel, SkipTurn>().into_iter() {
             let mut turn = turn_q.get_single_mut().unwrap();
-            if let Some(next_player) = turn.skip_turn() {
+            if let (allow_free_combo, Some(next_player)) = turn.skip_turn() {
                 // If only 1 player left on the pool, they can play any card they wanted to
-                global.allow_free_combo = true;
+                global.allow_free_combo = allow_free_combo;
 
                 for (u_key, _) in global.users_map.iter() {
                     server.send_message::<GameSystemChannel, UpdateTurn>(

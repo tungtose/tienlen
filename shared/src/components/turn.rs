@@ -46,14 +46,26 @@ impl Turn {
         self.current_active_player()
     }
 
-    pub fn skip_turn(&mut self) -> Option<usize> {
-        if self.total_player == 1 {
-            return self.current_active_player();
-        }
-        self.pool.pop_front().unwrap();
-        self.recalculate_turn();
+    pub fn skip_turn(&mut self) -> (bool, Option<usize>) {
+        // FIXME: crazy hack here!!!
+        let mut allow_any_combo = false;
 
-        self.current_active_player()
+        if self.total_player == 1 {
+            return (allow_any_combo, self.current_active_player());
+        }
+
+        self.pool.pop_front().unwrap();
+
+        if self.pool.len() == 1 {
+            allow_any_combo = true;
+
+            for _ in 0..self.total_player - 1 {
+                let next_p = (*self.pool.back().unwrap() + 1) % self.total_player;
+                self.pool.push_back(next_p);
+            }
+        }
+
+        (allow_any_combo, self.current_active_player())
     }
 
     pub fn calculate_turn(&mut self, first_player_pos: usize) {
