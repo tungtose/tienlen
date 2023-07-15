@@ -13,4 +13,4 @@ pub struct PlayCard(pub String);
 pub struct SkipTurn;
 
 #[derive(Message, Debug, Default)]
-pub struct UpdateTurn;
+pub struct UpdateTurn(pub usize);

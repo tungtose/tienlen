@@ -101,8 +101,6 @@ pub fn spawn_play_btn(
     player_container_q: Query<Entity, With<PlayContainer>>,
     player_q: Query<&Player, With<LocalPlayer>>,
 ) {
-    // info!("Spawn Play BTN!!!");
-
     let Ok(player) = player_q.get_single() else {
         return;
     };

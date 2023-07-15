@@ -6,7 +6,7 @@ pub struct Counter {
     pub counter: Property<f32>,
 }
 
-const TIMEOUT: f32 = 10.;
+const TIMEOUT: f32 = 20.;
 
 impl Default for Counter {
     fn default() -> Self {

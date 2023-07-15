@@ -111,6 +111,7 @@ pub fn message_events(
         }
 
         for _ in events.read::<GameSystemChannel, StartGame>() {
+            global.active_player_pos = 0;
             start_game_ev.send(LocalStartGame);
         }
 
@@ -130,8 +131,12 @@ pub fn message_events(
             }
         }
 
-        for _ in events.read::<GameSystemChannel, UpdateTurn>() {
-            info!("Play Card From Server!!!");
+        for update_turn in events.read::<GameSystemChannel, UpdateTurn>() {
+            info!("Update turn!!!");
+            let active_player_pos = update_turn.0 as i32;
+
+            global.active_player_pos = active_player_pos;
+
             update_player_cards_ev.send(UpdatePlayerCards)
         }
 

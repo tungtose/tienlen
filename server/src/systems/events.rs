@@ -262,6 +262,13 @@ pub fn message_events(
         for (_, _) in events.read::<PlayerActionChannel, SkipTurn>().into_iter() {
             let mut turn = turn_q.get_single_mut().unwrap();
             if let Some(next_player) = turn.skip_turn() {
+                for (u_key, _) in global.users_map.iter() {
+                    server.send_message::<GameSystemChannel, UpdateTurn>(
+                        u_key,
+                        &UpdateTurn(next_player),
+                    );
+                }
+
                 for mut player in player_q.iter_mut() {
                     *player.active = false;
                     if next_player == *player.pos {
@@ -335,13 +342,6 @@ pub fn message_events(
                     player_hand.remove_cards(put_hand.cards.as_slice());
                     *server_hand.cards = player_hand.to_string();
 
-                    for (u_key, _) in global.users_map.iter() {
-                        server.send_message::<GameSystemChannel, UpdateTurn>(
-                            u_key,
-                            &UpdateTurn::default(),
-                        );
-                    }
-
                     info!("server hand after Sended!");
                 }
 
@@ -352,10 +352,12 @@ pub fn message_events(
                 let mut turn = turn_q.get_single_mut().unwrap();
 
                 if let Some(next_player) = turn.next_turn() {
-                    info!("next_player: {}", next_player);
-
-                    info!("db: {:?}", turn);
-
+                    for (u_key, _) in global.users_map.iter() {
+                        server.send_message::<GameSystemChannel, UpdateTurn>(
+                            u_key,
+                            &UpdateTurn(next_player),
+                        );
+                    }
                     for mut player in player_q.iter_mut() {
                         *player.active = false;
                         if next_player == *player.pos {
