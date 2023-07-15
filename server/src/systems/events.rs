@@ -2,6 +2,7 @@ use std::cmp::Ordering;
 
 use bevy_ecs::{
     event::EventReader,
+    prelude::DetectChanges,
     system::{Commands, Query, ResMut},
 };
 use bevy_log::info;
@@ -262,6 +263,9 @@ pub fn message_events(
         for (_, _) in events.read::<PlayerActionChannel, SkipTurn>().into_iter() {
             let mut turn = turn_q.get_single_mut().unwrap();
             if let Some(next_player) = turn.skip_turn() {
+                // If only 1 player left on the pool, they can play any card they wanted to
+                global.allow_free_combo = true;
+
                 for (u_key, _) in global.users_map.iter() {
                     server.send_message::<GameSystemChannel, UpdateTurn>(
                         u_key,
@@ -295,8 +299,8 @@ pub fn message_events(
                 }
 
                 // Check if is their turn?
-                let cur_player_entity = global.users_map.get(&user_key).unwrap();
-                let cur_player = player_q.get(*cur_player_entity).unwrap();
+                let cur_player_entity = *global.users_map.get(&user_key).unwrap();
+                let cur_player = player_q.get(cur_player_entity).unwrap();
 
                 info!("Player: {:?}", *cur_player.pos);
 
@@ -310,24 +314,29 @@ pub fn message_events(
                 }
 
                 if let Some(last_played_hand) = global.table.back() {
-                    info!("In the check lasted {} \n {}", last_played_hand, put_hand);
-                    if last_played_hand.len() != put_hand.len() {
-                        server.send_message::<GameSystemChannel, ErrorCode>(
-                            &user_key,
-                            &ErrorCode::from(GameError::WrongCombination),
-                        );
+                    // FIXME: Find better way for allow free combo. This feel like hacky
+                    if !global.allow_free_combo {
+                        info!("In the check lasted {} \n {}", last_played_hand, put_hand);
+                        if last_played_hand.len() != put_hand.len() {
+                            server.send_message::<GameSystemChannel, ErrorCode>(
+                                &user_key,
+                                &ErrorCode::from(GameError::WrongCombination),
+                            );
 
-                        return;
+                            return;
+                        }
+
+                        if last_played_hand.cmp(&put_hand) == Ordering::Greater {
+                            server.send_message::<GameSystemChannel, ErrorCode>(
+                                &user_key,
+                                &ErrorCode::from(GameError::InvalidCards),
+                            );
+
+                            return;
+                        }
                     }
 
-                    if last_played_hand.cmp(&put_hand) == Ordering::Greater {
-                        server.send_message::<GameSystemChannel, ErrorCode>(
-                            &user_key,
-                            &ErrorCode::from(GameError::InvalidCards),
-                        );
-
-                        return;
-                    }
+                    global.allow_free_combo = false;
                 }
 
                 // Update cards on the table
@@ -335,7 +344,7 @@ pub fn message_events(
                 *table.cards = put_hand.to_string();
 
                 // Update cards of the player
-                if let Ok(mut server_hand) = serverhand_q.get_mut(*cur_player_entity) {
+                if let Ok(mut server_hand) = serverhand_q.get_mut(cur_player_entity) {
                     let hand_str = server_hand.cards.clone();
                     let mut player_hand = Hand::from(hand_str);
                     // remove cards
