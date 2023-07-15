@@ -54,6 +54,6 @@ pub fn my_cursor_system(
         .cursor_position()
         .and_then(|cursor| camera.viewport_to_world_2d(camera_transform, cursor))
     {
-        eprintln!("World coords: {}/{}", world_position.x, world_position.y);
+        // eprintln!("World coords: {}/{}", world_position.x, world_position.y);
     }
 }

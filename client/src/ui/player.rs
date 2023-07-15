@@ -99,14 +99,7 @@ pub fn card_click(
         match *interaction {
             Interaction::Clicked => {
                 info!("clicking on: {:?}", button.0);
-
                 select_card_ev.send(SelectCardEvent(button.0));
-                // let mut active = active_card_q.get_mut(button.0).unwrap();
-                //
-                // active.0 = !active.0;
-                //
-                info!("Start DRAWING NOW!!!");
-                // draw_player_ev.send(DrawPlayer);
             }
             Interaction::Hovered => {}
             Interaction::None => {}
