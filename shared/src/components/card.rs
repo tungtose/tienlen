@@ -24,7 +24,7 @@ impl PartialOrd for Card {
 
 impl Ord for Card {
     fn cmp(&self, other: &Self) -> Ordering {
-        return self.cmp_rank_suit(other);
+        self.cmp_rank_suit(other)
     }
 }
 
@@ -34,7 +34,7 @@ impl Card {
     }
 
     pub fn cmp_rank(&self, other: &Card) -> Ordering {
-        return self.rank.cmp(&other.rank);
+        self.rank.cmp(&other.rank)
     }
 
     pub fn make_3_c() -> Card {
@@ -109,7 +109,7 @@ impl Card {
 
         path.push_str(".png");
 
-        return path;
+        path
     }
 
     pub fn name(&self) -> String {

@@ -2,7 +2,6 @@ use std::cmp::Ordering;
 
 use bevy_ecs::{
     event::EventReader,
-    prelude::DetectChanges,
     system::{Commands, Query, ResMut},
 };
 use bevy_log::info;
@@ -22,6 +21,7 @@ use naia_bevy_demo_shared::{
         EntityAssignmentChannel, GameSystemChannel, PlayerActionChannel, PlayerCommandChannel,
     },
     components::{
+        deck::Deck,
         hand::Hand,
         player::{Host, Player},
         server_hand::ServerHand,
@@ -35,7 +35,7 @@ use naia_bevy_demo_shared::{
     },
 };
 
-use crate::resources::Global;
+use crate::resources::{Global, PlayerData};
 
 pub fn auth_events(mut server: Server, mut event_reader: EventReader<AuthEvents>) {
     for events in event_reader.iter() {
@@ -72,6 +72,7 @@ pub fn connect_events(
 
         info!("player_num {}", player_num);
 
+        // FIXME: remove this
         let player = Player::new(player_num);
 
         let entity = commands
@@ -85,7 +86,16 @@ pub fn connect_events(
         }
 
         global.users_map.insert(*user_key, entity);
-        global.players_map.insert(player_num, entity);
+        let player_data = PlayerData {
+            entity,
+            pos: player_num,
+            active: player_num == 0,
+            cards: String::new(),
+            score: 0,
+            user_key: *user_key,
+        };
+
+        global.players_map.0.insert(*user_key, player_data);
 
         server.room_mut(&global.main_room_key).add_entity(&entity);
 
@@ -145,6 +155,8 @@ pub fn connect_events(
         // Send an Entity Assignment message to the User that owns the Square
         let mut assignment_message = EntityAssignment::new(true);
         assignment_message.entity.set(&server, &entity);
+
+        global.players_map.debug();
 
         server.send_message::<EntityAssignmentChannel, EntityAssignment>(
             user_key,
@@ -208,7 +220,6 @@ pub fn message_events(
 ) {
     for events in event_reader.iter() {
         for (_, _) in events.read::<PlayerActionChannel, StartGame>() {
-            let users_map = global.users_map.clone();
             let total_player = global.total_player;
 
             // Add the table component to the room
@@ -238,25 +249,21 @@ pub fn message_events(
             // .add_entity(&turn_entity);
 
             // Draw card to players and start the game
-            for (user_key, entity) in users_map.iter() {
+            let mut deck = Deck::new();
+            for (_player_pos, player_data) in global.players_map.0.iter() {
                 let hand = Hand {
-                    cards: global.deck.deal(13),
+                    cards: deck.deal(13),
                 };
-
-                // Calculate what player can play at first
-                // if hand.contain_3_c() {
-                //     info!("Player {:?}, take the first play", *p.pos);
-                //     is_decided_first_play = true;
-                //     commands.entity(*entity).insert(Active);
-                // }
 
                 let cards_str = hand.to_string();
                 let server_hand = ServerHand::new(cards_str);
 
-                commands.entity(*entity).insert(server_hand);
+                commands.entity(player_data.entity).insert(server_hand);
 
-                server
-                    .send_message::<GameSystemChannel, StartGame>(user_key, &StartGame::default());
+                server.send_message::<GameSystemChannel, StartGame>(
+                    &player_data.user_key,
+                    &StartGame::default(),
+                );
             }
         }
 
@@ -355,9 +362,14 @@ pub fn message_events(
                     // remove cards
                     player_hand.remove_cards(put_hand.cards.as_slice());
 
-                    *server_hand.cards = player_hand.to_string();
+                    let new_hand_str = player_hand.to_string();
+                    *server_hand.cards = new_hand_str.clone();
+
+                    global.players_map.update_cards(&user_key, new_hand_str);
+
                     // Check if run out of cards
                     if player_hand.is_empty() {
+                        global.players_map.update_score(&user_key, 3);
                         // Update turn pool
                         let next_player = turn.player_out();
                         for (u_key, _) in global.users_map.iter() {
@@ -374,7 +386,6 @@ pub fn message_events(
                                 *player.active = true;
                             }
                         }
-
                         // No need to update turn after then
                         return;
                     }
@@ -382,6 +393,8 @@ pub fn message_events(
 
                 // Handle Turn:
                 if let Some(next_player) = turn.next_turn() {
+                    global.players_map.update_active_player(next_player);
+
                     for (u_key, _) in global.users_map.iter() {
                         server.send_message::<GameSystemChannel, UpdateTurn>(
                             u_key,
@@ -399,6 +412,8 @@ pub fn message_events(
                         counter.recount();
                     }
                 }
+
+                global.players_map.debug();
             });
     }
 }

@@ -61,7 +61,9 @@ impl Turn {
         // FIXME: crazy hack here!!!
         let mut allow_any_combo = false;
 
-        if self.total_player == 1 {
+        let player_left = self.total_player - self.players_out.len();
+
+        if player_left == 1 {
             return (allow_any_combo, self.current_active_player());
         }
 
@@ -69,8 +71,6 @@ impl Turn {
 
         if self.pool.len() == 1 {
             allow_any_combo = true;
-
-            let player_left = self.total_player - self.players_out.len();
 
             let mut last = (*self.pool.back().unwrap() + 1) % self.total_player;
 
