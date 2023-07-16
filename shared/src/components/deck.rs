@@ -108,7 +108,7 @@ impl Deck {
 
     /// Deals one or more card from the undealt pile and returns them as an array.
     pub fn deal(&mut self, numcards: usize) -> Vec<Card> {
-        let mut result: Vec<Card> = Vec::with_capacity(numcards as usize);
+        let mut result: Vec<Card> = Vec::with_capacity(numcards);
         for _ in 0..numcards {
             if let Ok(card) = self.deal_one() {
                 result.push(card);

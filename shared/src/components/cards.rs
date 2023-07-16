@@ -97,8 +97,8 @@ fn test_is_double_sequence() {
     let double_sequences = Hand::from_strings(&["4D", "5H", "5D", "6C", "6S", "4S"]);
     let non_double_sequences = Hand::from_strings(&["4D", "4S", "7H", "5D", "6C", "6S"]);
 
-    assert_eq!(is_double_sequences(double_sequences.cards()), true);
-    assert_eq!(is_double_sequences(non_double_sequences.cards()), false);
+    assert!(is_double_sequences(double_sequences.cards()));
+    assert!(!is_double_sequences(non_double_sequences.cards()));
 }
 
 #[test]
@@ -107,8 +107,8 @@ fn test_is_sequence() {
     let seq_hand = Hand::from_strings(&["8D", "9H", "4D", "5D", "6C", "7S"]);
     let non_seq_hand = Hand::from_strings(&["3D", "9D", "5D"]);
 
-    assert_eq!(is_sequences(seq_hand.cards()), true);
-    assert_eq!(is_sequences(non_seq_hand.cards()), false);
+    assert!(is_sequences(seq_hand.cards()));
+    assert!(!is_sequences(non_seq_hand.cards()));
 }
 
 /// Sorts the slice by suit then rank (low to high)
@@ -163,11 +163,11 @@ pub fn get_ords_rank(cards: &[Card]) -> Vec<usize> {
 
     ords.sort_by(|a, b| a.cmp(b));
 
-    return ords;
+    ords
 }
 
 pub fn balance_array(ords: Vec<usize>) -> bool {
-    let first = ords.get(0).unwrap_or(&0);
+    let first = ords.first().unwrap_or(&0);
 
     ords.iter().all(|x| first.cmp(x) == Ordering::Equal)
 }
@@ -306,7 +306,7 @@ pub trait Cards {
             return false;
         }
 
-        return true;
+        true
     }
 
     /// Sort the cards by suit and then by rank (low to high)

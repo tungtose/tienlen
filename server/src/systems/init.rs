@@ -5,7 +5,7 @@ use bevy_log::info;
 
 use naia_bevy_server::{transport::webrtc, Server};
 
-use crate::resources::Global;
+use crate::resources::{Global, PlayerMap};
 
 use naia_bevy_demo_shared::{components::deck::Deck, messages::Counter};
 
@@ -35,11 +35,14 @@ pub fn init(mut commands: Commands, mut server: Server) {
     let table = VecDeque::new();
 
     let counter = Counter::new(0.);
-    let players_map = HashMap::new();
+    let players_map = PlayerMap::new();
+
+    let player_data_map = HashMap::new();
 
     // Init Global Resource
     let global = Global {
         counter,
+        player_data_map,
         time: 0.,
         allow_free_combo: true,
         deck,
