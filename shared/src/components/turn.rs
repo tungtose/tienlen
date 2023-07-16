@@ -1,4 +1,4 @@
-use std::collections::VecDeque;
+use std::collections::{HashSet, VecDeque};
 
 use bevy_ecs::prelude::Component;
 use log::info;
@@ -6,20 +6,24 @@ use log::info;
 #[derive(Component, Default, Debug)]
 pub struct Turn {
     pool: VecDeque<usize>,
+    /// Players already have no cards
+    players_out: HashSet<usize>,
     total_player: usize,
 }
 
 impl Turn {
     pub fn new(total_player: usize) -> Self {
-        let mut queue = VecDeque::new();
+        let mut pool = VecDeque::new();
+        let players_out = HashSet::new();
 
         for i in 0..total_player {
-            queue.push_back(i);
+            pool.push_back(i);
         }
 
         Self {
-            pool: queue,
+            pool,
             total_player,
+            players_out,
         }
     }
 
@@ -46,6 +50,13 @@ impl Turn {
         self.current_active_player()
     }
 
+    pub fn player_out(&mut self) -> usize {
+        let player_pos = self.pool.pop_front().unwrap();
+        self.players_out.insert(player_pos);
+
+        self.current_active_player().unwrap()
+    }
+
     pub fn skip_turn(&mut self) -> (bool, Option<usize>) {
         // FIXME: crazy hack here!!!
         let mut allow_any_combo = false;
@@ -59,9 +70,15 @@ impl Turn {
         if self.pool.len() == 1 {
             allow_any_combo = true;
 
-            for _ in 0..self.total_player - 1 {
-                let next_p = (*self.pool.back().unwrap() + 1) % self.total_player;
-                self.pool.push_back(next_p);
+            let player_left = self.total_player - self.players_out.len();
+
+            let mut last = (*self.pool.back().unwrap() + 1) % self.total_player;
+
+            while self.pool.len() != player_left {
+                if !self.players_out.contains(&last) {
+                    self.pool.push_back(last);
+                }
+                last = (last + 1) % self.total_player;
             }
         }
 

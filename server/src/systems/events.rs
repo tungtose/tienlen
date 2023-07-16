@@ -339,9 +339,14 @@ pub fn message_events(
                     global.allow_free_combo = false;
                 }
 
+                let mut turn = turn_q.get_single_mut().unwrap();
+
                 // Update cards on the table
                 let mut table = table_q.get_single_mut().unwrap();
                 *table.cards = put_hand.to_string();
+
+                // Keep track the history of the card being played
+                global.table.push_back(put_hand.clone());
 
                 // Update cards of the player
                 if let Ok(mut server_hand) = serverhand_q.get_mut(cur_player_entity) {
@@ -349,17 +354,33 @@ pub fn message_events(
                     let mut player_hand = Hand::from(hand_str);
                     // remove cards
                     player_hand.remove_cards(put_hand.cards.as_slice());
-                    *server_hand.cards = player_hand.to_string();
 
-                    info!("server hand after Sended!");
+                    *server_hand.cards = player_hand.to_string();
+                    // Check if run out of cards
+                    if player_hand.is_empty() {
+                        // Update turn pool
+                        let next_player = turn.player_out();
+                        for (u_key, _) in global.users_map.iter() {
+                            server.send_message::<GameSystemChannel, UpdateTurn>(
+                                u_key,
+                                &UpdateTurn(next_player),
+                            );
+                        }
+
+                        // FIXME: pleaseeeeeee!!!!
+                        for mut player in player_q.iter_mut() {
+                            *player.active = false;
+                            if next_player == *player.pos {
+                                *player.active = true;
+                            }
+                        }
+
+                        // No need to update turn after then
+                        return;
+                    }
                 }
 
-                // Keep track the history of the card being played
-                global.table.push_back(put_hand);
-
                 // Handle Turn:
-                let mut turn = turn_q.get_single_mut().unwrap();
-
                 if let Some(next_player) = turn.next_turn() {
                     for (u_key, _) in global.users_map.iter() {
                         server.send_message::<GameSystemChannel, UpdateTurn>(
