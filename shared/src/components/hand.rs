@@ -9,7 +9,7 @@ use naia_bevy_shared::Property;
 use super::card::Card;
 use super::cards::Cards;
 
-#[derive(Clone, Component, PartialEq, Eq)]
+#[derive(Clone, Component, PartialEq, Eq, Default)]
 pub struct Hand {
     pub cards: Vec<Card>,
 }
@@ -24,12 +24,6 @@ impl Display for Hand {
             }
         });
         write!(f, "{}", result)
-    }
-}
-
-impl Default for Hand {
-    fn default() -> Self {
-        Self { cards: Vec::new() }
     }
 }
 
@@ -68,17 +62,17 @@ impl Cards for Hand {
 }
 
 impl From<Property<String>> for Hand {
-    fn from(cards_str: Property<String>) -> Self {
+    fn from(cards_str: Property<String>) -> Hand {
+        if cards_str.is_empty() {
+            return Hand::new();
+        }
+
         let cards = cards_str
             .split(',')
-            .map(|c_str| {
-                Card::from_str(c_str).unwrap_or_else(|_| {
-                    panic!("Not a known card {}", c_str);
-                })
-            })
+            .map(|c_str| Card::from_str(c_str).unwrap())
             .collect::<Vec<Card>>();
 
-        Self { cards }
+        Hand { cards }
     }
 }
 
@@ -133,6 +127,10 @@ impl Hand {
             .map(|c| c.to_str())
             .collect::<Vec<String>>()
             .join(",")
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.cards.is_empty()
     }
 
     /// Adds one `Card` to the `Hand`
@@ -196,7 +194,7 @@ impl Hand {
     }
 
     pub fn contain_3_c(&self) -> bool {
-        let three_spade = Card::make_3C();
+        let three_spade = Card::make_3_c();
         !self
             .cards
             .iter()

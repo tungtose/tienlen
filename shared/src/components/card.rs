@@ -37,7 +37,7 @@ impl Card {
         return self.rank.cmp(&other.rank);
     }
 
-    pub fn make_3C() -> Card {
+    pub fn make_3_c() -> Card {
         Card {
             suit: Suit::Clubs,
             rank: Rank::Three,
@@ -54,6 +54,7 @@ impl Card {
         cmp_rank_result
     }
 
+    #[allow(clippy::should_implement_trait)]
     pub fn from_str(s: &str) -> Result<Card, &'static str> {
         if s.len() != 2 {
             return Err("Card string must be length equal to 2");

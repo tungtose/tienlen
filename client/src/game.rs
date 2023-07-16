@@ -162,9 +162,15 @@ pub fn update_player_cards(
     };
 
     let hand_str = server_hand.cards.clone();
+
     let hand = Hand::from(hand_str);
 
     global.player_cards.clear();
+
+    if hand.is_empty() {
+        draw_player_ev.send(DrawPlayer);
+        return;
+    }
 
     for card in hand.cards.as_slice() {
         global.player_cards.insert(card.ordinal(), *card);
