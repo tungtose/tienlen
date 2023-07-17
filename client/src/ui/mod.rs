@@ -58,6 +58,6 @@ pub struct UiAssets {
     pub font: Handle<Font>,
     pub cards: HashMap<String, Handle<Image>>,
     pub board: Handle<Image>,
-    pub avatars: HashMap<String, Handle<Image>>,
+    pub avatars: HashMap<i32, Handle<Image>>,
     // pub avatars: Handle<Image>,
 }

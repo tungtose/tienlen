@@ -225,6 +225,9 @@ pub fn create_player_ui(
         color: Color::WHITE,
     };
 
+    let avatar = res.avatars.get(&player_pos).unwrap().clone();
+    let player_name = format!("Player {}", player_pos);
+
     commands
         .spawn((
             cir_setting,
@@ -236,7 +239,7 @@ pub fn create_player_ui(
         ))
         .with_children(|builder| {
             builder.spawn(SpriteBundle {
-                texture: res.avatars.get("circle_1").unwrap().clone(),
+                texture: avatar,
                 transform: Transform::from_xyz(draw_pos.x, draw_pos.y, 0.),
                 sprite: Sprite {
                     custom_size: Some(Vec2::new(AVATAR_SIZE, AVATAR_SIZE)),
@@ -250,7 +253,7 @@ pub fn create_player_ui(
                 AnimateText,
                 PlayerPos(player_pos),
                 Text2dBundle {
-                    text: Text::from_section("Tung To".to_string(), text_style)
+                    text: Text::from_section(player_name, text_style)
                         .with_alignment(TextAlignment::Left),
                     text_2d_bounds: Text2dBounds {
                         size: Vec2::new(100., 30.),
