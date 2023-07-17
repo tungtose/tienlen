@@ -28,6 +28,7 @@
             libGL
 
             cargo-watch
+            cargo-make
             wasm-pack
             udev
             alsa-lib
