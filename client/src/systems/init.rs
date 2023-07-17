@@ -17,7 +17,7 @@ pub fn init(
     info!("Naia Bevy Client Demo started");
 
     client.auth(Auth::new("charlie", "12345"));
-    let socket = webrtc::Socket::new("http://127.0.0.1:14191", client.socket_config());
+    let socket = webrtc::Socket::new("http://localhost:14191", client.socket_config());
     client.connect(socket);
 
     // Setup Camera
