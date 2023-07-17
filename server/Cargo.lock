@@ -819,19 +819,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "naia-bevy-server-demo"
-version = "0.1.0"
-dependencies = [
- "bevy_app",
- "bevy_core",
- "bevy_ecs",
- "bevy_log",
- "bevy_time",
- "naia-bevy-demo-shared",
- "naia-bevy-server",
-]
-
-[[package]]
 name = "naia-bevy-shared"
 version = "0.21.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1231,6 +1218,19 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.18",
+]
+
+[[package]]
+name = "server"
+version = "0.0.1"
+dependencies = [
+ "bevy_app",
+ "bevy_core",
+ "bevy_ecs",
+ "bevy_log",
+ "bevy_time",
+ "naia-bevy-demo-shared",
+ "naia-bevy-server",
 ]
 
 [[package]]
