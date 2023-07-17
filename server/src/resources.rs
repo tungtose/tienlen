@@ -53,8 +53,7 @@ impl PlayerMap {
     }
 
     pub fn update_score(&mut self, user_key: &UserKey, score: u32) {
-        info!("----------- UPDATED SCORE ---------------");
-        self.0.get_mut(user_key).unwrap().score = score;
+        self.0.get_mut(user_key).unwrap().score += score;
     }
 
     pub fn debug(&self) {
@@ -62,6 +61,15 @@ impl PlayerMap {
             info!("----------- PLAYER MAP ---------------");
             info!("{:?}", p);
         }
+    }
+}
+
+impl Global {
+    pub fn new_match(&mut self) {
+        self.time = 0.;
+        self.table.clear();
+        self.cur_active_pos = 0;
+        self.allow_free_combo = true;
     }
 }
 

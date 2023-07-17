@@ -16,4 +16,8 @@ impl Table {
     pub fn new(card_str: String) -> Self {
         Self::new_complete(card_str)
     }
+
+    pub fn new_match(&mut self) {
+        *self.cards = "".to_string();
+    }
 }
