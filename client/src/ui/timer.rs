@@ -23,7 +23,7 @@ fn create_timer_container(commands: &mut Commands) -> Entity {
             NodeBundle {
                 style: Style {
                     position_type: PositionType::Absolute,
-                    position: UiRect::bottom(Val::Px(20.)),
+                    position: UiRect::bottom(Val::Px(0.)),
                     justify_content: JustifyContent::Center,
                     align_items: AlignItems::Center,
                     flex_direction: FlexDirection::Column,
@@ -49,7 +49,6 @@ pub fn draw_counter(
     timer_q: Query<&Counter>,
     res: Res<UiAssets>,
     timer_container_query: Query<Entity, With<TimerContainer>>,
-    player_q: Query<&Player, With<LocalPlayer>>,
 ) {
     clear_counter(&mut commands, &timer_container_query);
 
@@ -61,23 +60,6 @@ pub fn draw_counter(
     let container = create_timer_container(&mut commands);
 
     let timer_string = server_timer.as_string();
-
-    let p = player_q.get_single().unwrap();
-    let pos = *p.pos.clone();
-
-    let player_entity = commands
-        .spawn((
-            SkipTurnTimerText,
-            TextBundle::from_section(
-                pos.to_string(),
-                TextStyle {
-                    font: res.font.clone(),
-                    font_size: 32.0,
-                    color: Color::RED,
-                },
-            ),
-        ))
-        .id();
 
     let timer_entity = commands
         .spawn((
@@ -93,8 +75,5 @@ pub fn draw_counter(
         ))
         .id();
 
-    commands
-        .entity(container)
-        .add_child(timer_entity)
-        .add_child(player_entity);
+    commands.entity(container).add_child(timer_entity);
 }
