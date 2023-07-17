@@ -2,7 +2,7 @@ use std::cmp::Ordering;
 
 use bevy_ecs::{
     event::EventReader,
-    system::{Commands, Query, ResMut},
+    system::{Commands, Query, Res, ResMut},
 };
 use bevy_log::info;
 
@@ -24,14 +24,14 @@ use naia_bevy_demo_shared::{
         deck::Deck,
         hand::Hand,
         player::{Host, Player},
-        server_hand::ServerHand,
+        server_hand::{self, ServerHand},
         table::Table,
         turn::Turn,
         Color, ColorValue, Counter, Position, Shape, ShapeValue,
     },
     messages::{
-        error::GameError, Auth, EntityAssignment, ErrorCode, KeyCommand, PlayCard, SkipTurn,
-        StartGame, UpdateTurn,
+        error::GameError, Auth, EntityAssignment, ErrorCode, KeyCommand, NewMatch, PlayCard,
+        SkipTurn, StartGame, UpdateTurn,
     },
 };
 
@@ -369,7 +369,8 @@ pub fn message_events(
 
                     // Check if run out of cards
                     if player_hand.is_empty() {
-                        global.players_map.update_score(&user_key, 3);
+                        let next_score = turn.next_score();
+                        global.players_map.update_score(&user_key, next_score);
                         // Update turn pool
                         let next_player = turn.player_out();
                         for (u_key, _) in global.users_map.iter() {
@@ -414,7 +415,62 @@ pub fn message_events(
                 }
 
                 global.players_map.debug();
+                turn.debug();
             });
+    }
+}
+
+pub fn end_match(
+    mut global: ResMut<Global>,
+    mut turn_q: Query<&mut Turn>,
+    mut server: Server,
+    mut serverhand_q: Query<&mut ServerHand>,
+    mut counter_q: Query<&mut Counter>,
+    mut player_q: Query<&mut Player>,
+    mut table_q: Query<&mut Table>,
+) {
+    if let Ok(mut turn) = turn_q.get_single_mut() {
+        // End match here since only 1 player have cards left
+        if turn.only_one_player_left() {
+            // Clear player hand
+
+            let mut deck = Deck::new();
+
+            for (user_key, player_data) in global.players_map.0.iter_mut() {
+                let hand = Hand {
+                    cards: deck.deal(13),
+                };
+
+                if let Ok(mut server_hand) = serverhand_q.get_mut(player_data.entity) {
+                    *server_hand.cards = hand.to_string();
+                }
+
+                server.send_message::<GameSystemChannel, NewMatch>(user_key, &NewMatch::default());
+            }
+
+            // FIXME: let client verify & finish animation -> then reset
+            global.new_match();
+            turn.new_match();
+
+            let next_player = turn.current_active_player().unwrap();
+
+            // FIXME: again :((
+            for mut player in player_q.iter_mut() {
+                *player.active = false;
+                if next_player == *player.pos {
+                    *player.active = true;
+                }
+            }
+
+            if let Ok(mut table) = table_q.get_single_mut() {
+                table.new_match();
+            }
+
+            if let Ok(mut counter) = counter_q.get_single_mut() {
+                counter.recount();
+            }
+            turn.debug();
+        }
     }
 }
 

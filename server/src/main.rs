@@ -37,6 +37,7 @@ fn main() {
         // Test
         .add_startup_system(common::set_up_counter)
         .add_systems((common::countdown, common::run_out_countdow).chain())
+        .add_system(events::end_match)
         // Receive Server Events
         .add_systems(
             (

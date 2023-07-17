@@ -14,3 +14,6 @@ pub struct SkipTurn;
 
 #[derive(Message, Debug, Default)]
 pub struct UpdateTurn(pub usize);
+
+#[derive(Message, Debug, Default)]
+pub struct NewMatch;

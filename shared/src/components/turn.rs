@@ -27,6 +27,39 @@ impl Turn {
         }
     }
 
+    pub fn next_score(&self) -> u32 {
+        let player_left = self.total_player - self.players_out.len();
+
+        let next_score = match player_left {
+            4 => 3,
+            3 => 2,
+            2 => 1,
+            1 => 0,
+            _ => unreachable!(),
+        };
+
+        next_score as u32
+    }
+
+    pub fn debug(&self) {
+        info!("----------- TURN ---------------");
+        info!("{:?}", self);
+        info!("----------- END_TURN ---------------");
+    }
+
+    pub fn new_match(&mut self) {
+        self.pool.clear();
+        self.players_out.clear();
+
+        for i in 0..self.total_player {
+            self.pool.push_back(i);
+        }
+    }
+
+    pub fn only_one_player_left(&self) -> bool {
+        (self.total_player - self.players_out.len()) == 1
+    }
+
     pub fn new_player_join(&mut self) {
         if self.total_player > 3 {
             info!("This game only able for 4 players");
