@@ -2,7 +2,6 @@ use bevy::{
     prelude::*,
     window::{Window, WindowPlugin},
 };
-// use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use naia_bevy_client::{ClientConfig, Plugin as ClientPlugin, ReceiveEvents};
 use naia_bevy_demo_shared::protocol;
 
@@ -34,7 +33,6 @@ pub fn run() {
             }),
             ..default()
         }))
-        // .add_plugin(WorldInspectorPlugin::new())
         // Add Naia Client Plugin
         .add_plugin(ClientPlugin::new(ClientConfig::default(), protocol()))
         .add_plugin(UiPlugin)
