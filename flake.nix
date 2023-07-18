@@ -28,6 +28,7 @@
             libGL
 
             cargo-watch
+            cargo-release
             cargo-make
             wasm-pack
             udev

@@ -1,0 +1,35 @@
+# CLIENT
+[tasks.install-basic-http-server]
+install_crate = { crate_name = "basic-http-server", binary = "basic-http-server", test_arg="--help" }
+
+[tasks.install-wasm-bindgen-cli]
+install_crate = { crate_name = "wasm-bindgen-cli", binary = "wasm-bindgen", test_arg="--help" }
+
+[tasks.cargo-build-wasm]
+command = "cargo"
+args = ["build", "--target", "wasm32-unknown-unknown", "--lib", "--target-dir", "target", "--release"]
+
+[tasks.wasm-bindgen]
+command = "wasm-bindgen"
+args = ["--out-dir", "target", "--out-name", "app", "--target", "web", "--no-typescript", "client/target/wasm32-unknown-unknown/release/app.wasm"]
+dependencies = ["cargo-build-wasm", "install-wasm-bindgen-cli"]
+
+[tasks.serve]
+command = "basic-http-server"
+args = ["-x"]
+dependencies = ["wasm-bindgen", "install-basic-http-server"]
+
+
+# SERVER
+[tasks.bump-patch]
+command = "cargo-release"
+args = ["release", "version", "patch", "--manifest-path", "./server/Cargo.toml", "--execute", "--no-confirm"]
+
+[tasks.dockerize]
+command = "sh"
+args = ["./scripts/build-server.sh"]
+
+[tasks.release-dev]
+command = "sh"
+args = ["./scripts/update-server.sh"]
+dependencies = ["bump-patch", "dockerize"]

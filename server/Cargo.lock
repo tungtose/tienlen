@@ -1221,19 +1221,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "server"
-version = "0.0.1"
-dependencies = [
- "bevy_app",
- "bevy_core",
- "bevy_ecs",
- "bevy_log",
- "bevy_time",
- "naia-bevy-demo-shared",
- "naia-bevy-server",
-]
-
-[[package]]
 name = "sharded-slab"
 version = "0.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1371,6 +1358,19 @@ checksum = "3fdd6f064ccff2d6567adcb3873ca630700f00b5ad3f060c25b5dcfd9a4ce152"
 dependencies = [
  "cfg-if",
  "once_cell",
+]
+
+[[package]]
+name = "tienlen-server"
+version = "0.0.7"
+dependencies = [
+ "bevy_app",
+ "bevy_core",
+ "bevy_ecs",
+ "bevy_log",
+ "bevy_time",
+ "naia-bevy-demo-shared",
+ "naia-bevy-server",
 ]
 
 [[package]]
