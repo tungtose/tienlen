@@ -22,7 +22,7 @@ pub fn init(mut commands: Commands, mut server: Server) {
             .parse()
             .expect("could not parse WebRTC data address/port"),
         // The public WebRTC IP address to advertise
-        "http://127.0.0.1:14192",
+        "http://tienlen.cedrus.cloud:14192",
     );
     let socket = webrtc::Socket::new(&server_addresses, server.socket_config());
     server.listen(socket);
