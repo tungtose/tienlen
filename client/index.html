@@ -1,16 +1,17 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="utf-8"/>
-        <title>Tien Len</title>
-    </head>
-    <body>
-        <script type="module">
-            import app from "./target/app.js";
-            async function start() {
-                await app();
-            }
-            start();
-        </script>
-    </body>
+  <head>
+    <meta charset="utf-8" />
+    <title>Tien Len</title>
+  </head>
+
+  <body>
+    <script type="module">
+      import app from "./wasm/app.js";
+      async function start() {
+        await app();
+      }
+      start();
+    </script>
+  </body>
 </html>
