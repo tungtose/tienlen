@@ -26,10 +26,9 @@
             openssl
             libxkbcommon
             libGL
-
+            just
             cargo-watch
             cargo-release
-            cargo-make
             wasm-pack
             udev
             alsa-lib

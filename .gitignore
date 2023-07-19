@@ -1,5 +1,6 @@
 /target
 /client/target
+/client/wasm
 /server/target
 /shared/target
 

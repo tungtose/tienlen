@@ -1,0 +1,26 @@
+install_build_tools:
+  cargo install basic-http-server
+  cargo install wasm-bindgen-cli
+
+
+clean:
+  rm -rf ./target
+
+build:
+  cargo build --release
+
+build_wasm:
+  cargo build --target wasm32-unknown-unknown --lib --target-dir target --release
+
+wasm_bindgen:
+  wasm-bindgen --out-dir wasm --out-name app --target web --no-typescript target/wasm32-unknown-unknown/release/app.wasm
+
+gen_wasm:
+  just install_build_tools
+  just build_wasm
+  just wasm_bindgen
+
+serve path="./":
+  just gen_wasm
+  basic-http-server -x {{path}}
+
