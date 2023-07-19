@@ -7,22 +7,21 @@ use naia_bevy_server::{transport::webrtc, Server};
 
 use crate::resources::{Global, PlayerMap};
 
-use naia_bevy_demo_shared::{components::deck::Deck, messages::Counter};
+use naia_bevy_demo_shared::messages::Counter;
 
 pub fn init(mut commands: Commands, mut server: Server) {
-    info!("Naia Bevy Server Demo is running");
+    info!("Tienlen server is running");
 
-    // Naia Server initialization
     let server_addresses = webrtc::ServerAddrs::new(
-        "0.0.0.0:14191"
+        "127.0.0.1:14191"
             .parse()
             .expect("could not parse Signaling address/port"),
         // IP Address to listen on for UDP WebRTC data channels
-        "0.0.0.0:14192"
+        "127.0.0.1:14192"
             .parse()
             .expect("could not parse WebRTC data address/port"),
         // The public WebRTC IP address to advertise
-        "http://tienlen.cedrus.cloud:14192",
+        "http://127.0.0.1:14192",
     );
     let socket = webrtc::Socket::new(&server_addresses, server.socket_config());
     server.listen(socket);
@@ -31,7 +30,6 @@ pub fn init(mut commands: Commands, mut server: Server) {
     // can receive updates from
     let main_room_key = server.make_room().key();
 
-    let deck = Deck::new();
     let table = VecDeque::new();
 
     let counter = Counter::new(0.);
@@ -44,8 +42,7 @@ pub fn init(mut commands: Commands, mut server: Server) {
         counter,
         player_data_map,
         time: 0.,
-        allow_free_combo: true,
-        deck,
+        leader_turn: true,
         table,
         players_map,
         main_room_key,

@@ -44,9 +44,16 @@ pub fn run_out_countdow(
         if is_over {
             // FIXME: refactor!!!
             let mut turn = turn_q.get_single_mut().unwrap();
-            let (_, Some(next_active_pos)) = turn.skip_turn() else {
+            let (leader_turn, Some(next_active_pos)) = turn.skip_turn() else {
                 return;
             };
+
+            #[allow(unused_parens)]
+            if (leader_turn) {
+                // TODO:
+                // Need to do some thing here,
+                // Ex: auto play a card if player not play any cards
+            }
 
             info!("SEND ACTIVE: {}", next_active_pos);
 

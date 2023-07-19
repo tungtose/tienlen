@@ -69,17 +69,16 @@ impl Global {
         self.time = 0.;
         self.table.clear();
         self.cur_active_pos = 0;
-        self.allow_free_combo = true;
+        self.leader_turn = true;
     }
 }
 
 #[derive(Resource)]
 pub struct Global {
     pub counter: Counter,
-    pub deck: Deck,
     pub time: f32,
     pub table: VecDeque<Hand>,
-    pub allow_free_combo: bool,
+    pub leader_turn: bool,
     pub users_map: HashMap<UserKey, Entity>,
     pub players_map: PlayerMap,
     pub player_data_map: HashMap<usize, PlayerData>,

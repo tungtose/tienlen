@@ -9,6 +9,7 @@ pub struct Turn {
     /// Players already have no cards
     players_out: HashSet<usize>,
     total_player: usize,
+    leader_turn: usize,
 }
 
 impl Turn {
@@ -24,6 +25,7 @@ impl Turn {
             pool,
             total_player,
             players_out,
+            leader_turn: 0,
         }
     }
 
@@ -74,8 +76,9 @@ impl Turn {
     }
 
     pub fn make_move(&mut self) {
-        let a = self.pool.pop_front().unwrap();
-        self.pool.push_back(a);
+        let player_pos = self.pool.pop_front().unwrap();
+        self.leader_turn = player_pos;
+        self.pool.push_back(player_pos);
     }
 
     pub fn next_turn(&mut self) -> Option<usize> {
@@ -92,18 +95,18 @@ impl Turn {
 
     pub fn skip_turn(&mut self) -> (bool, Option<usize>) {
         // FIXME: crazy hack here!!!
-        let mut allow_any_combo = false;
+        let mut leader_turn = false;
 
         let player_left = self.total_player - self.players_out.len();
 
         if player_left == 1 {
-            return (allow_any_combo, self.current_active_player());
+            return (leader_turn, self.current_active_player());
         }
 
         self.pool.pop_front().unwrap();
 
         if self.pool.len() == 1 {
-            allow_any_combo = true;
+            leader_turn = true;
 
             let mut last = (*self.pool.back().unwrap() + 1) % self.total_player;
 
@@ -115,7 +118,7 @@ impl Turn {
             }
         }
 
-        (allow_any_combo, self.current_active_player())
+        (leader_turn, self.current_active_player())
     }
 
     pub fn calculate_turn(&mut self, first_player_pos: usize) {
