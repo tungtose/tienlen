@@ -24,7 +24,7 @@ use naia_bevy_demo_shared::{
         deck::Deck,
         hand::Hand,
         player::{Host, Player},
-        server_hand::{self, ServerHand},
+        server_hand::ServerHand,
         table::Table,
         turn::Turn,
         Color, ColorValue, Counter, Position, Shape, ShapeValue,
@@ -267,11 +267,26 @@ pub fn message_events(
             }
         }
 
-        for (_, _) in events.read::<PlayerActionChannel, SkipTurn>().into_iter() {
+        for (user_key, _) in events.read::<PlayerActionChannel, SkipTurn>().into_iter() {
             let mut turn = turn_q.get_single_mut().unwrap();
-            if let (allow_free_combo, Some(next_player)) = turn.skip_turn() {
-                // If only 1 player left on the pool, they can play any card they wanted to
-                global.allow_free_combo = allow_free_combo;
+
+            info!("==== BEFORE SKIP: {}", global.leader_turn);
+
+            if global.leader_turn {
+                server.send_message::<GameSystemChannel, ErrorCode>(
+                    &user_key,
+                    &ErrorCode::from(GameError::CanNotSkipTurn),
+                );
+
+                return;
+            }
+
+            if let (leader_turn, Some(next_player)) = turn.skip_turn() {
+                // If only 1 player left on the pool, they can play any card they wanted to and
+                // they can not skip turn
+
+                global.leader_turn = leader_turn;
+                info!("==== AFTER SKIP: {}", global.leader_turn);
 
                 for (u_key, _) in global.users_map.iter() {
                     server.send_message::<GameSystemChannel, UpdateTurn>(
@@ -322,7 +337,8 @@ pub fn message_events(
 
                 if let Some(last_played_hand) = global.table.back() {
                     // FIXME: Find better way for allow free combo. This feel like hacky
-                    if !global.allow_free_combo {
+                    // Not check last hand played on the table because of leader turn
+                    if !global.leader_turn {
                         info!("In the check lasted {} \n {}", last_played_hand, put_hand);
                         if last_played_hand.len() != put_hand.len() {
                             server.send_message::<GameSystemChannel, ErrorCode>(
@@ -342,9 +358,8 @@ pub fn message_events(
                             return;
                         }
                     }
-
-                    global.allow_free_combo = false;
                 }
+                global.leader_turn = false;
 
                 let mut turn = turn_q.get_single_mut().unwrap();
 

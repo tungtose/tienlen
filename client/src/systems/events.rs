@@ -126,6 +126,11 @@ pub fn message_events(
                         "Your cards are not the same combination".to_string(),
                     ));
                 }
+                GameError::CanNotSkipTurn => {
+                    draw_status_ev.send(DrawStatus(
+                        "You can not skip turn, you can play any card now".to_string(),
+                    ));
+                }
                 GameError::WrongTurn => todo!(),
                 GameError::UnknownError => todo!(),
             }
