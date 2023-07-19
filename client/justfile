@@ -24,3 +24,5 @@ serve path="./":
   just gen_wasm
   basic-http-server -x {{path}}
 
+run:
+  cargo run --release
