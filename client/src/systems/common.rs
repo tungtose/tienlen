@@ -29,9 +29,3 @@ pub fn playable(
     }
     info!("TOTAL PLAYER: {}", total_player_num);
 }
-
-// pub fn _test(_table_q: Query<&Table>) {
-//     for table in table_q.iter() {
-//         // info!("GOT Table: {}", table.cards.to_string());
-//     }
-// }

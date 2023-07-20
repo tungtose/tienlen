@@ -7,21 +7,20 @@ use naia_bevy_server::{transport::webrtc, Server};
 
 use crate::resources::{Global, PlayerMap};
 
-use naia_bevy_demo_shared::messages::Counter;
+use naia_bevy_demo_shared::{env::Env, messages::Counter};
 
 pub fn init(mut commands: Commands, mut server: Server) {
     info!("Tienlen server is running");
 
+    let env = Env::new();
+    info!("ENV: {:?}", env);
+
     let server_addresses = webrtc::ServerAddrs::new(
-        "127.0.0.1:14191"
-            .parse()
-            .expect("could not parse Signaling address/port"),
+        env.signaling_address.parse().unwrap(),
         // IP Address to listen on for UDP WebRTC data channels
-        "127.0.0.1:14192"
-            .parse()
-            .expect("could not parse WebRTC data address/port"),
+        env.webrtc_address.parse().unwrap(),
         // The public WebRTC IP address to advertise
-        "http://127.0.0.1:14192",
+        &env.server_public_address,
     );
     let socket = webrtc::Socket::new(&server_addresses, server.socket_config());
     server.listen(socket);

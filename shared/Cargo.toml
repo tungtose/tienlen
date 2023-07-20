@@ -14,3 +14,4 @@ cfg-if = { version = "1.0" }
 log = { version = "0.4" }
 naia-bevy-shared = "0.21.0"
 rand = "0.8.5"
+dotenv = "0.15.0"
