@@ -14,10 +14,14 @@ pub fn init(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
-    info!("Naia Bevy Client Demo started");
+    info!("Tienlen client started");
 
-    client.auth(Auth::new("charlie", "12345"));
-    let socket = webrtc::Socket::new("http://127.0.0.1:14191", client.socket_config());
+    let auth_user_name = env!("AUTH_USER_NAME");
+    let auth_user_pass = env!("AUTH_USER_PASS");
+    let server_init_address = env!("SERVER_INIT_ADDRESS");
+
+    client.auth(Auth::new(auth_user_name, auth_user_pass));
+    let socket = webrtc::Socket::new(server_init_address, client.socket_config());
     client.connect(socket);
 
     // Setup Camera

@@ -1,3 +1,5 @@
+set dotenv-load
+
 install_build_tools:
   cargo install basic-http-server
   cargo install wasm-bindgen-cli
@@ -25,4 +27,9 @@ serve path="./":
   basic-http-server -x {{path}}
 
 run:
+  cargo run --release
+
+run_remote:
+  export ENVIRONMENT=PROD
+  echo $ENVIRONMENT
   cargo run --release
