@@ -31,7 +31,7 @@ use naia_bevy_demo_shared::{
     },
     messages::{
         error::GameError, Auth, EntityAssignment, ErrorCode, KeyCommand, NewMatch, PlayCard,
-        SkipTurn, StartGame, UpdateTurn,
+        PlayerMessage, SkipTurn, StartGame, UpdateScore, UpdateTurn,
     },
 };
 
@@ -95,7 +95,14 @@ pub fn connect_events(
             user_key: *user_key,
         };
 
-        global.players_map.0.insert(*user_key, player_data);
+        global.players_map.0.insert(*user_key, player_data.clone());
+
+        for (user_key, _) in global.players_map.0.iter() {
+            server.send_message::<GameSystemChannel, PlayerMessage>(
+                user_key,
+                &player_data.clone().into(),
+            );
+        }
 
         server.room_mut(&global.main_room_key).add_entity(&entity);
 
@@ -111,57 +118,57 @@ pub fn connect_events(
         // Create components for Entity to represent new player
 
         // Position component
-        let position = {
-            let x = 16 * ((Random::gen_range_u32(0, 40) as i16) - 20);
-            let y = 16 * ((Random::gen_range_u32(0, 30) as i16) - 15);
-            Position::new(x, y)
-        };
+        // let position = {
+        //     let x = 16 * ((Random::gen_range_u32(0, 40) as i16) - 20);
+        //     let y = 16 * ((Random::gen_range_u32(0, 30) as i16) - 15);
+        //     Position::new(x, y)
+        // };
+        //
+        // // Color component
+        // let color = {
+        //     let color_value = match server.users_count() % 4 {
+        //         0 => ColorValue::Yellow,
+        //         1 => ColorValue::Red,
+        //         2 => ColorValue::Blue,
+        //         _ => ColorValue::Green,
+        //     };
+        //     Color::new(color_value)
+        // };
 
-        // Color component
-        let color = {
-            let color_value = match server.users_count() % 4 {
-                0 => ColorValue::Yellow,
-                1 => ColorValue::Red,
-                2 => ColorValue::Blue,
-                _ => ColorValue::Green,
-            };
-            Color::new(color_value)
-        };
-
-        // Shape component
-        let shape = Shape::new(ShapeValue::Square);
-
-        // Spawn entity
-        let entity = commands
-            // Spawn new Entity
-            .spawn_empty()
-            // MUST call this to begin replication
-            .enable_replication(&mut server)
-            // Insert Position component
-            .insert(position)
-            // Insert Color component
-            .insert(color)
-            // Insert Shape component
-            .insert(shape)
-            // return Entity id
-            .id();
-
-        server.room_mut(&global.main_room_key).add_entity(&entity);
-
-        global.user_to_square_map.insert(*user_key, entity);
-        global.square_to_user_map.insert(entity, *user_key);
+        // // Shape component
+        // let shape = Shape::new(ShapeValue::Square);
+        //
+        // // Spawn entity
+        // let entity = commands
+        //     // Spawn new Entity
+        //     .spawn_empty()
+        //     // MUST call this to begin replication
+        //     .enable_replication(&mut server)
+        //     // Insert Position component
+        //     .insert(position)
+        //     // Insert Color component
+        //     .insert(color)
+        //     // Insert Shape component
+        //     .insert(shape)
+        //     // return Entity id
+        //     .id();
+        //
+        // server.room_mut(&global.main_room_key).add_entity(&entity);
+        //
+        // global.user_to_square_map.insert(*user_key, entity);
+        // global.square_to_user_map.insert(entity, *user_key);
         global.total_player += 1;
 
         // Send an Entity Assignment message to the User that owns the Square
-        let mut assignment_message = EntityAssignment::new(true);
-        assignment_message.entity.set(&server, &entity);
-
-        global.players_map.debug();
-
-        server.send_message::<EntityAssignmentChannel, EntityAssignment>(
-            user_key,
-            &assignment_message,
-        );
+        // let mut assignment_message = EntityAssignment::new(true);
+        // assignment_message.entity.set(&server, &entity);
+        //
+        // global.players_map.debug();
+        //
+        // server.send_message::<EntityAssignmentChannel, EntityAssignment>(
+        //     user_key,
+        //     &assignment_message,
+        // );
     }
 }
 
@@ -382,16 +389,28 @@ pub fn message_events(
 
                     global.players_map.update_cards(&user_key, new_hand_str);
 
-                    // Check if run out of cards
+                    // Check if run out of cards / update player score
                     if player_hand.is_empty() {
                         let next_score = turn.next_score();
                         global.players_map.update_score(&user_key, next_score);
+
+                        let mut player = player_q
+                            .get_mut(*global.users_map.get(&user_key).unwrap())
+                            .unwrap();
+
+                        *player.score += next_score;
+
                         // Update turn pool
                         let next_player = turn.player_out();
-                        for (u_key, _) in global.users_map.iter() {
+                        for (u_key, player_data) in global.players_map.0.iter() {
                             server.send_message::<GameSystemChannel, UpdateTurn>(
                                 u_key,
                                 &UpdateTurn(next_player),
+                            );
+
+                            server.send_message::<GameSystemChannel, UpdateScore>(
+                                u_key,
+                                &UpdateScore(player_data.score),
                             );
                         }
 

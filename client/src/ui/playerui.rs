@@ -22,6 +22,9 @@ pub struct Cooldown;
 pub struct PlayerPos(pub i32);
 
 #[derive(Component)]
+pub struct Score;
+
+#[derive(Component)]
 pub struct CircleSetting {
     angle: f32,
     center: Vec2,
@@ -115,6 +118,27 @@ fn create_circle_path(cir_setting: &CircleSetting) -> Path {
     path_builder.build()
 }
 
+pub fn update_score(
+    mut text_q: Query<(&mut Text, &PlayerPos), With<Score>>,
+    player_q: Query<&Player>,
+    res: Res<UiAssets>,
+) {
+    // TODO: O(N^2) here, worst  case only 8 iterate but still bother me
+    for (mut text, player_pos) in text_q.iter_mut() {
+        for player in player_q.iter() {
+            if player_pos.0 as usize == *player.pos {
+                let new_score = format!("Score: {}", *player.score);
+                let text_style = TextStyle {
+                    font: res.font.clone(),
+                    font_size: 15.0,
+                    color: Color::WHITE,
+                };
+                *text = Text::from_section(new_score, text_style);
+            }
+        }
+    }
+}
+
 #[allow(clippy::type_complexity)]
 pub fn animatetext_update(
     mut text_q: Query<(&mut Visibility, &PlayerPos), (With<AnimateText>, With<Text>)>,
@@ -144,8 +168,13 @@ pub fn spawn_playerui(
     let l_player = local_player_q.get_single().unwrap();
     let l_player_pos = *l_player.pos.clone() as i32;
 
-    let local_player_ui =
-        create_player_ui(&mut commands, &Vec2::new(0., -175.), &res, l_player_pos);
+    let local_player_ui = create_player_ui(
+        &mut commands,
+        &Vec2::new(0., -175.),
+        &res,
+        l_player_pos,
+        *l_player.score,
+    );
     commands.entity(local_player_ui).insert(LocalPlayer);
 
     for player in players_q.iter() {
@@ -201,7 +230,8 @@ pub fn spawn_playerui(
             _ => {}
         }
 
-        let foreign_playerui = create_player_ui(&mut commands, &pos, &res, player_pos);
+        let foreign_playerui =
+            create_player_ui(&mut commands, &pos, &res, player_pos, *player.score);
 
         commands.entity(foreign_playerui).insert(ForeignPlayer);
     }
@@ -212,6 +242,7 @@ pub fn create_player_ui(
     draw_pos: &Vec2,
     res: &Res<UiAssets>,
     player_pos: i32,
+    player_score: u32,
 ) -> Entity {
     let cir_setting = CircleSetting::new(*draw_pos);
 
@@ -227,6 +258,7 @@ pub fn create_player_ui(
 
     let avatar = res.avatars.get(&player_pos).unwrap().clone();
     let player_name = format!("Player {}", player_pos);
+    let score = format!("Score: {}", player_score);
 
     commands
         .spawn((
@@ -253,8 +285,27 @@ pub fn create_player_ui(
                 AnimateText,
                 PlayerPos(player_pos),
                 Text2dBundle {
-                    text: Text::from_section(player_name, text_style)
+                    text: Text::from_section(player_name, text_style.clone())
                         .with_alignment(TextAlignment::Left),
+                    text_2d_bounds: Text2dBounds {
+                        size: Vec2::new(100., 30.),
+                    },
+                    transform: Transform::from_translation(Vec3::from_array([
+                        draw_pos.x,
+                        draw_pos.y + 35.,
+                        1.,
+                    ])),
+                    ..default()
+                },
+            ));
+        })
+        .with_children(|builder| {
+            builder.spawn((
+                Score,
+                PlayerPos(player_pos),
+                Text2dBundle {
+                    text: Text::from_section(score, text_style)
+                        .with_alignment(TextAlignment::Center),
                     text_2d_bounds: Text2dBounds {
                         size: Vec2::new(100., 30.),
                     },

@@ -11,7 +11,7 @@ pub use auth::Auth;
 pub use counter::Counter;
 pub use entity_assignment::EntityAssignment;
 pub use error::{ErrorCode, GameError};
-pub use game::{NewMatch, PlayCard, SkipTurn, StartGame, UpdateTurn};
+pub use game::{NewMatch, PlayCard, PlayerMessage, SkipTurn, StartGame, UpdateScore, UpdateTurn};
 pub use key_command::KeyCommand;
 
 // Plugin
@@ -29,6 +29,8 @@ impl ProtocolPlugin for MessagesPlugin {
             .add_message::<PlayCard>()
             .add_message::<UpdateTurn>()
             .add_message::<SkipTurn>()
+            .add_message::<UpdateScore>()
+            .add_message::<PlayerMessage>()
             .add_message::<ErrorCode>();
     }
 }

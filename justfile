@@ -19,7 +19,7 @@ update_server:
   sh ./scripts/update-server.sh
 
 run_server:
-  cd server && cargo run --release
+  cd server && cargo run --release --config env.ENVIRONMENT='"DEV"'
 
 release_dev:
   just bump_patch

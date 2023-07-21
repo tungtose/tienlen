@@ -33,6 +33,7 @@ impl Plugin for GamePlugin {
 }
 
 pub struct LocalStartGame;
+pub struct SpawnLPlayer;
 pub struct UpdatePlayerCards;
 
 pub struct SelectCardEvent(pub usize);
