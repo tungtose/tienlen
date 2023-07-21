@@ -430,6 +430,11 @@ pub fn message_events(
                 if let Some(next_player) = turn.next_turn() {
                     global.players_map.update_active_player(next_player);
 
+                    server.send_message::<GameSystemChannel, PlayCard>(
+                        &user_key,
+                        &PlayCard::default(),
+                    );
+
                     for (u_key, _) in global.users_map.iter() {
                         server.send_message::<GameSystemChannel, UpdateTurn>(
                             u_key,

@@ -122,11 +122,8 @@ pub fn select_card(
     }
 }
 
-pub fn skip_turn(mut client: Client, mut active_cards_q: Query<&mut ActiveCards>) {
+pub fn skip_turn(mut client: Client) {
     info!("skip turn!!!");
-    // clear all active cards, to avoid the next render they detroy  the ui
-    active_cards_q.get_single_mut().unwrap().clear();
-
     client.send_message::<PlayerActionChannel, SkipTurn>(&SkipTurn::default());
 }
 

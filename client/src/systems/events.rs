@@ -21,8 +21,8 @@ use naia_bevy_demo_shared::{
     channels::{EntityAssignmentChannel, GameSystemChannel, PlayerCommandChannel},
     components::{player::Player, Color, ColorValue, Position, Shape, ShapeValue},
     messages::{
-        Counter, EntityAssignment, ErrorCode, GameError, KeyCommand, StartGame, UpdateScore,
-        UpdateTurn,
+        Counter, EntityAssignment, ErrorCode, GameError, KeyCommand, PlayCard, StartGame,
+        UpdateScore, UpdateTurn,
     },
 };
 
@@ -141,13 +141,14 @@ pub fn message_events(
             }
         }
 
+        for _ in events.read::<GameSystemChannel, PlayCard>() {
+            update_player_cards_ev.send(UpdatePlayerCards)
+        }
+
         for update_turn in events.read::<GameSystemChannel, UpdateTurn>() {
             info!("Update turn!!!");
             let active_player_pos = update_turn.0 as i32;
-
             global.active_player_pos = active_player_pos;
-
-            update_player_cards_ev.send(UpdatePlayerCards)
         }
 
         for message in events.read::<EntityAssignmentChannel, EntityAssignment>() {
