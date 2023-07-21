@@ -43,7 +43,6 @@ deploy_web:
 
 
 run_client:
-  export ENVIRONMENT=DEV
   just ./client/run
 
 run_client_remote:
