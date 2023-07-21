@@ -22,10 +22,12 @@ impl Plugin for UiPlugin {
             .add_event::<DrawPlayer>()
             .add_event::<UpdateCard>()
             .add_event::<DrawStatus>()
+            .add_event::<UpdateScoreUI>()
             .add_plugin(ShapePlugin)
             .add_startup_system(assets::load_assets)
             .add_system(playerui::spawn_playerui.run_if(on_event::<LocalStartGame>()))
             .add_system(playerui::circle_cooldown_update.run_if(in_state(MainState::Game)))
+            .add_system(playerui::update_score.run_if(on_event::<UpdateScoreUI>()))
             .add_system(playerui::animatetext_update.in_schedule(CoreSchedule::FixedUpdate))
             .insert_resource(FixedTime::new_from_secs(FIXED_TIMESTEP))
             // .add_system(playerui::animatetext_update.run_if(in_state(MainState::Game)))
@@ -49,6 +51,11 @@ impl Plugin for UiPlugin {
 
 pub struct ReloadUiEvent;
 pub struct ReloadBar;
+
+#[derive(Default)]
+pub struct UpdateScoreUI;
+
+#[derive(Default)]
 pub struct DrawPlayer;
 pub struct DrawStatus(pub String);
 pub struct UpdateCard;

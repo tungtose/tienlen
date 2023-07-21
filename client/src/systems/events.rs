@@ -21,7 +21,8 @@ use naia_bevy_demo_shared::{
     channels::{EntityAssignmentChannel, GameSystemChannel, PlayerCommandChannel},
     components::{player::Player, Color, ColorValue, Position, Shape, ShapeValue},
     messages::{
-        Counter, EntityAssignment, ErrorCode, GameError, KeyCommand, StartGame, UpdateTurn,
+        Counter, EntityAssignment, ErrorCode, GameError, KeyCommand, StartGame, UpdateScore,
+        UpdateTurn,
     },
 };
 
@@ -29,7 +30,7 @@ use crate::{
     components::{Confirmed, Interp, LocalCursor, LocalPlayer},
     game::{LocalStartGame, UpdatePlayerCards},
     resources::Global,
-    ui::{DrawStatus, ReloadBar},
+    ui::{DrawStatus, ReloadBar, UpdateScoreUI},
 };
 
 const SQUARE_SIZE: f32 = 32.0;
@@ -98,12 +99,12 @@ pub fn message_events(
     client: Client,
     mut global: ResMut<Global>,
     mut event_reader: EventReader<MessageEvents>,
-    // position_query: Query<&Position>,
     player_query: Query<&Player>,
     mut bar_ev: EventWriter<ReloadBar>,
     mut start_game_ev: EventWriter<LocalStartGame>,
     mut draw_status_ev: EventWriter<DrawStatus>,
     mut update_player_cards_ev: EventWriter<UpdatePlayerCards>,
+    mut update_score_ev: EventWriter<UpdateScoreUI>,
 ) {
     for events in event_reader.iter() {
         for message in events.read::<GameSystemChannel, Counter>() {
@@ -113,6 +114,10 @@ pub fn message_events(
         for _ in events.read::<GameSystemChannel, StartGame>() {
             global.active_player_pos = 0;
             start_game_ev.send(LocalStartGame);
+        }
+
+        for _ in events.read::<GameSystemChannel, UpdateScore>() {
+            update_score_ev.send_default();
         }
 
         for error_code in events.read::<GameSystemChannel, ErrorCode>() {
@@ -154,6 +159,7 @@ pub fn message_events(
 
                 match player_query.get(entity) {
                     Ok(_) => {
+                        info!("CONNECTED!!!");
                         global.player_entity = Some(entity);
                         commands.entity(entity).insert(LocalPlayer);
                         bar_ev.send(ReloadBar);

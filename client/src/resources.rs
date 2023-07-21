@@ -1,14 +1,40 @@
 use std::{collections::BTreeMap, default::Default};
 
-use bevy::prelude::{ColorMaterial, Entity, Handle, Mesh, Resource};
+use bevy::{
+    prelude::{ColorMaterial, Entity, Handle, Mesh, Resource},
+    utils::HashMap,
+};
 
 use naia_bevy_client::CommandHistory;
-use naia_bevy_demo_shared::{components::card::Card, messages::KeyCommand};
+use naia_bevy_demo_shared::{
+    components::card::Card,
+    messages::{KeyCommand, PlayerMessage},
+};
 
 pub struct OwnedEntity {
     pub confirmed: Entity,
     pub predicted: Entity,
 }
+
+pub struct PlayerData {
+    pos: usize,
+    score: u32,
+    active: bool,
+    name: String,
+}
+
+impl From<PlayerMessage> for PlayerData {
+    fn from(value: PlayerMessage) -> Self {
+        Self {
+            pos: value.pos,
+            score: value.score,
+            active: value.active,
+            name: format!("Player {}", value.pos),
+        }
+    }
+}
+
+pub struct PlayerMap(pub HashMap<usize, PlayerData>);
 
 #[derive(Resource)]
 pub struct Global {
