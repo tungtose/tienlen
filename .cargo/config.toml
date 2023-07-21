@@ -1,5 +1,4 @@
 [env]
-ENVIRONMENT = "DEV"
 AUTH_USER_NAME = "charlie"
 AUTH_USER_PASS = "12345"
-SERVER_INIT_ADDRESS = "http://tienlen.cedrus.cloud:14191"
+SERVER_INIT_ADDRESS = "http://127.0.0.1:14191"

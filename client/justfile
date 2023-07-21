@@ -12,7 +12,8 @@ build:
   cargo build --release
 
 build_wasm:
-  cargo build --target wasm32-unknown-unknown --lib --target-dir target --release
+  cargo build --target wasm32-unknown-unknown --lib --target-dir target --release --config env.SERVER_INIT_ADDRESS='"$SERVER_INIT_ADDRESS"'
+
 
 wasm_bindgen:
   wasm-bindgen --out-dir wasm --out-name app --target web --no-typescript target/wasm32-unknown-unknown/release/app.wasm
@@ -27,9 +28,8 @@ serve path="./":
   basic-http-server -x {{path}}
 
 run:
-  cargo run --release
+  cargo run --release --config env.SERVER_INIT_ADDRESS='"$SERVER_INIT_ADDRESS_DEV"'
 
 run_remote:
-  export ENVIRONMENT=PROD
-  echo $ENVIRONMENT
-  cargo run --release
+  cargo run --release --config env.SERVER_INIT_ADDRESS='"$SERVER_INIT_ADDRESS"'
+
