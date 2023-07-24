@@ -9,8 +9,9 @@ use crate::{
     assets::AssetPlugin,
     game::GamePlugin,
     states::MainState,
-    systems::{common, events, init, input, my_cursor_system, sync},
+    systems::{events, init, input, my_cursor_system, sync},
     ui::UiPlugin,
+    welcome::WelcomeScreenPlugin,
 };
 
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
@@ -36,6 +37,7 @@ pub fn run() {
         // Add Naia Client Plugin
         .add_plugin(ClientPlugin::new(ClientConfig::default(), protocol()))
         .add_plugin(UiPlugin)
+        .add_plugin(WelcomeScreenPlugin)
         .add_plugin(GamePlugin)
         .add_plugin(AssetPlugin)
         // Background Color

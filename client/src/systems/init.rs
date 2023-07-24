@@ -22,9 +22,10 @@ pub fn init(
 
     let server_address = env!("SERVER_INIT_ADDRESS");
 
-    client.auth(Auth::new(auth_user_name, auth_user_pass));
-    let socket = webrtc::Socket::new(server_address, client.socket_config());
-    client.connect(socket);
+    // TODO: move the logic connect server to another place
+    // client.auth(Auth::new(auth_user_name, auth_user_pass));
+    // let socket = webrtc::Socket::new(server_address, client.socket_config());
+    // client.connect(socket);
 
     // Setup Camera
     commands.spawn((MainCamera, Camera2dBundle::default()));

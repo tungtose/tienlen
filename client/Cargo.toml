@@ -21,6 +21,7 @@ naia-bevy-client = { version = "0.21.0", features = ["transport_webrtc"] }
 naia-bevy-demo-shared = { path = "../shared" }
 bevy = { version = "0.10.1", features = [ "bevy_asset", "bevy_winit", "bevy_core_pipeline", "bevy_render", "bevy_sprite", "x11"] }
 bevy_prototype_lyon = "0.8"
+bevy_egui = "0.20.3"
 cfg-if = { version = "1.0" }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]

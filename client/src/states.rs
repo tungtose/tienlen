@@ -4,6 +4,7 @@ use bevy::prelude::*;
 pub enum MainState {
     #[default]
     LoadAssets,
+    Welcome,
     Lobby,
     Game,
 }
