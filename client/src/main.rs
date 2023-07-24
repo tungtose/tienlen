@@ -12,6 +12,7 @@ cfg_if! {
         mod states;
         mod assets;
         mod game;
+        mod welcome;
 
         fn main() {
             app::run();

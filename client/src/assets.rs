@@ -26,7 +26,7 @@ pub fn check_asset_loading(
         }
         LoadState::Loaded => {
             info!("loading assets done!");
-            next_state.set(MainState::Lobby);
+            next_state.set(MainState::Welcome);
         }
         LoadState::Failed => {
             error!("asset loading error");
