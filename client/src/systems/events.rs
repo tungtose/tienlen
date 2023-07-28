@@ -13,7 +13,7 @@ use naia_bevy_client::{
         ClientTickEvent, ConnectEvent, DespawnEntityEvent, DisconnectEvent, InsertComponentEvents,
         MessageEvents, RejectEvent, RemoveComponentEvents, SpawnEntityEvent, UpdateComponentEvents,
     },
-    sequence_greater_than, Client, CommandsExt, Random, Replicate, Tick,
+    sequence_greater_than, Client, Replicate, Tick,
 };
 
 use naia_bevy_demo_shared::{
@@ -23,13 +23,13 @@ use naia_bevy_demo_shared::{
     },
     components::{player::Player, Color, ColorValue, Position, Shape, ShapeValue},
     messages::{
-        Counter, EntityAssignment, ErrorCode, GameError, KeyCommand, NewPlayer, PlayCard,
+        Counter, EntityAssignment, ErrorCode, GameError, KeyCommand, NewMatch, NewPlayer, PlayCard,
         StartGame, UpdateScore, UpdateTurn,
     },
 };
 
 use crate::{
-    components::{Confirmed, Interp, LocalCursor, LocalPlayer},
+    components::{Confirmed, Interp, LocalPlayer},
     game::{LocalStartGame, UpdatePlayerCards},
     resources::Global,
     states::MainState,
@@ -55,36 +55,6 @@ pub fn connect_events(
             .send_message::<PlayerActionChannel, NewPlayer>(&NewPlayer(global.player_name.clone()));
 
         next_state.set(MainState::Lobby);
-
-        // // Position component
-        // let position = {
-        //     let x = 16 * ((Random::gen_range_u32(0, 40) as i16) - 20);
-        //     let y = 16 * ((Random::gen_range_u32(0, 30) as i16) - 15);
-        //     Position::new(x, y)
-        // };
-        //
-        // // Spawn Cursor Entity
-        // let cursor_entity = commands
-        //     // Spawn new Square Entity
-        //     .spawn_empty()
-        //     // MUST call this to begin replication
-        //     .enable_replication(&mut client)
-        //     // Insert Position component
-        //     .insert(position)
-        //     // Insert Cursor marker component
-        //     .insert(LocalCursor)
-        //     // return Entity id
-        //     .id();
-        //
-        // // Insert SpriteBundle locally only
-        // commands.entity(cursor_entity).insert(MaterialMesh2dBundle {
-        //     mesh: global.circle.clone().into(),
-        //     material: global.white.clone(),
-        //     transform: Transform::from_xyz(0.0, 0.0, 1.0),
-        //     ..Default::default()
-        // });
-        //
-        // global.cursor_entity = Some(cursor_entity);
     }
 }
 
@@ -146,6 +116,10 @@ pub fn message_events(
                 GameError::WrongTurn => todo!(),
                 GameError::UnknownError => todo!(),
             }
+        }
+
+        for _ in events.read::<GameSystemChannel, NewMatch>() {
+            update_player_cards_ev.send(UpdatePlayerCards)
         }
 
         for _ in events.read::<GameSystemChannel, PlayCard>() {

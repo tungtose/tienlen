@@ -431,6 +431,7 @@ pub fn message_events(
 
                     // Check if run out of cards / update player score
                     if player_hand.is_empty() {
+                        info!("PLAYER WIN!!!");
                         let next_score = turn.next_score();
                         global.players_map.update_score(&user_key, next_score);
 
@@ -465,6 +466,8 @@ pub fn message_events(
                         return;
                     }
                 }
+
+                info!("IT GET OUT OF THE LOOP!!!");
 
                 // Handle Turn:
                 if let Some(next_player) = turn.next_turn() {
@@ -509,29 +512,34 @@ pub fn end_match(
     mut table_q: Query<&mut Table>,
 ) {
     if let Ok(mut turn) = turn_q.get_single_mut() {
+        // info!("END MATCH - 0");
         // End match here since only 1 player have cards left
         if turn.only_one_player_left() {
             // Clear player hand
+            info!("END MATCH - 1");
 
             let mut deck = Deck::new();
 
-            for (user_key, player_data) in global.players_map.0.iter_mut() {
+            for (user_key, entity) in global.users_map.iter_mut() {
+                info!("END MATCH - 2");
                 let hand = Hand {
                     cards: deck.deal(13),
                 };
 
-                if let Ok(mut server_hand) = serverhand_q.get_mut(player_data.entity) {
+                if let Ok(mut server_hand) = serverhand_q.get_mut(*entity) {
                     *server_hand.cards = hand.to_string();
                 }
 
                 server.send_message::<GameSystemChannel, NewMatch>(user_key, &NewMatch::default());
             }
+            info!("END MATCH - 3");
 
             // FIXME: let client verify & finish animation -> then reset
             global.new_match();
             turn.new_match();
 
             let next_player = turn.current_active_player().unwrap();
+            info!("END MATCH - 4");
 
             // FIXME: again :((
             for mut player in player_q.iter_mut() {
