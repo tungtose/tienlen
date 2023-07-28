@@ -167,6 +167,7 @@ pub fn spawn_playerui(
 ) {
     let l_player = local_player_q.get_single().unwrap();
     let l_player_pos = *l_player.pos.clone() as i32;
+    let l_player_name = l_player.name.clone().to_string();
 
     let local_player_ui = create_player_ui(
         &mut commands,
@@ -174,6 +175,7 @@ pub fn spawn_playerui(
         &res,
         l_player_pos,
         *l_player.score,
+        &l_player_name,
     );
     commands.entity(local_player_ui).insert(LocalPlayer);
 
@@ -230,8 +232,16 @@ pub fn spawn_playerui(
             _ => {}
         }
 
-        let foreign_playerui =
-            create_player_ui(&mut commands, &pos, &res, player_pos, *player.score);
+        let player_name = player.name.to_string();
+
+        let foreign_playerui = create_player_ui(
+            &mut commands,
+            &pos,
+            &res,
+            player_pos,
+            *player.score,
+            &player_name,
+        );
 
         commands.entity(foreign_playerui).insert(ForeignPlayer);
     }
@@ -243,6 +253,7 @@ pub fn create_player_ui(
     res: &Res<UiAssets>,
     player_pos: i32,
     player_score: u32,
+    player_name: &str,
 ) -> Entity {
     let cir_setting = CircleSetting::new(*draw_pos);
 
@@ -257,7 +268,6 @@ pub fn create_player_ui(
     };
 
     let avatar = res.avatars.get(&player_pos).unwrap().clone();
-    let player_name = format!("Player {}", player_pos);
     let score = format!("Score: {}", player_score);
 
     commands

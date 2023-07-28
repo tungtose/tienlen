@@ -28,3 +28,6 @@ pub struct UpdateScore(pub u32);
 
 #[derive(Message, Debug, Default)]
 pub struct NewMatch;
+
+#[derive(Message, Debug, Default)]
+pub struct NewPlayer(pub String);

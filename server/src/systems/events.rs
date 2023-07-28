@@ -2,7 +2,7 @@ use std::cmp::Ordering;
 
 use bevy_ecs::{
     event::EventReader,
-    system::{Commands, Query, Res, ResMut},
+    system::{Commands, Query, ResMut},
 };
 use bevy_log::info;
 
@@ -12,7 +12,7 @@ use naia_bevy_server::{
         InsertComponentEvents, MessageEvents, RemoveComponentEvents, SpawnEntityEvent, TickEvent,
         UpdateComponentEvents,
     },
-    CommandsExt, Random, Server,
+    CommandsExt, Server,
 };
 
 use naia_bevy_demo_shared::{
@@ -30,8 +30,8 @@ use naia_bevy_demo_shared::{
         Color, ColorValue, Counter, Position, Shape, ShapeValue,
     },
     messages::{
-        error::GameError, Auth, EntityAssignment, ErrorCode, KeyCommand, NewMatch, PlayCard,
-        PlayerMessage, SkipTurn, StartGame, UpdateScore, UpdateTurn,
+        error::GameError, Auth, EntityAssignment, ErrorCode, KeyCommand, NewMatch, NewPlayer,
+        PlayCard, SkipTurn, StartGame, UpdateScore, UpdateTurn,
     },
 };
 
@@ -52,9 +52,8 @@ pub fn auth_events(mut server: Server, mut event_reader: EventReader<AuthEvents>
 }
 
 pub fn connect_events(
-    mut commands: Commands,
+    global: ResMut<Global>,
     mut server: Server,
-    mut global: ResMut<Global>,
     mut event_reader: EventReader<ConnectEvent>,
 ) {
     for ConnectEvent(user_key) in event_reader.iter() {
@@ -67,53 +66,53 @@ pub fn connect_events(
 
         info!("Naia Server connected to: {}", address);
 
-        // Check if player is Host
-        let player_num = global.users_map.len();
-
-        info!("player_num {}", player_num);
-
-        // FIXME: remove this
-        let player = Player::new(player_num);
-
-        let entity = commands
-            .spawn_empty()
-            .enable_replication(&mut server)
-            .insert(player)
-            .id();
-
-        if player_num == 0 {
-            commands.entity(entity).insert(Host);
-        }
-
-        global.users_map.insert(*user_key, entity);
-        let player_data = PlayerData {
-            entity,
-            pos: player_num,
-            active: player_num == 0,
-            cards: String::new(),
-            score: 0,
-            user_key: *user_key,
-        };
-
-        global.players_map.0.insert(*user_key, player_data.clone());
-
-        for (user_key, _) in global.players_map.0.iter() {
-            server.send_message::<GameSystemChannel, PlayerMessage>(
-                user_key,
-                &player_data.clone().into(),
-            );
-        }
-
-        server.room_mut(&global.main_room_key).add_entity(&entity);
+        // // Check if player is Host
+        // let player_num = global.users_map.len();
+        //
+        // info!("player_num {}", player_num);
+        //
+        // // FIXME: remove this
+        // let player = Player::new(player_num);
+        //
+        // let entity = commands
+        //     .spawn_empty()
+        //     .enable_replication(&mut server)
+        //     .insert(player)
+        //     .id();
+        //
+        // if player_num == 0 {
+        //     commands.entity(entity).insert(Host);
+        // }
+        //
+        // global.users_map.insert(*user_key, entity);
+        // let player_data = PlayerData {
+        //     entity,
+        //     pos: player_num,
+        //     active: player_num == 0,
+        //     cards: String::new(),
+        //     score: 0,
+        //     user_key: *user_key,
+        // };
+        //
+        // global.players_map.0.insert(*user_key, player_data.clone());
+        //
+        // for (user_key, _) in global.players_map.0.iter() {
+        //     server.send_message::<GameSystemChannel, PlayerMessage>(
+        //         user_key,
+        //         &player_data.clone().into(),
+        //     );
+        // }
+        //
+        // server.room_mut(&global.main_room_key).add_entity(&entity);
 
         // Send an Entity Assignment message to the User that owns the Square
-        let mut assignment_message = EntityAssignment::new(true);
-        assignment_message.entity.set(&server, &entity);
-
-        server.send_message::<EntityAssignmentChannel, EntityAssignment>(
-            user_key,
-            &assignment_message,
-        );
+        // let mut assignment_message = EntityAssignment::new(true);
+        // assignment_message.entity.set(&server, &entity);
+        //
+        // server.send_message::<EntityAssignmentChannel, EntityAssignment>(
+        //     user_key,
+        //     &assignment_message,
+        // );
 
         // Create components for Entity to represent new player
 
@@ -157,7 +156,7 @@ pub fn connect_events(
         //
         // global.user_to_square_map.insert(*user_key, entity);
         // global.square_to_user_map.insert(entity, *user_key);
-        global.total_player += 1;
+        // global.total_player += 1;
 
         // Send an Entity Assignment message to the User that owns the Square
         // let mut assignment_message = EntityAssignment::new(true);
@@ -226,6 +225,47 @@ pub fn message_events(
     mut serverhand_q: Query<&mut ServerHand>,
 ) {
     for events in event_reader.iter() {
+        for (user_key, new_player_data) in events.read::<PlayerActionChannel, NewPlayer>() {
+            let player_name = new_player_data.0.chars().take(10).collect::<String>();
+            let player_num = global.users_map.len();
+            let player = Player::new(player_num, &player_name);
+
+            let entity = commands
+                .spawn_empty()
+                .enable_replication(&mut server)
+                .insert(player)
+                .id();
+
+            if player_num == 0 {
+                commands.entity(entity).insert(Host);
+            }
+
+            global.users_map.insert(user_key, entity);
+
+            let player_data = PlayerData {
+                name: player_name,
+                entity,
+                pos: player_num,
+                active: player_num == 0,
+                cards: String::new(),
+                score: 0,
+                user_key,
+            };
+
+            global.players_map.0.insert(user_key, player_data.clone());
+            global.total_player += 1;
+
+            server.room_mut(&global.main_room_key).add_entity(&entity);
+
+            let mut assignment_message = EntityAssignment::new(true);
+            assignment_message.entity.set(&server, &entity);
+
+            server.send_message::<EntityAssignmentChannel, EntityAssignment>(
+                &user_key,
+                &assignment_message,
+            );
+        }
+
         for (_, _) in events.read::<PlayerActionChannel, StartGame>() {
             let total_player = global.total_player;
 
