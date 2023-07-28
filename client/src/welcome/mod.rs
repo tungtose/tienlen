@@ -1,7 +1,10 @@
+use crate::resources::Global;
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts, EguiPlugin};
+use naia_bevy_client::{transport::webrtc, Client};
+use naia_bevy_demo_shared::messages::Auth;
 
-use crate::states::{self, MainState};
+use crate::states::MainState;
 
 pub struct WelcomeScreenPlugin;
 
@@ -11,7 +14,7 @@ impl Plugin for WelcomeScreenPlugin {
             .add_event::<JoinEvent>()
             .init_resource::<UiState>()
             .add_system(join.run_if(on_event::<JoinEvent>()))
-            .add_system(name_input_system.run_if(in_state(states::MainState::Welcome)));
+            .add_system(name_input_system.run_if(in_state(MainState::Welcome)));
     }
 }
 
@@ -22,16 +25,39 @@ struct UiState {
 }
 
 #[derive(Default)]
-struct JoinEvent(pub String);
+struct JoinEvent(String);
 
-fn join(mut next_state: ResMut<NextState<MainState>>) {
-    next_state.set(MainState::Lobby);
+impl JoinEvent {
+    pub fn player_name(&self) -> String {
+        self.0.clone()
+    }
+}
+
+fn join(mut client: Client, mut join_ev: EventReader<JoinEvent>, mut global: ResMut<Global>) {
+    // Process connect sever here?
+    // FIXME: I don't want to messing up with these env
+    let auth_user_name = env!("AUTH_USER_NAME");
+    let auth_user_pass = env!("AUTH_USER_PASS");
+    let server_address = env!("SERVER_INIT_ADDRESS");
+    //
+    client.auth(Auth::new(auth_user_name, auth_user_pass));
+    let socket = webrtc::Socket::new(server_address, client.socket_config());
+    client.connect(socket);
+
+    for join_data in join_ev.iter() {
+        info!("Sending Player Data: {:?}", join_data.player_name());
+        // Pass to global is a hack!!!
+        global.player_name = join_data.player_name();
+    }
+
+    // next_state.set(MainState::Lobby);
 }
 
 fn name_input_system(
     mut egui_ctx: EguiContexts,
     mut ui_state: ResMut<UiState>,
     mut join_event: EventWriter<JoinEvent>,
+    client: Client,
 ) {
     egui::CentralPanel::default().show(egui_ctx.ctx_mut(), |ui| {
         ui_state.can_join = !ui_state.name.is_empty();
@@ -50,11 +76,14 @@ fn name_input_system(
 
             ui.add_space(10.);
 
-            if ui
+            if client.is_connecting() {
+                ui.label("Connecting to server...");
+                ui.add_space(5.);
+                ui.spinner();
+            } else if ui
                 .add_enabled(ui_state.can_join, egui::Button::new("Join"))
                 .clicked()
             {
-                info!("Clicked btn");
                 join_event.send(JoinEvent(ui_state.name.clone()))
             }
         });

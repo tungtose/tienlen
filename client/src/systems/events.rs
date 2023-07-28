@@ -2,8 +2,8 @@ use std::default::Default;
 
 use bevy::{
     prelude::{
-        info, Color as BevyColor, Commands, EventReader, EventWriter, Query, Res, ResMut, Sprite,
-        SpriteBundle, Transform, Vec2,
+        info, Color as BevyColor, Commands, EventReader, EventWriter, NextState, Query, Res,
+        ResMut, Sprite, SpriteBundle, Transform, Vec2,
     },
     sprite::MaterialMesh2dBundle,
 };
@@ -18,11 +18,13 @@ use naia_bevy_client::{
 
 use naia_bevy_demo_shared::{
     behavior as shared_behavior,
-    channels::{EntityAssignmentChannel, GameSystemChannel, PlayerCommandChannel},
+    channels::{
+        EntityAssignmentChannel, GameSystemChannel, PlayerActionChannel, PlayerCommandChannel,
+    },
     components::{player::Player, Color, ColorValue, Position, Shape, ShapeValue},
     messages::{
-        Counter, EntityAssignment, ErrorCode, GameError, KeyCommand, PlayCard, StartGame,
-        UpdateScore, UpdateTurn,
+        Counter, EntityAssignment, ErrorCode, GameError, KeyCommand, NewPlayer, PlayCard,
+        StartGame, UpdateScore, UpdateTurn,
     },
 };
 
@@ -30,15 +32,17 @@ use crate::{
     components::{Confirmed, Interp, LocalCursor, LocalPlayer},
     game::{LocalStartGame, UpdatePlayerCards},
     resources::Global,
+    states::MainState,
     ui::{DrawStatus, ReloadBar, UpdateScoreUI},
 };
 
 const SQUARE_SIZE: f32 = 32.0;
 
 pub fn connect_events(
-    mut commands: Commands,
+    // mut commands: Commands,
     mut client: Client,
-    mut global: ResMut<Global>,
+    global: ResMut<Global>,
+    mut next_state: ResMut<NextState<MainState>>,
     mut event_reader: EventReader<ConnectEvent>,
 ) {
     for _ in event_reader.iter() {
@@ -47,37 +51,40 @@ pub fn connect_events(
         };
         info!("Client connected to: {}", server_address);
 
-        // Create entity for Client-authoritative Cursor
+        client
+            .send_message::<PlayerActionChannel, NewPlayer>(&NewPlayer(global.player_name.clone()));
 
-        // Position component
-        let position = {
-            let x = 16 * ((Random::gen_range_u32(0, 40) as i16) - 20);
-            let y = 16 * ((Random::gen_range_u32(0, 30) as i16) - 15);
-            Position::new(x, y)
-        };
+        next_state.set(MainState::Lobby);
 
-        // Spawn Cursor Entity
-        let cursor_entity = commands
-            // Spawn new Square Entity
-            .spawn_empty()
-            // MUST call this to begin replication
-            .enable_replication(&mut client)
-            // Insert Position component
-            .insert(position)
-            // Insert Cursor marker component
-            .insert(LocalCursor)
-            // return Entity id
-            .id();
-
-        // Insert SpriteBundle locally only
-        commands.entity(cursor_entity).insert(MaterialMesh2dBundle {
-            mesh: global.circle.clone().into(),
-            material: global.white.clone(),
-            transform: Transform::from_xyz(0.0, 0.0, 1.0),
-            ..Default::default()
-        });
-
-        global.cursor_entity = Some(cursor_entity);
+        // // Position component
+        // let position = {
+        //     let x = 16 * ((Random::gen_range_u32(0, 40) as i16) - 20);
+        //     let y = 16 * ((Random::gen_range_u32(0, 30) as i16) - 15);
+        //     Position::new(x, y)
+        // };
+        //
+        // // Spawn Cursor Entity
+        // let cursor_entity = commands
+        //     // Spawn new Square Entity
+        //     .spawn_empty()
+        //     // MUST call this to begin replication
+        //     .enable_replication(&mut client)
+        //     // Insert Position component
+        //     .insert(position)
+        //     // Insert Cursor marker component
+        //     .insert(LocalCursor)
+        //     // return Entity id
+        //     .id();
+        //
+        // // Insert SpriteBundle locally only
+        // commands.entity(cursor_entity).insert(MaterialMesh2dBundle {
+        //     mesh: global.circle.clone().into(),
+        //     material: global.white.clone(),
+        //     transform: Transform::from_xyz(0.0, 0.0, 1.0),
+        //     ..Default::default()
+        // });
+        //
+        // global.cursor_entity = Some(cursor_entity);
     }
 }
 

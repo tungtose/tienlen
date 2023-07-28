@@ -13,15 +13,13 @@ pub struct Player {
 }
 
 impl Player {
-    pub fn new(pos: usize) -> Self {
+    pub fn new(pos: usize, name: &str) -> Self {
         let mut active = false;
         if pos == 0 {
             active = true;
         }
 
-        let name = format!("Player {}", pos);
-
-        Self::new_complete(pos, active, 0, name)
+        Self::new_complete(pos, active, 0, name.to_string())
     }
 }
 

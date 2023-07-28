@@ -14,6 +14,7 @@ use naia_bevy_server::{RoomKey, UserKey};
 
 #[derive(Clone)]
 pub struct PlayerData {
+    pub name: String,
     pub pos: usize,
     pub active: bool,
     pub cards: String,
