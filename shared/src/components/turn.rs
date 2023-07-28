@@ -90,6 +90,8 @@ impl Turn {
         let player_pos = self.pool.pop_front().unwrap();
         self.players_out.insert(player_pos);
 
+        self.debug();
+
         self.current_active_player().unwrap()
     }
 

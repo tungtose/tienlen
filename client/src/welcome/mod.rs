@@ -77,9 +77,9 @@ fn name_input_system(
             ui.add_space(10.);
 
             if client.is_connecting() {
-                ui.label("Connecting to server...");
-                ui.add_space(5.);
                 ui.spinner();
+                ui.add_space(5.);
+                ui.label("Connecting to server...");
             } else if ui
                 .add_enabled(ui_state.can_join, egui::Button::new("Join"))
                 .clicked()

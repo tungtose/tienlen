@@ -1369,7 +1369,7 @@ dependencies = [
 
 [[package]]
 name = "tienlen-server"
-version = "0.0.16"
+version = "0.0.20"
 dependencies = [
  "bevy_app",
  "bevy_core",
