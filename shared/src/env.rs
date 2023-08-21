@@ -19,8 +19,8 @@ impl Default for Env {
         Self {
             auth_user_name: "charlie".to_string(),
             auth_pass: "12345".to_string(),
-            webrtc_address: "127.0.0.1:14192".to_string(),
-            signaling_address: "127.0.0.1:14191".to_string(),
+            webrtc_address: "0.0.0.0:14192".to_string(),
+            signaling_address: "0.0.0.0:14191".to_string(),
             server_public_address: "http://127.0.0.1:14192".to_string(),
             server_init_address: "http://127.0.0.1:14191".to_string(),
         }
@@ -47,6 +47,8 @@ impl Env {
         dotenv().ok();
 
         let environment = env!("ENVIRONMENT");
+
+        info!("ENV: {}", environment);
 
         // Seem like JAVA? holy shit why I write this?
         if let Environment::Dev = Environment::from(environment) {
