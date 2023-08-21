@@ -6,7 +6,7 @@ alias sl := stream_log
 alias dw := deploy_web
 alias rs := run_server
 alias rc := run_client
-alias rcr := run_client_remote
+# alias rcr := run_client_remote
 
 
 bump_patch:
@@ -45,5 +45,5 @@ deploy_web:
 run_client:
   just ./client/run
 
-run_client_remote:
-  just ./client/run_remote
+# run_client_remote:
+#   just ./client/run_remote
