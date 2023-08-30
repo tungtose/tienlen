@@ -29,6 +29,7 @@ impl ProtocolPlugin for MessagesPlugin {
             .add_message::<StartGame>()
             .add_message::<NewMatch>()
             .add_message::<NewPlayer>()
+            // .add_message::<NewPlayerJoin>()
             .add_message::<PlayCard>()
             .add_message::<UpdateTurn>()
             .add_message::<SkipTurn>()

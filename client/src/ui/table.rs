@@ -117,6 +117,7 @@ pub fn draw_table(
 
     let table_server = server_table_q.get_single();
 
+    // Please remove this shit !!!
     let table_str: String;
 
     match table_server {

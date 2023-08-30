@@ -1,51 +1,97 @@
-use bevy::prelude::{info, Query, Transform, With};
+use bevy::prelude::{Query, ResMut, Vec2, With, Without};
 
-use naia_bevy_client::Client;
-use naia_bevy_demo_shared::components::Position;
+use naia_bevy_demo_shared::components::Player;
 
-use crate::components::{Confirmed, Interp, LocalCursor, Predicted};
+use crate::{components::LocalPlayer, resources::Global};
 
-pub fn sync_clientside_sprites(
-    client: Client,
-    mut query: Query<(&Position, &mut Interp, &mut Transform), With<Predicted>>,
+pub fn sync_main_player(
+    main_player_q: Query<&Player, With<LocalPlayer>>,
+    mut global: ResMut<Global>,
 ) {
-    for (position, mut interp, mut transform) in query.iter_mut() {
-        if *position.x != interp.next_x as i16 || *position.y != interp.next_y as i16 {
-            interp.next_position(*position.x, *position.y);
-        }
+    let Ok(player) = main_player_q.get_single() else {
+        return;
+    };
 
-        let interp_amount = client.client_interpolation();
+    global.game.local_player.name = player.name.to_string();
+    global.game.local_player.pos = *player.pos;
+    global.game.local_player.is_join = true;
+}
 
-        match interp_amount {
-            Some(amount) => {
-                interp.interpolate(amount);
-                transform.translation.x = interp.interp_x;
-                transform.translation.y = interp.interp_y;
+pub fn sync_foreign_player(
+    player_q: Query<&Player, Without<LocalPlayer>>,
+    mut global: ResMut<Global>,
+) {
+    let main_player_pos = global.game.local_player.pos;
+    let is_join = global.game.local_player.is_join;
+
+    if !is_join {
+        return;
+    }
+
+    for player in player_q.iter() {
+        let player_pos = *player.pos;
+
+        let mut player_num: usize = 0;
+
+        match main_player_pos {
+            0 => {
+                player_num = player_pos;
             }
-            None => info!("Please handle me: sync.rs"),
+            1 => {
+                if player_pos == 2 {
+                    player_num = 1;
+                }
+                if player_pos == 3 {
+                    player_num = 2;
+                }
+                if player_pos == 0 {
+                    player_num = 3;
+                }
+            }
+
+            2 => {
+                if player_pos == 3 {
+                    player_num = 1;
+                }
+                if player_pos == 0 {
+                    player_num = 2;
+                }
+                if player_pos == 1 {
+                    player_num = 3;
+                }
+            }
+            3 => {
+                if player_pos == 0 {
+                    player_num = 1;
+                }
+                if player_pos == 1 {
+                    player_num = 2;
+                }
+
+                if player_pos == 2 {
+                    player_num = 3;
+                }
+            }
+            _ => unreachable!(),
         }
-    }
-}
 
-pub fn sync_serverside_sprites(
-    client: Client,
-    mut query: Query<(&Position, &mut Interp, &mut Transform), With<Confirmed>>,
-) {
-    for (position, mut interp, mut transform) in query.iter_mut() {
-        if *position.x != interp.next_x as i16 || *position.y != interp.next_y as i16 {
-            interp.next_position(*position.x, *position.y);
+        match player_num {
+            1 => {
+                global.game.player_1.name = player.name.to_string();
+                global.game.player_1.is_join = true;
+                global.game.player_1.draw_pos = Vec2::new(-335., 35.);
+            }
+            2 => {
+                global.game.player_2.name = player.name.to_string();
+                global.game.player_2.is_join = true;
+                global.game.player_2.draw_pos = Vec2::new(0., 210.);
+            }
+            3 => {
+                global.game.player_3.name = player.name.to_string();
+                global.game.player_3.is_join = true;
+                global.game.player_3.draw_pos = Vec2::new(335., 35.);
+            }
+            _ => unreachable!(),
         }
-
-        let interp_amount = client.server_interpolation().unwrap();
-        interp.interpolate(interp_amount);
-        transform.translation.x = interp.interp_x;
-        transform.translation.y = interp.interp_y;
-    }
-}
-
-pub fn sync_cursor_sprite(mut query: Query<(&Position, &mut Transform), With<LocalCursor>>) {
-    for (position, mut transform) in query.iter_mut() {
-        transform.translation.x = *position.x as f32;
-        transform.translation.y = *position.y as f32;
     }
 }

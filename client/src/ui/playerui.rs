@@ -25,6 +25,9 @@ pub struct PlayerPos(pub i32);
 pub struct Score;
 
 #[derive(Component)]
+pub struct Name;
+
+#[derive(Component)]
 pub struct CircleSetting {
     angle: f32,
     center: Vec2,
@@ -159,91 +162,80 @@ pub fn animatetext_update(
     }
 }
 
-pub fn spawn_playerui(
-    mut commands: Commands,
-    res: Res<UiAssets>,
-    players_q: Query<&Player, Without<LocalPlayer>>,
-    local_player_q: Query<&Player, With<LocalPlayer>>,
-) {
-    let l_player = local_player_q.get_single().unwrap();
-    let l_player_pos = *l_player.pos.clone() as i32;
-    let l_player_name = l_player.name.clone().to_string();
+#[derive(Component)]
+pub struct ForeignPlayer1;
+#[derive(Component)]
+pub struct ForeignPlayer2;
+#[derive(Component)]
+pub struct ForeignPlayer3;
 
-    let local_player_ui = create_player_ui(
-        &mut commands,
-        &Vec2::new(0., -175.),
-        &res,
-        l_player_pos,
-        *l_player.score,
-        &l_player_name,
-    );
-    commands.entity(local_player_ui).insert(LocalPlayer);
+pub fn draw_player_ui(mut commands: Commands, mut global: ResMut<Global>, res: Res<UiAssets>) {
+    let local_player = &global.game.local_player;
 
-    for player in players_q.iter() {
-        let player_pos = *player.pos.clone() as i32;
-
-        // FIXME: Find the way to clean this mess
-        let mut pos: Vec2 = Vec2::new(0., 0.);
-        match l_player_pos {
-            0 => {
-                if player_pos == 1 {
-                    pos = Vec2::new(-335., 35.);
-                }
-                if player_pos == 2 {
-                    pos = Vec2::new(0., 210.);
-                }
-                if player_pos == 3 {
-                    pos = Vec2::new(335., 35.);
-                }
-            }
-            1 => {
-                if player_pos == 2 {
-                    pos = Vec2::new(-335., 35.);
-                }
-                if player_pos == 3 {
-                    pos = Vec2::new(0., 210.);
-                }
-                if player_pos == 0 {
-                    pos = Vec2::new(335., 35.);
-                }
-            }
-            2 => {
-                if player_pos == 3 {
-                    pos = Vec2::new(-335., 35.);
-                }
-                if player_pos == 0 {
-                    pos = Vec2::new(0., 210.);
-                }
-                if player_pos == 1 {
-                    pos = Vec2::new(335., 35.);
-                }
-            }
-            3 => {
-                if player_pos == 0 {
-                    pos = Vec2::new(-335., 35.);
-                }
-                if player_pos == 1 {
-                    pos = Vec2::new(0., 210.);
-                }
-                if player_pos == 2 {
-                    pos = Vec2::new(335., 35.);
-                }
-            }
-            _ => {}
-        }
-
-        let player_name = player.name.to_string();
-
-        let foreign_playerui = create_player_ui(
+    if local_player.is_join && !local_player.is_drawed {
+        let local_player_ui = create_player_ui(
             &mut commands,
-            &pos,
+            &Vec2::new(0., -175.),
             &res,
-            player_pos,
-            *player.score,
-            &player_name,
+            0,
+            "0",
+            &local_player.name,
+            true,
         );
 
-        commands.entity(foreign_playerui).insert(ForeignPlayer);
+        commands.entity(local_player_ui).insert(LocalPlayer);
+
+        global.game.local_player.is_drawed = true;
+    }
+
+    if global.game.player_1.is_join && !global.game.player_1.is_drawed {
+        let p1 = &global.game.player_1;
+        let p1_ui = create_player_ui(
+            &mut commands,
+            &p1.draw_pos,
+            &res,
+            1,
+            &p1.score,
+            &p1.name,
+            true,
+        );
+
+        commands.entity(p1_ui).insert(ForeignPlayer1);
+
+        global.game.player_1.is_drawed = true;
+    }
+
+    let p2 = &global.game.player_2;
+    if p2.is_join && !p2.is_drawed {
+        let p2_ui = create_player_ui(
+            &mut commands,
+            &p2.draw_pos,
+            &res,
+            2,
+            &p2.score,
+            &p2.name,
+            true,
+        );
+        commands.entity(p2_ui).insert(ForeignPlayer2);
+
+        global.game.player_2.is_drawed = true;
+    }
+
+    let p3 = &global.game.player_3;
+    if p3.is_join && !p3.is_drawed {
+        let p3_ui = create_player_ui(
+            &mut commands,
+            &p3.draw_pos,
+            &res,
+            3,
+            &p3.score,
+            &p3.name,
+            true,
+        );
+
+        commands.entity(p3_ui).insert(ForeignPlayer3);
+
+        global.game.player_3.is_drawed = true;
     }
 }
 
@@ -252,8 +244,9 @@ pub fn create_player_ui(
     draw_pos: &Vec2,
     res: &Res<UiAssets>,
     player_pos: i32,
-    player_score: u32,
+    player_score: &str,
     player_name: &str,
+    is_show: bool,
 ) -> Entity {
     let cir_setting = CircleSetting::new(*draw_pos);
 
@@ -270,6 +263,12 @@ pub fn create_player_ui(
     let avatar = res.avatars.get(&player_pos).unwrap().clone();
     let score = format!("Score: {}", player_score);
 
+    let vis = if is_show {
+        Visibility::Hidden
+    } else {
+        Visibility::Visible
+    };
+
     commands
         .spawn((
             cir_setting,
@@ -278,6 +277,7 @@ pub fn create_player_ui(
             ShapeBundle { path, ..default() },
             // Stroke::new(Color::RED, 2.),
             Fill::color(color),
+            // vis,
         ))
         .with_children(|builder| {
             builder.spawn(SpriteBundle {
@@ -292,6 +292,7 @@ pub fn create_player_ui(
         })
         .with_children(|builder| {
             builder.spawn((
+                Name,
                 AnimateText,
                 PlayerPos(player_pos),
                 Text2dBundle {
