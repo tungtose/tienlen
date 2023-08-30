@@ -71,9 +71,8 @@ pub fn run() {
             (
                 input::key_input,
                 input::cursor_input,
-                sync::sync_clientside_sprites,
-                sync::sync_serverside_sprites,
-                sync::sync_cursor_sprite,
+                sync::sync_main_player,
+                sync::sync_foreign_player,
             )
                 .chain()
                 .in_set(MainLoop),

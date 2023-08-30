@@ -1,50 +1,18 @@
 use bevy::prelude::*;
 
-use naia_bevy_client::{transport::webrtc, Client};
-use naia_bevy_demo_shared::messages::Auth;
-
 use crate::resources::Global;
 
 #[derive(Component)]
 pub struct MainCamera;
 
-pub fn init(
-    mut commands: Commands,
-    mut client: Client,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
-) {
+pub fn init(mut commands: Commands) {
     info!("Tienlen client started");
-
-    // FIXME: I don't want to messing up with these env
-    let auth_user_name = env!("AUTH_USER_NAME");
-    let auth_user_pass = env!("AUTH_USER_PASS");
-
-    let server_address = env!("SERVER_INIT_ADDRESS");
-
-    // TODO: move the logic connect server to another place
-    // client.auth(Auth::new(auth_user_name, auth_user_pass));
-    // let socket = webrtc::Socket::new(server_address, client.socket_config());
-    // client.connect(socket);
 
     // Setup Camera
     commands.spawn((MainCamera, Camera2dBundle::default()));
 
     // Setup Global Resource
-    let mut global = Global::default();
-
-    // Load colors
-    global.red = materials.add(ColorMaterial::from(Color::RED));
-    global.blue = materials.add(ColorMaterial::from(Color::BLUE));
-    global.yellow = materials.add(ColorMaterial::from(Color::YELLOW));
-    global.green = materials.add(ColorMaterial::from(Color::GREEN));
-    global.white = materials.add(ColorMaterial::from(Color::WHITE));
-    global.purple = materials.add(ColorMaterial::from(Color::PURPLE));
-    global.orange = materials.add(ColorMaterial::from(Color::ORANGE));
-    global.aqua = materials.add(ColorMaterial::from(Color::AQUAMARINE));
-
-    // Load shapes
-    global.circle = meshes.add(shape::Circle::new(6.).into());
+    let global = Global::default();
 
     // Insert Global Resource
     commands.insert_resource(global);

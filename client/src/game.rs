@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use naia_bevy_client::Client;
 use naia_bevy_demo_shared::{
     channels::PlayerActionChannel,
-    components::{card::Card, hand::Hand, server_hand::ServerHand, Player},
+    components::{card::Card, hand::Hand, server_hand::ServerHand},
     messages::{PlayCard, SkipTurn},
 };
 
@@ -46,12 +46,6 @@ pub struct ActiveCard(pub bool);
 
 #[derive(Component, Default)]
 pub struct ActiveCards(BTreeMap<usize, Card>);
-
-// impl Default for ActiveCards {
-//     fn default() -> Self {
-//         Self(BTreeMap::new())
-//     }
-// }
 
 impl ActiveCards {
     pub fn is_active(&self, key: &usize) -> bool {

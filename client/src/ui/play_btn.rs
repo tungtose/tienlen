@@ -20,6 +20,15 @@ const NORMAL_BUTTON: Color = Color::rgb(0.15, 0.15, 0.15);
 #[derive(Component)]
 pub struct PlayContainer;
 
+#[derive(Component)]
+pub struct StartContainer;
+
+pub fn hide_start_btn(mut vis_q: Query<&mut Visibility, With<StartContainer>>) {
+    for mut vis in vis_q.iter_mut() {
+        *vis = Visibility::Hidden;
+    }
+}
+
 pub fn spawn_start_btn(
     mut commands: Commands,
     host_query: Query<&Host>,
@@ -34,24 +43,25 @@ pub fn spawn_start_btn(
         }
     }
 
-    // info!("IAM HOST!!! {}", is_host);
-
     if !is_host {
         return;
     }
 
     let container = commands
-        .spawn((NodeBundle {
-            style: Style {
-                position_type: PositionType::Absolute,
-                position: UiRect::top(Val::Px(100.)),
-                justify_content: JustifyContent::Center,
-                align_items: AlignItems::Center,
-                size: Size::new(Val::Percent(100.), Val::Px(100.)),
+        .spawn((
+            StartContainer,
+            NodeBundle {
+                style: Style {
+                    position_type: PositionType::Absolute,
+                    position: UiRect::top(Val::Px(150.)),
+                    justify_content: JustifyContent::Center,
+                    align_items: AlignItems::Center,
+                    size: Size::new(Val::Percent(100.), Val::Px(100.)),
+                    ..Default::default()
+                },
                 ..Default::default()
             },
-            ..Default::default()
-        },))
+        ))
         .id();
 
     let start_btn = commands

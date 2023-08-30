@@ -33,7 +33,7 @@ use crate::{
     game::{LocalStartGame, UpdatePlayerCards},
     resources::Global,
     states::MainState,
-    ui::{DrawStatus, ReloadBar, UpdateScoreUI},
+    ui::{DrawStatus, NewPlayerJoin, ReloadBar, SpawnLocalPlayerEvent, UpdateScoreUI},
 };
 
 const SQUARE_SIZE: f32 = 32.0;
@@ -82,6 +82,8 @@ pub fn message_events(
     mut draw_status_ev: EventWriter<DrawStatus>,
     mut update_player_cards_ev: EventWriter<UpdatePlayerCards>,
     mut update_score_ev: EventWriter<UpdateScoreUI>,
+    mut new_player_join_ev: EventWriter<NewPlayerJoin>,
+    mut spawn_local_player_ev: EventWriter<SpawnLocalPlayerEvent>,
 ) {
     for events in event_reader.iter() {
         for message in events.read::<GameSystemChannel, Counter>() {
@@ -91,6 +93,11 @@ pub fn message_events(
         for _ in events.read::<GameSystemChannel, StartGame>() {
             global.active_player_pos = 0;
             start_game_ev.send(LocalStartGame);
+        }
+
+        for _ in events.read::<GameSystemChannel, NewPlayer>() {
+            info!("NEw player join!!!");
+            new_player_join_ev.send_default();
         }
 
         for _ in events.read::<GameSystemChannel, UpdateScore>() {
@@ -168,7 +175,6 @@ pub fn despawn_entity_events(mut event_reader: EventReader<DespawnEntityEvent>) 
 pub fn insert_component_events(
     mut commands: Commands,
     mut event_reader: EventReader<InsertComponentEvents>,
-    global: Res<Global>,
     sprite_query: Query<(&Shape, &Color)>,
     position_query: Query<&Position>,
 ) {
@@ -178,64 +184,7 @@ pub fn insert_component_events(
             // use that value to also insert a local-only SpriteBundle component into this entity
             info!("add Color Component to entity");
 
-            if let Ok((shape, color)) = sprite_query.get(entity) {
-                match *shape.value {
-                    // Square
-                    ShapeValue::Square => {
-                        let color = {
-                            match *color.value {
-                                ColorValue::Red => BevyColor::RED,
-                                ColorValue::Blue => BevyColor::BLUE,
-                                ColorValue::Yellow => BevyColor::YELLOW,
-                                ColorValue::Green => BevyColor::GREEN,
-                                ColorValue::White => BevyColor::WHITE,
-                                ColorValue::Purple => BevyColor::PURPLE,
-                                ColorValue::Orange => BevyColor::ORANGE,
-                                ColorValue::Aqua => BevyColor::AQUAMARINE,
-                            }
-                        };
-
-                        commands
-                            .entity(entity)
-                            .insert(SpriteBundle {
-                                sprite: Sprite {
-                                    custom_size: Some(Vec2::new(SQUARE_SIZE, SQUARE_SIZE)),
-                                    color,
-                                    ..Default::default()
-                                },
-                                transform: Transform::from_xyz(0.0, 0.0, 0.0),
-                                ..Default::default()
-                            })
-                            // mark as confirmed
-                            .insert(Confirmed);
-                    }
-                    // Circle
-                    ShapeValue::Circle => {
-                        let handle = {
-                            match *color.value {
-                                ColorValue::Red => &global.red,
-                                ColorValue::Blue => &global.blue,
-                                ColorValue::Yellow => &global.yellow,
-                                ColorValue::Green => &global.green,
-                                ColorValue::White => &global.white,
-                                ColorValue::Purple => &global.purple,
-                                ColorValue::Orange => &global.orange,
-                                ColorValue::Aqua => &global.aqua,
-                            }
-                        };
-                        commands
-                            .entity(entity)
-                            .insert(MaterialMesh2dBundle {
-                                mesh: global.circle.clone().into(),
-                                material: handle.clone(),
-                                transform: Transform::from_xyz(0.0, 0.0, 0.0),
-                                ..Default::default()
-                            })
-                            // mark as confirmed
-                            .insert(Confirmed);
-                    }
-                }
-            }
+            if let Ok((shape, color)) = sprite_query.get(entity) {}
         }
         for entity in events.read::<Position>() {
             info!("add Position Component to entity");
@@ -258,47 +207,47 @@ pub fn update_component_events(
     // we must ensure the Client-side Prediction also remains in-sync
     // So we roll the Prediction back to the authoritative Server state
     // and then execute all Player Commands since that tick, using the CommandHistory helper struct
-    if let Some(owned_entity) = &global.owned_entity {
-        let mut latest_tick: Option<Tick> = None;
-        let server_entity = owned_entity.confirmed;
-        let client_entity = owned_entity.predicted;
-
-        for events in event_reader.iter() {
-            // Update square position
-            for (server_tick, updated_entity) in events.read::<Position>() {
-                // If entity is owned
-                if updated_entity == server_entity {
-                    if let Some(last_tick) = &mut latest_tick {
-                        if sequence_greater_than(server_tick, *last_tick) {
-                            *last_tick = server_tick;
-                        }
-                    } else {
-                        latest_tick = Some(server_tick);
-                    }
-                }
-            }
-        }
-
-        if let Some(server_tick) = latest_tick {
-            if let Ok([server_position, mut client_position]) =
-                position_query.get_many_mut([server_entity, client_entity])
-            {
-                // Set to authoritative state
-                client_position.mirror(&*server_position);
-
-                // Replay all stored commands
-
-                // TODO: why is it necessary to subtract 1 Tick here?
-                // it's not like this in the Macroquad demo
-                let modified_server_tick = server_tick.wrapping_sub(1);
-
-                let replay_commands = global.command_history.replays(&modified_server_tick);
-                for (_command_tick, command) in replay_commands {
-                    shared_behavior::process_command(&command, &mut client_position);
-                }
-            }
-        }
-    }
+    // if let Some(owned_entity) = &global.owned_entity {
+    //     let mut latest_tick: Option<Tick> = None;
+    //     let server_entity = owned_entity.confirmed;
+    //     let client_entity = owned_entity.predicted;
+    //
+    //     for events in event_reader.iter() {
+    //         // Update square position
+    //         for (server_tick, updated_entity) in events.read::<Position>() {
+    //             // If entity is owned
+    //             if updated_entity == server_entity {
+    //                 if let Some(last_tick) = &mut latest_tick {
+    //                     if sequence_greater_than(server_tick, *last_tick) {
+    //                         *last_tick = server_tick;
+    //                     }
+    //                 } else {
+    //                     latest_tick = Some(server_tick);
+    //                 }
+    //             }
+    //         }
+    //     }
+    //
+    //     if let Some(server_tick) = latest_tick {
+    //         if let Ok([server_position, mut client_position]) =
+    //             position_query.get_many_mut([server_entity, client_entity])
+    //         {
+    //             // Set to authoritative state
+    //             client_position.mirror(&*server_position);
+    //
+    //             // Replay all stored commands
+    //
+    //             // TODO: why is it necessary to subtract 1 Tick here?
+    //             // it's not like this in the Macroquad demo
+    //             let modified_server_tick = server_tick.wrapping_sub(1);
+    //
+    //             let replay_commands = global.command_history.replays(&modified_server_tick);
+    //             for (_command_tick, command) in replay_commands {
+    //                 shared_behavior::process_command(&command, &mut client_position);
+    //             }
+    //         }
+    //     }
+    // }
 }
 
 pub fn remove_component_events(mut event_reader: EventReader<RemoveComponentEvents>) {

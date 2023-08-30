@@ -260,6 +260,11 @@ pub fn message_events(
             let mut assignment_message = EntityAssignment::new(true);
             assignment_message.entity.set(&server, &entity);
 
+            for (u_key, _) in global.users_map.iter() {
+                info!("New Player JOIN!!!");
+                server.send_message::<GameSystemChannel, NewPlayer>(u_key, &NewPlayer::default());
+            }
+
             server.send_message::<EntityAssignmentChannel, EntityAssignment>(
                 &user_key,
                 &assignment_message,
