@@ -38,6 +38,7 @@ pub struct Player {
     pub in_turn: bool,
     pub is_join: bool,
     pub draw_pos: Vec2,
+    pub pos: i32,
     pub is_drawed: bool,
 }
 
@@ -47,6 +48,7 @@ impl Player {
             draw_pos: Vec2::default(),
             name: pos.to_string(),
             score: "0".to_string(),
+            pos: pos as i32,
             in_turn: false,
             is_join: false,
             is_drawed: false,
@@ -62,7 +64,7 @@ pub struct LocalPlayer {
     pub is_join: bool,
     pub in_turn: bool,
     pub is_drawed: bool,
-    pub pos: usize,
+    pub pos: i32,
 }
 
 impl Default for Game {
