@@ -13,7 +13,7 @@ pub fn sync_main_player(
     };
 
     global.game.local_player.name = player.name.to_string();
-    global.game.local_player.pos = *player.pos;
+    global.game.local_player.pos = *player.pos as i32;
     global.game.local_player.is_join = true;
 }
 
@@ -80,16 +80,19 @@ pub fn sync_foreign_player(
                 global.game.player_1.name = player.name.to_string();
                 global.game.player_1.is_join = true;
                 global.game.player_1.draw_pos = Vec2::new(-335., 35.);
+                global.game.player_1.pos = *player.pos as i32;
             }
             2 => {
                 global.game.player_2.name = player.name.to_string();
                 global.game.player_2.is_join = true;
                 global.game.player_2.draw_pos = Vec2::new(0., 210.);
+                global.game.player_2.pos = *player.pos as i32;
             }
             3 => {
                 global.game.player_3.name = player.name.to_string();
                 global.game.player_3.is_join = true;
                 global.game.player_3.draw_pos = Vec2::new(335., 35.);
+                global.game.player_3.pos = *player.pos as i32;
             }
             _ => unreachable!(),
         }

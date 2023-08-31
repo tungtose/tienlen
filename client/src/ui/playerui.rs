@@ -177,10 +177,9 @@ pub fn draw_player_ui(mut commands: Commands, mut global: ResMut<Global>, res: R
             &mut commands,
             &Vec2::new(0., -175.),
             &res,
-            0,
+            local_player.pos,
             "0",
             &local_player.name,
-            true,
         );
 
         commands.entity(local_player_ui).insert(LocalPlayer);
@@ -194,10 +193,9 @@ pub fn draw_player_ui(mut commands: Commands, mut global: ResMut<Global>, res: R
             &mut commands,
             &p1.draw_pos,
             &res,
-            1,
+            p1.pos,
             &p1.score,
             &p1.name,
-            true,
         );
 
         commands.entity(p1_ui).insert(ForeignPlayer1);
@@ -211,10 +209,9 @@ pub fn draw_player_ui(mut commands: Commands, mut global: ResMut<Global>, res: R
             &mut commands,
             &p2.draw_pos,
             &res,
-            2,
+            p2.pos,
             &p2.score,
             &p2.name,
-            true,
         );
         commands.entity(p2_ui).insert(ForeignPlayer2);
 
@@ -227,10 +224,9 @@ pub fn draw_player_ui(mut commands: Commands, mut global: ResMut<Global>, res: R
             &mut commands,
             &p3.draw_pos,
             &res,
-            3,
+            p3.pos,
             &p3.score,
             &p3.name,
-            true,
         );
 
         commands.entity(p3_ui).insert(ForeignPlayer3);
@@ -246,7 +242,6 @@ pub fn create_player_ui(
     player_pos: i32,
     player_score: &str,
     player_name: &str,
-    is_show: bool,
 ) -> Entity {
     let cir_setting = CircleSetting::new(*draw_pos);
 
@@ -263,12 +258,6 @@ pub fn create_player_ui(
     let avatar = res.avatars.get(&player_pos).unwrap().clone();
     let score = format!("Score: {}", player_score);
 
-    let vis = if is_show {
-        Visibility::Hidden
-    } else {
-        Visibility::Visible
-    };
-
     commands
         .spawn((
             cir_setting,
@@ -277,7 +266,6 @@ pub fn create_player_ui(
             ShapeBundle { path, ..default() },
             // Stroke::new(Color::RED, 2.),
             Fill::color(color),
-            // vis,
         ))
         .with_children(|builder| {
             builder.spawn(SpriteBundle {
