@@ -94,7 +94,7 @@ impl Hand {
         }
     }
 
-    pub fn from_str(cards_str: &String) -> Hand {
+    pub fn from_str(cards_str: &str) -> Hand {
         let cards = cards_str
             .split(",")
             .map(|c_str| {

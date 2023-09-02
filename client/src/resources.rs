@@ -28,13 +28,15 @@ pub struct Game {
     pub player_2: Player,
     pub player_3: Player,
     pub local_player: LocalPlayer,
+    pub table_cards: String,
     pub active_player_pos: i32,
+    pub timer: String,
 }
 
 #[derive(Default, Debug)]
 pub struct Player {
     pub name: String,
-    pub score: String,
+    pub score: u32,
     pub in_turn: bool,
     pub is_join: bool,
     pub draw_pos: Vec2,
@@ -47,7 +49,7 @@ impl Player {
         Self {
             draw_pos: Vec2::default(),
             name: pos.to_string(),
-            score: "0".to_string(),
+            score: 0,
             pos: pos as i32,
             in_turn: false,
             is_join: false,
@@ -60,7 +62,7 @@ impl Player {
 pub struct LocalPlayer {
     pub name: String,
     pub cards: BTreeMap<usize, Card>,
-    pub score: String,
+    pub score: u32,
     pub is_join: bool,
     pub in_turn: bool,
     pub is_drawed: bool,
@@ -78,7 +80,9 @@ impl Default for Game {
             player_2: p2,
             player_3: p3,
             active_player_pos: 0,
+            table_cards: String::new(),
             local_player: Default::default(),
+            timer: "0".to_string(),
         }
     }
 }

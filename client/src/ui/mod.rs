@@ -29,7 +29,7 @@ impl Plugin for UiPlugin {
             .add_startup_system(assets::load_assets)
             .add_system(playerui::draw_player_ui.run_if(in_state(MainState::Lobby)))
             .add_system(playerui::circle_cooldown_update.run_if(in_state(MainState::Game)))
-            .add_system(playerui::update_score.run_if(on_event::<UpdateScoreUI>()))
+            .add_system(playerui::update_score.run_if(in_state(MainState::Game)))
             .add_system(
                 playerui::animatetext_update
                     .run_if(in_state(MainState::Game))
@@ -50,8 +50,9 @@ impl Plugin for UiPlugin {
                     .run_if(in_state(MainState::Game))
                     .before(player::draw_player),
             )
-            .add_system(timer::draw_counter.run_if(in_state(MainState::Game)))
-            .add_system(player::draw_player.run_if(on_event::<DrawPlayer>()))
+            .add_system(timer::init_counter.in_schedule(OnEnter(MainState::Game)))
+            .add_system(timer::update_counter.run_if(in_state(MainState::Game)))
+            .add_system(player::draw_player.run_if(in_state(MainState::Game)))
             .add_system(play_btn::spawn_start_btn.run_if(on_event::<ReloadBar>()))
             .add_system(play_btn::player_btn_click.run_if(in_state(MainState::Lobby)))
             .add_system(play_btn::player_btn_click.run_if(in_state(MainState::Game)))

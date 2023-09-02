@@ -8,6 +8,8 @@ const CARD_WIDTH: f32 = 32.;
 const CARD_HEIGHT: f32 = 48.;
 const CARD_MARGIN: f32 = 2.;
 
+use crate::resources::Global;
+
 use super::{DrawPlayer, DrawStatus, UiAssets};
 
 #[derive(Component)]
@@ -107,7 +109,7 @@ pub fn draw_table(
     mut commands: Commands,
     table_card_container_query: Query<Entity, With<TableCardContainer>>,
     res: Res<UiAssets>,
-    server_table_q: Query<&Table>,
+    global: Res<Global>,
 ) {
     clear_table_cards(&mut commands, &table_card_container_query);
 
@@ -115,25 +117,11 @@ pub fn draw_table(
         return;
     };
 
-    let table_server = server_table_q.get_single();
-
-    // Please remove this shit !!!
-    let table_str: String;
-
-    match table_server {
-        Ok(table) => {
-            table_str = table.cards.to_string();
-        }
-        _ => {
-            table_str = "".to_string();
-        }
-    }
-
-    if table_str.is_empty() {
+    if global.game.table_cards.is_empty() {
         return;
     }
 
-    let hand = Hand::from_str(&table_str);
+    let hand = Hand::from_str(&global.game.table_cards);
 
     for card in hand.cards {
         let handle = res.cards.get(&card.name()).unwrap();

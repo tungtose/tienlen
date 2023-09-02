@@ -123,21 +123,35 @@ fn create_circle_path(cir_setting: &CircleSetting) -> Path {
 
 pub fn update_score(
     mut text_q: Query<(&mut Text, &PlayerPos), With<Score>>,
-    player_q: Query<&Player>,
+    global: Res<Global>,
     res: Res<UiAssets>,
 ) {
+    let text_style = TextStyle {
+        font: res.font.clone(),
+        font_size: 15.0,
+        color: Color::WHITE,
+    };
+
     // TODO: O(N^2) here, worst  case only 8 iterate but still bother me
     for (mut text, player_pos) in text_q.iter_mut() {
-        for player in player_q.iter() {
-            if player_pos.0 as usize == *player.pos {
-                let new_score = format!("Score: {}", *player.score);
-                let text_style = TextStyle {
-                    font: res.font.clone(),
-                    font_size: 15.0,
-                    color: Color::WHITE,
-                };
-                *text = Text::from_section(new_score, text_style);
-            }
+        if player_pos.0 == global.game.local_player.pos {
+            let new_score = format!("Score: {}", global.game.local_player.score);
+            *text = Text::from_section(new_score, text_style.clone());
+        }
+
+        if player_pos.0 == global.game.player_1.pos {
+            let new_score = format!("Score: {}", global.game.player_1.score);
+            *text = Text::from_section(new_score, text_style.clone());
+        }
+
+        if player_pos.0 == global.game.player_2.pos {
+            let new_score = format!("Score: {}", global.game.player_2.score);
+            *text = Text::from_section(new_score, text_style.clone());
+        }
+
+        if player_pos.0 == global.game.player_3.pos {
+            let new_score = format!("Score: {}", global.game.player_3.score);
+            *text = Text::from_section(new_score, text_style.clone());
         }
     }
 }
@@ -178,7 +192,7 @@ pub fn draw_player_ui(mut commands: Commands, mut global: ResMut<Global>, res: R
             &Vec2::new(0., -175.),
             &res,
             local_player.pos,
-            "0",
+            &local_player.score.to_string(),
             &local_player.name,
         );
 
@@ -194,7 +208,7 @@ pub fn draw_player_ui(mut commands: Commands, mut global: ResMut<Global>, res: R
             &p1.draw_pos,
             &res,
             p1.pos,
-            &p1.score,
+            &p1.score.to_string(),
             &p1.name,
         );
 
@@ -210,7 +224,7 @@ pub fn draw_player_ui(mut commands: Commands, mut global: ResMut<Global>, res: R
             &p2.draw_pos,
             &res,
             p2.pos,
-            &p2.score,
+            &p2.score.to_string(),
             &p2.name,
         );
         commands.entity(p2_ui).insert(ForeignPlayer2);
@@ -225,7 +239,7 @@ pub fn draw_player_ui(mut commands: Commands, mut global: ResMut<Global>, res: R
             &p3.draw_pos,
             &res,
             p3.pos,
-            &p3.score,
+            &p3.score.to_string(),
             &p3.name,
         );
 

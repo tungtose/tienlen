@@ -33,7 +33,6 @@ impl Plugin for GamePlugin {
 }
 
 pub struct LocalStartGame;
-pub struct SpawnLPlayer;
 pub struct UpdatePlayerCards;
 
 pub struct SelectCardEvent(pub usize);
@@ -153,6 +152,7 @@ pub fn update_player_cards(
     mut draw_player_ev: EventWriter<DrawPlayer>,
     mut active_cards_q: Query<&mut ActiveCards>,
 ) {
+    info!("DRAW P CARDS!!!");
     let Ok(server_hand) = hand_q.get_single() else {
         return;
     };
