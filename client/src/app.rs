@@ -73,6 +73,10 @@ pub fn run() {
                 input::cursor_input,
                 sync::sync_main_player,
                 sync::sync_foreign_player,
+                sync::sync_main_player_cards,
+                sync::sync_table_cards,
+                sync::sync_timer,
+                sync::sync_player,
             )
                 .chain()
                 .in_set(MainLoop),

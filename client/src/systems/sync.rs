@@ -1,8 +1,8 @@
-use bevy::prelude::{Query, ResMut, Vec2, With, Without};
+use bevy::prelude::{info, EventWriter, Query, ResMut, Vec2, With, Without};
 
-use naia_bevy_demo_shared::components::Player;
+use naia_bevy_demo_shared::components::{hand::Hand, Counter, Player, ServerHand, Table};
 
-use crate::{components::LocalPlayer, resources::Global};
+use crate::{components::LocalPlayer, resources::Global, ui::DrawPlayer};
 
 pub fn sync_main_player(
     main_player_q: Query<&Player, With<LocalPlayer>>,
@@ -95,6 +95,74 @@ pub fn sync_foreign_player(
                 global.game.player_3.pos = *player.pos as i32;
             }
             _ => unreachable!(),
+        }
+    }
+}
+
+pub fn sync_main_player_cards(
+    mut global: ResMut<Global>,
+    hand_q: Query<&ServerHand, With<LocalPlayer>>,
+    // mut draw_player_ev: EventWriter<DrawPlayer>,
+) {
+    let Ok(server_hand) = hand_q.get_single() else {
+        return;
+    };
+
+    let hand_str = server_hand.cards.clone();
+
+    let hand = Hand::from(hand_str);
+
+    global.game.local_player.cards.clear();
+
+    if hand.is_empty() {
+        // draw_player_ev.send(DrawPlayer);
+        return;
+    }
+
+    for card in hand.cards.as_slice() {
+        global.game.local_player.cards.insert(card.ordinal(), *card);
+    }
+}
+
+pub fn sync_table_cards(mut global: ResMut<Global>, server_table_q: Query<&Table>) {
+    let Ok(table_server) = server_table_q.get_single() else {
+        return;
+    };
+
+    let table_cards_str = table_server.cards.to_string();
+
+    if table_cards_str.is_empty() {
+        return;
+    }
+
+    global.game.table_cards = table_server.cards.to_string();
+}
+
+pub fn sync_timer(mut global: ResMut<Global>, timer_q: Query<&Counter>) {
+    let Ok(server_timer) = timer_q.get_single() else {
+        return;
+    };
+
+    global.game.timer = server_timer.as_string();
+}
+
+pub fn sync_player(mut global: ResMut<Global>, player_q: Query<&Player>) {
+    let game = &mut global.game;
+    for player in player_q.iter() {
+        if game.player_1.pos == *player.pos as i32 {
+            game.player_1.score = *player.score;
+        }
+
+        if game.player_2.pos == *player.pos as i32 {
+            game.player_2.score = *player.score;
+        }
+
+        if game.player_3.pos == *player.pos as i32 {
+            game.player_3.score = *player.score;
+        }
+
+        if game.local_player.pos == *player.pos as i32 {
+            game.local_player.score = *player.score;
         }
     }
 }

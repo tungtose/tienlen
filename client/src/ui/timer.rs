@@ -1,7 +1,7 @@
 use bevy::prelude::*;
-use naia_bevy_demo_shared::components::{timer::Counter, Player};
+use naia_bevy_demo_shared::components::timer::Counter;
 
-use crate::components::LocalPlayer;
+use crate::resources::Global;
 
 use super::UiAssets;
 
@@ -44,28 +44,14 @@ fn clear_counter(commands: &mut Commands, query: &Query<Entity, With<TimerContai
     }
 }
 
-pub fn draw_counter(
-    mut commands: Commands,
-    timer_q: Query<&Counter>,
-    res: Res<UiAssets>,
-    timer_container_query: Query<Entity, With<TimerContainer>>,
-) {
-    clear_counter(&mut commands, &timer_container_query);
-
-    let Ok(server_timer) = timer_q.get_single() else {
-        info!("No timer yet!");
-        return;
-    };
-
+pub fn init_counter(mut commands: Commands, res: Res<UiAssets>) {
     let container = create_timer_container(&mut commands);
-
-    let timer_string = server_timer.as_string();
 
     let timer_entity = commands
         .spawn((
             SkipTurnTimerText,
             TextBundle::from_section(
-                timer_string,
+                "0".to_string(),
                 TextStyle {
                     font: res.font.clone(),
                     font_size: 32.0,
@@ -76,4 +62,20 @@ pub fn draw_counter(
         .id();
 
     commands.entity(container).add_child(timer_entity);
+}
+
+pub fn update_counter(
+    global: ResMut<Global>,
+    res: Res<UiAssets>,
+    mut text_q: Query<&mut Text, With<SkipTurnTimerText>>,
+) {
+    let mut text_counter = text_q.get_single_mut().unwrap();
+
+    let text_style = TextStyle {
+        font: res.font.clone(),
+        font_size: 32.0,
+        color: Color::RED,
+    };
+
+    *text_counter = Text::from_section(&global.game.timer, text_style);
 }
