@@ -24,7 +24,7 @@ use naia_bevy_demo_shared::{
     components::{player::Player, Color, ColorValue, Position, Shape, ShapeValue},
     messages::{
         Counter, EntityAssignment, ErrorCode, GameError, KeyCommand, NewMatch, NewPlayer, PlayCard,
-        StartGame, UpdateScore, UpdateTurn,
+        PlayerMessage, StartGame, UpdateScore, UpdateTurn,
     },
 };
 
@@ -33,7 +33,10 @@ use crate::{
     game::{LocalStartGame, UpdatePlayerCards},
     resources::Global,
     states::MainState,
-    ui::{DrawStatus, NewPlayerJoin, ReloadBar, SpawnLocalPlayerEvent, UpdateScoreUI},
+    ui::{
+        DrawStatus, NewPlayerJoin, PlayerMessageEvent, ReloadBar, SpawnLocalPlayerEvent,
+        UpdateScoreUI,
+    },
 };
 
 const SQUARE_SIZE: f32 = 32.0;
@@ -83,11 +86,12 @@ pub fn message_events(
     mut update_player_cards_ev: EventWriter<UpdatePlayerCards>,
     mut update_score_ev: EventWriter<UpdateScoreUI>,
     mut new_player_join_ev: EventWriter<NewPlayerJoin>,
-    mut spawn_local_player_ev: EventWriter<SpawnLocalPlayerEvent>,
+    mut player_message_ev: EventWriter<PlayerMessageEvent>,
 ) {
     for events in event_reader.iter() {
-        for message in events.read::<GameSystemChannel, Counter>() {
-            info!("Counter from server: {:?}", message.as_string())
+        for message in events.read::<GameSystemChannel, PlayerMessage>() {
+            let event = PlayerMessageEvent(message.0, message.1.to_string());
+            player_message_ev.send(event);
         }
 
         for _ in events.read::<GameSystemChannel, StartGame>() {
@@ -96,7 +100,6 @@ pub fn message_events(
         }
 
         for _ in events.read::<GameSystemChannel, NewPlayer>() {
-            info!("NEw player join!!!");
             new_player_join_ev.send_default();
         }
 
@@ -134,7 +137,6 @@ pub fn message_events(
         }
 
         for update_turn in events.read::<GameSystemChannel, UpdateTurn>() {
-            info!("Update turn!!!");
             let active_player_pos = update_turn.0 as i32;
             global.active_player_pos = active_player_pos;
         }

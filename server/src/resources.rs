@@ -6,10 +6,7 @@ use std::{
 use bevy_ecs::{entity::Entity, prelude::Resource};
 
 use bevy_log::info;
-use naia_bevy_demo_shared::{
-    components::{deck::Deck, hand::Hand},
-    messages::{Counter, PlayerMessage},
-};
+use naia_bevy_demo_shared::{components::hand::Hand, messages::Counter};
 use naia_bevy_server::{RoomKey, UserKey};
 
 #[derive(Clone)]
@@ -35,17 +32,6 @@ impl Debug for PlayerData {
             .field("entity", &self.entity)
             .field("score", &self.score)
             .finish()
-    }
-}
-
-impl Into<PlayerMessage> for PlayerData {
-    fn into(self) -> PlayerMessage {
-        PlayerMessage {
-            pos: self.pos,
-            active: self.active,
-            cards: self.cards,
-            score: self.score,
-        }
     }
 }
 

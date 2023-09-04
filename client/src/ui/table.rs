@@ -34,7 +34,6 @@ pub struct StatusContainer;
 
 #[derive(Component)]
 pub struct CounterConfig {
-    /// How often to spawn a new bomb? (repeating timer)
     timer: Timer,
 }
 

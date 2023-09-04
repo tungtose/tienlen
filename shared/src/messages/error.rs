@@ -5,12 +5,6 @@ pub struct ErrorCode {
     code: usize,
 }
 
-// impl Default for ErrorCode {
-//     fn default() -> Self {
-//         Self { code: 0 }
-//     }
-// }
-
 pub enum GameError {
     InvalidCards,
     WrongTurn,
