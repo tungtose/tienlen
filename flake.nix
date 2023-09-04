@@ -36,6 +36,7 @@
 
             libxkbcommon
             wayland
+            watchexec
 
             xorg.libXcursor
             xorg.libXrandr
