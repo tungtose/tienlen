@@ -6,14 +6,15 @@ mod entity_assignment;
 pub mod error;
 mod game;
 mod key_command;
+mod player;
+
+pub use player::PlayerMessage;
 
 pub use auth::Auth;
 pub use counter::Counter;
 pub use entity_assignment::EntityAssignment;
 pub use error::{ErrorCode, GameError};
-pub use game::{
-    NewMatch, NewPlayer, PlayCard, PlayerMessage, SkipTurn, StartGame, UpdateScore, UpdateTurn,
-};
+pub use game::{NewMatch, NewPlayer, PlayCard, SkipTurn, StartGame, UpdateScore, UpdateTurn};
 pub use key_command::KeyCommand;
 
 // Plugin
@@ -33,8 +34,8 @@ impl ProtocolPlugin for MessagesPlugin {
             .add_message::<PlayCard>()
             .add_message::<UpdateTurn>()
             .add_message::<SkipTurn>()
-            .add_message::<UpdateScore>()
             .add_message::<PlayerMessage>()
+            .add_message::<UpdateScore>()
             .add_message::<ErrorCode>();
     }
 }

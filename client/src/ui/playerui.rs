@@ -1,16 +1,20 @@
+use std::time::Duration;
+
 use bevy::{prelude::*, text::Text2dBounds};
 use bevy_prototype_lyon::prelude::*;
-use naia_bevy_demo_shared::components::Player;
 
 use crate::{components::LocalPlayer, resources::Global};
 
-use super::UiAssets;
+use super::{PlayerMessageEvent, UiAssets};
 
 const TIME_OUT: f32 = 20.;
 const AVATAR_SIZE: f32 = 55.;
 
 #[derive(Component)]
 pub struct ForeignPlayer;
+
+#[derive(Component)]
+pub struct PlayerMessageContainer;
 
 #[derive(Component)]
 pub struct AnimateText;
@@ -26,6 +30,12 @@ pub struct Score;
 
 #[derive(Component)]
 pub struct Name;
+
+#[derive(Component)]
+pub struct CleanMessageCounter {
+    timer: Timer,
+    pos: i32,
+}
 
 #[derive(Component)]
 pub struct CircleSetting {
@@ -249,6 +259,58 @@ pub fn draw_player_ui(mut commands: Commands, mut global: ResMut<Global>, res: R
     }
 }
 
+pub fn clean_player_message(
+    mut commands: Commands,
+    time: Res<Time>,
+    res: Res<UiAssets>,
+    mut counter_q: Query<(Entity, &mut CleanMessageCounter)>,
+    mut ui_q: Query<(&mut Text, &PlayerPos), With<PlayerMessageContainer>>,
+) {
+    let text_style = TextStyle {
+        font: res.font.clone(),
+        font_size: 16.0,
+        color: Color::rgb(0.9, 0.9, 0.9),
+    };
+    for (entity, mut counter) in counter_q.iter_mut() {
+        counter.timer.tick(time.delta());
+
+        if counter.timer.finished() {
+            commands.entity(entity).despawn();
+            for (mut text, pos) in ui_q.iter_mut() {
+                if pos.0 == counter.pos {
+                    *text = Text::from_section("".to_string(), text_style.clone());
+                }
+            }
+        }
+    }
+}
+
+pub fn update_player_message(
+    mut commands: Commands,
+    mut message_ev: EventReader<PlayerMessageEvent>,
+    mut ui_q: Query<(&mut Text, &PlayerPos), With<PlayerMessageContainer>>,
+    res: Res<UiAssets>,
+) {
+    let text_style = TextStyle {
+        font: res.font.clone(),
+        font_size: 20.0,
+        color: Color::RED,
+    };
+
+    for message in message_ev.iter() {
+        for (mut text, pos) in ui_q.iter_mut() {
+            if pos.0 == message.0 as i32 {
+                *text = Text::from_section(message.1.clone(), text_style.clone());
+
+                commands.spawn(CleanMessageCounter {
+                    timer: Timer::new(Duration::from_secs(3), TimerMode::Once),
+                    pos: pos.0,
+                });
+            }
+        }
+    }
+}
+
 pub fn create_player_ui(
     commands: &mut Commands,
     draw_pos: &Vec2,
@@ -317,7 +379,7 @@ pub fn create_player_ui(
                 Score,
                 PlayerPos(player_pos),
                 Text2dBundle {
-                    text: Text::from_section(score, text_style)
+                    text: Text::from_section(score, text_style.clone())
                         .with_alignment(TextAlignment::Center),
                     text_2d_bounds: Text2dBounds {
                         size: Vec2::new(100., 30.),
@@ -326,6 +388,23 @@ pub fn create_player_ui(
                         draw_pos.x,
                         draw_pos.y - 35.,
                         1.,
+                    ])),
+                    ..default()
+                },
+            ));
+        })
+        .with_children(|builder| {
+            builder.spawn((
+                PlayerMessageContainer,
+                PlayerPos(player_pos),
+                Text2dBundle {
+                    text: Text::from_section("".to_string(), text_style)
+                        .with_alignment(TextAlignment::Center),
+                    text_2d_bounds: Text2dBounds {
+                        size: Vec2::new(100., 30.),
+                    },
+                    transform: Transform::from_translation(Vec3::from_array([
+                        draw_pos.x, draw_pos.y, 1.,
                     ])),
                     ..default()
                 },

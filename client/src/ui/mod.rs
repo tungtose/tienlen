@@ -20,6 +20,7 @@ impl Plugin for UiPlugin {
         app.add_event::<ReloadUiEvent>()
             .add_event::<SpawnLocalPlayerEvent>()
             .add_event::<ReloadBar>()
+            .add_event::<PlayerMessageEvent>()
             .add_event::<DrawPlayer>()
             .add_event::<UpdateCard>()
             .add_event::<DrawStatus>()
@@ -30,6 +31,8 @@ impl Plugin for UiPlugin {
             .add_system(playerui::draw_player_ui.run_if(in_state(MainState::Lobby)))
             .add_system(playerui::circle_cooldown_update.run_if(in_state(MainState::Game)))
             .add_system(playerui::update_score.run_if(in_state(MainState::Game)))
+            .add_system(playerui::update_player_message.run_if(on_event::<PlayerMessageEvent>()))
+            .add_system(playerui::clean_player_message.run_if(in_state(MainState::Game)))
             .add_system(
                 playerui::animatetext_update
                     .run_if(in_state(MainState::Game))
@@ -71,6 +74,9 @@ pub struct NewPlayerJoin;
 
 #[derive(Default)]
 pub struct SpawnLocalPlayerEvent;
+
+#[derive(Default)]
+pub struct PlayerMessageEvent(pub usize, pub String);
 
 #[derive(Default)]
 pub struct DrawPlayer;

@@ -63,14 +63,13 @@ impl ActiveCards {
     }
 
     pub fn to_vec(&mut self) -> Vec<Card> {
-        let cards = {
+        {
             let mut cards_vec = vec![];
             for card in self.0.values() {
                 cards_vec.push(*card);
             }
             cards_vec
-        };
-        cards
+        }
     }
 
     pub fn to_string(&mut self) -> Result<String, &'static str> {

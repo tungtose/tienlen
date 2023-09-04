@@ -31,7 +31,7 @@ use naia_bevy_demo_shared::{
     },
     messages::{
         error::GameError, Auth, EntityAssignment, ErrorCode, KeyCommand, NewMatch, NewPlayer,
-        PlayCard, SkipTurn, StartGame, UpdateScore, UpdateTurn,
+        PlayCard, PlayerMessage, SkipTurn, StartGame, UpdateScore, UpdateTurn,
     },
 };
 
@@ -65,109 +65,6 @@ pub fn connect_events(
             .address();
 
         info!("Naia Server connected to: {}", address);
-
-        // // Check if player is Host
-        // let player_num = global.users_map.len();
-        //
-        // info!("player_num {}", player_num);
-        //
-        // // FIXME: remove this
-        // let player = Player::new(player_num);
-        //
-        // let entity = commands
-        //     .spawn_empty()
-        //     .enable_replication(&mut server)
-        //     .insert(player)
-        //     .id();
-        //
-        // if player_num == 0 {
-        //     commands.entity(entity).insert(Host);
-        // }
-        //
-        // global.users_map.insert(*user_key, entity);
-        // let player_data = PlayerData {
-        //     entity,
-        //     pos: player_num,
-        //     active: player_num == 0,
-        //     cards: String::new(),
-        //     score: 0,
-        //     user_key: *user_key,
-        // };
-        //
-        // global.players_map.0.insert(*user_key, player_data.clone());
-        //
-        // for (user_key, _) in global.players_map.0.iter() {
-        //     server.send_message::<GameSystemChannel, PlayerMessage>(
-        //         user_key,
-        //         &player_data.clone().into(),
-        //     );
-        // }
-        //
-        // server.room_mut(&global.main_room_key).add_entity(&entity);
-
-        // Send an Entity Assignment message to the User that owns the Square
-        // let mut assignment_message = EntityAssignment::new(true);
-        // assignment_message.entity.set(&server, &entity);
-        //
-        // server.send_message::<EntityAssignmentChannel, EntityAssignment>(
-        //     user_key,
-        //     &assignment_message,
-        // );
-
-        // Create components for Entity to represent new player
-
-        // Position component
-        // let position = {
-        //     let x = 16 * ((Random::gen_range_u32(0, 40) as i16) - 20);
-        //     let y = 16 * ((Random::gen_range_u32(0, 30) as i16) - 15);
-        //     Position::new(x, y)
-        // };
-        //
-        // // Color component
-        // let color = {
-        //     let color_value = match server.users_count() % 4 {
-        //         0 => ColorValue::Yellow,
-        //         1 => ColorValue::Red,
-        //         2 => ColorValue::Blue,
-        //         _ => ColorValue::Green,
-        //     };
-        //     Color::new(color_value)
-        // };
-
-        // // Shape component
-        // let shape = Shape::new(ShapeValue::Square);
-        //
-        // // Spawn entity
-        // let entity = commands
-        //     // Spawn new Entity
-        //     .spawn_empty()
-        //     // MUST call this to begin replication
-        //     .enable_replication(&mut server)
-        //     // Insert Position component
-        //     .insert(position)
-        //     // Insert Color component
-        //     .insert(color)
-        //     // Insert Shape component
-        //     .insert(shape)
-        //     // return Entity id
-        //     .id();
-        //
-        // server.room_mut(&global.main_room_key).add_entity(&entity);
-        //
-        // global.user_to_square_map.insert(*user_key, entity);
-        // global.square_to_user_map.insert(entity, *user_key);
-        // global.total_player += 1;
-
-        // Send an Entity Assignment message to the User that owns the Square
-        // let mut assignment_message = EntityAssignment::new(true);
-        // assignment_message.entity.set(&server, &entity);
-        //
-        // global.players_map.debug();
-        //
-        // server.send_message::<EntityAssignmentChannel, EntityAssignment>(
-        //     user_key,
-        //     &assignment_message,
-        // );
     }
 }
 
@@ -333,6 +230,8 @@ pub fn message_events(
                 return;
             }
 
+            let current_active_player = turn.current_active_player().unwrap();
+
             if let (leader_turn, Some(next_player)) = turn.skip_turn() {
                 // If only 1 player left on the pool, they can play any card they wanted to and
                 // they can not skip turn
@@ -344,6 +243,11 @@ pub fn message_events(
                     server.send_message::<GameSystemChannel, UpdateTurn>(
                         u_key,
                         &UpdateTurn(next_player),
+                    );
+
+                    server.send_message::<GameSystemChannel, PlayerMessage>(
+                        u_key,
+                        &PlayerMessage(current_active_player, "skip".to_string()),
                     );
                 }
 
