@@ -23,6 +23,7 @@ pub fn check_asset_loading(
     match asset_server.get_group_load_state(asset_list.0.iter().map(|a| a.id())) {
         LoadState::Loading => {
             info!("loading assets...");
+            next_state.set(MainState::LoadAssets);
         }
         LoadState::Loaded => {
             info!("loading assets done!");

@@ -28,3 +28,6 @@ serve path="./":
 
 run:
   cargo run --release --config env.SERVER_INIT_ADDRESS='"$SERVER_INIT_ADDRESS"'
+
+styles:
+  pnpm dlx tailwindcss -i input.css -o assets/output.css --watch
