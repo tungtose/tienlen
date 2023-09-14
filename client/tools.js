@@ -13,7 +13,6 @@ function getFilename(resource) {
 // `progressiveFetch` is a wrapper over `window.fetch`. It allows you to insert middle-ware that is
 // polled as the fetch completes. See bevy-website/issues/338 for details.
 async function progressiveFetch(resource, callbacks={}) {
-    console.log("==== Start Fetch");
     const filename = getFilename(resource);
     const cb = Object.assign({
         start: (params) => {},
