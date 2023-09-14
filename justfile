@@ -45,5 +45,5 @@ deploy_web:
 run_client:
   just ./client/run
 
-# run_client_remote:
-#   just ./client/run_remote
+styles:
+  just ./client/styles
