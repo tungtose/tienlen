@@ -5,7 +5,7 @@ ssh $REMOTE DEST=$DEST 'bash -s' <<'ENDSSH'
   rm -rf $DEST/*
 ENDSSH
 
-scp -r .env client/assets client/index.html client/wasm "$REMOTE:$DEST"
+scp -r .env client/assets client/index.html client/wasm client/tools.js client/app.js "$REMOTE:$DEST"
 
 ssh $REMOTE DEST=$DEST 'bash -s' <<'ENDSSH'
   sudo cp -r $DEST* /var/www/html
