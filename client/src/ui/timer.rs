@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use naia_bevy_demo_shared::components::timer::Counter;
 
 use crate::resources::Global;
 
@@ -69,7 +68,10 @@ pub fn update_counter(
     res: Res<UiAssets>,
     mut text_q: Query<&mut Text, With<SkipTurnTimerText>>,
 ) {
-    let mut text_counter = text_q.get_single_mut().unwrap();
+    let Ok(mut text_counter) = text_q.get_single_mut() else {
+        info!("Not found text_counter");
+        return;
+    };
 
     let text_style = TextStyle {
         font: res.font.clone(),

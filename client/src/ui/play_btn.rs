@@ -119,6 +119,8 @@ pub fn spawn_play_btn(
         commands.entity(player_container_entity).despawn_recursive();
     }
 
+    info!("Player Active: {}", *player.active);
+
     let show_player_control = if *player.active {
         Visibility::Visible
     } else {

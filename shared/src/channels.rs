@@ -27,7 +27,7 @@ impl ProtocolPlugin for ChannelsPlugin {
             )
             .add_channel::<PlayerActionChannel>(
                 ChannelDirection::ClientToServer,
-                ChannelMode::UnorderedReliable(ReliableSettings::default()),
+                ChannelMode::OrderedReliable(ReliableSettings::default()),
             )
             .add_channel::<PlayerCommandChannel>(
                 ChannelDirection::ClientToServer,
@@ -35,7 +35,7 @@ impl ProtocolPlugin for ChannelsPlugin {
             )
             .add_channel::<EntityAssignmentChannel>(
                 ChannelDirection::ServerToClient,
-                ChannelMode::UnorderedReliable(ReliableSettings::default()),
+                ChannelMode::OrderedReliable(ReliableSettings::default()),
             );
     }
 }

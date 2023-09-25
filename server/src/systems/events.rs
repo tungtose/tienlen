@@ -31,7 +31,7 @@ use naia_bevy_demo_shared::{
     },
     messages::{
         error::GameError, Auth, EntityAssignment, ErrorCode, KeyCommand, NewMatch, NewPlayer,
-        PlayCard, PlayerMessage, SkipTurn, StartGame, UpdateScore, UpdateTurn,
+        PlayCard, PlayerMessage, PlayerReady, SkipTurn, StartGame, UpdateScore, UpdateTurn,
     },
 };
 
@@ -168,8 +168,29 @@ pub fn message_events(
             );
         }
 
+        for (user_key, _) in events.read::<PlayerActionChannel, PlayerReady>() {
+            let player_entity = global.users_map.get(&user_key).unwrap();
+
+            if let Ok(mut player) = player_q.get_mut(*player_entity) {
+                *player.ready = true;
+            }
+        }
+
         for (_, _) in events.read::<PlayerActionChannel, StartGame>() {
             let total_player = global.total_player;
+
+            if total_player < 2 {
+                return;
+            }
+
+            for (_, entity) in global.users_map.iter() {
+                if let Ok(player) = player_q.get(*entity) {
+                    if !*player.ready {
+                        info!("There are players not ready yet");
+                        return;
+                    }
+                }
+            }
 
             // Add the table component to the room
             let server_table = Table::new("".to_string());
