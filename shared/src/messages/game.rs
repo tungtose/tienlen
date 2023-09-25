@@ -33,4 +33,7 @@ pub struct NewMatch;
 pub struct NewPlayer(pub String);
 
 #[derive(Message, Debug, Default)]
+pub struct PlayerReady;
+
+#[derive(Message, Debug, Default)]
 pub struct NewPlayerJoin;

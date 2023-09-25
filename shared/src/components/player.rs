@@ -10,6 +10,7 @@ pub struct Player {
     pub active: Property<bool>,
     pub score: Property<u32>,
     pub name: Property<String>,
+    pub ready: Property<bool>,
 }
 
 impl Player {
@@ -19,7 +20,7 @@ impl Player {
             active = true;
         }
 
-        Self::new_complete(pos, active, 0, name.to_string())
+        Self::new_complete(pos, active, 0, name.to_string(), false)
     }
 }
 

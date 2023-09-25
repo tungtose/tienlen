@@ -24,7 +24,7 @@ use naia_bevy_demo_shared::{
     components::{player::Player, Color, ColorValue, Position, Shape, ShapeValue},
     messages::{
         Counter, EntityAssignment, ErrorCode, GameError, KeyCommand, NewMatch, NewPlayer, PlayCard,
-        PlayerMessage, StartGame, UpdateScore, UpdateTurn,
+        PlayerMessage, PlayerReady, StartGame, UpdateScore, UpdateTurn,
     },
 };
 
@@ -38,8 +38,6 @@ use crate::{
         UpdateScoreUI,
     },
 };
-
-const SQUARE_SIZE: f32 = 32.0;
 
 pub fn connect_events(
     // mut commands: Commands,
@@ -76,7 +74,7 @@ pub fn disconnect_events(mut event_reader: EventReader<DisconnectEvent>) {
 #[allow(clippy::too_many_arguments)]
 pub fn message_events(
     mut commands: Commands,
-    client: Client,
+    mut client: Client,
     mut global: ResMut<Global>,
     mut event_reader: EventReader<MessageEvents>,
     player_query: Query<&Player>,
@@ -123,8 +121,14 @@ pub fn message_events(
                         "You can not skip turn, you can play any card now".to_string(),
                     ));
                 }
-                GameError::WrongTurn => todo!(),
-                GameError::UnknownError => todo!(),
+                GameError::WrongTurn => {
+                    draw_status_ev.send(DrawStatus(
+                        "Not your turn now! Game bug probably".to_string(),
+                    ));
+                }
+                GameError::UnknownError => {
+                    draw_status_ev.send(DrawStatus("Unexpected error happend".to_string()));
+                }
             }
         }
 
@@ -154,8 +158,11 @@ pub fn message_events(
                         global.player_entity = Some(entity);
                         commands.entity(entity).insert(LocalPlayer);
                         bar_ev.send(ReloadBar);
+                        client.send_message::<PlayerActionChannel, PlayerReady>(
+                            &PlayerReady::default(),
+                        )
                     }
-                    Err(err) => info!("Error: {}", err),
+                    Err(err) => info!("Gave Ownership Error: {}", err),
                 }
             }
         }

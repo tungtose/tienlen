@@ -105,6 +105,7 @@ pub fn select_card(
     mut select_card_ev: EventReader<SelectCardEvent>,
 ) {
     for event in select_card_ev.iter() {
+        // BUG: there is a panic here!
         let card = global.player_cards.get(&event.0).unwrap();
         active_cards_q
             .get_single_mut()
