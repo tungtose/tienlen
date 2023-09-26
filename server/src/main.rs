@@ -1,4 +1,4 @@
-use bevy_app::{App, ScheduleRunnerPlugin, ScheduleRunnerSettings};
+use bevy_app::{App, ScheduleRunnerPlugin, Startup, Update};
 use bevy_core::{FrameCountPlugin, TaskPoolPlugin, TypeRegistrationPlugin};
 use bevy_ecs::schedule::IntoSystemConfigs;
 use bevy_log::{info, LogPlugin};
@@ -21,25 +21,30 @@ fn main() {
     // Build App
     App::default()
         // Plugins
-        .add_plugin(TaskPoolPlugin::default())
-        .add_plugin(TimePlugin::default())
-        .add_plugin(TypeRegistrationPlugin::default())
-        .add_plugin(FrameCountPlugin::default())
-        .insert_resource(
-            // this is needed to avoid running the server at uncapped FPS
-            ScheduleRunnerSettings::run_loop(Duration::from_millis(3)),
-        )
-        .add_plugin(ScheduleRunnerPlugin::default())
-        .add_plugin(LogPlugin::default())
-        .add_plugin(ServerPlugin::new(ServerConfig::default(), protocol()))
+        .add_plugins((
+            TaskPoolPlugin::default(),
+            TimePlugin::default(),
+            TypeRegistrationPlugin::default(),
+            FrameCountPlugin::default(),
+            LogPlugin::default(),
+            ServerPlugin::new(ServerConfig::default(), protocol()),
+            ScheduleRunnerPlugin::run_loop(Duration::from_millis(3)),
+        ))
         // Startup System
-        .add_startup_system(init)
+        .add_systems(Startup, (init, common::set_up_counter))
         // Test
-        .add_startup_system(common::set_up_counter)
-        .add_systems((common::countdown, common::run_out_countdow).chain())
-        .add_system(events::end_match)
+        // .add_startup_system(common::set_up_counter)
+        .add_systems(
+            Update,
+            (
+                common::countdown,
+                common::run_out_countdow,
+                events::end_match,
+            ),
+        )
         // Receive Server Events
         .add_systems(
+            Update,
             (
                 events::auth_events,
                 events::connect_events,
