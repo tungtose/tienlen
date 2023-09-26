@@ -43,10 +43,11 @@ fn create_hand_container(commands: &mut Commands, active: bool) -> Entity {
             NodeBundle {
                 style: Style {
                     position_type: PositionType::Absolute,
-                    position: UiRect::bottom(Val::Px(0.)),
+                    bottom: Val::Px(0.),
                     justify_content: JustifyContent::Center,
                     align_items: AlignItems::Center,
-                    size: Size::new(Val::Percent(100.), Val::Px(DECK_HEIGHT)),
+                    width: Val::Percent(100.),
+                    height: Val::Px(DECK_HEIGHT),
                     ..Default::default()
                 },
                 background_color,
@@ -58,13 +59,7 @@ fn create_hand_container(commands: &mut Commands, active: bool) -> Entity {
     hand_container
 }
 
-pub fn get_card(
-    commands: &mut Commands,
-    size: Size,
-    // margin: UiRect,
-    is_active: bool,
-    image: &Handle<Image>,
-) -> Entity {
+pub fn get_card(commands: &mut Commands, is_active: bool, image: &Handle<Image>) -> Entity {
     let mut margin = UiRect::all(Val::Px(CARD_MARGIN));
 
     if is_active {
@@ -76,7 +71,8 @@ pub fn get_card(
             CardUi,
             ButtonBundle {
                 style: Style {
-                    size,
+                    width: Val::Px(CARD_WIDTH),
+                    height: Val::Px(CARD_HEIGHT),
                     margin,
                     justify_content: JustifyContent::Center,
                     align_items: AlignItems::Center,
@@ -95,7 +91,7 @@ pub fn card_click(
 ) {
     for (interaction, button) in interactions.iter_mut() {
         match *interaction {
-            Interaction::Clicked => {
+            Interaction::Pressed => {
                 info!("clicking on: {:?}", button.0);
                 select_card_ev.send(SelectCardEvent(button.0));
             }
@@ -134,12 +130,7 @@ pub fn draw_player(
 
         let is_active = active_cards.is_active(card_entity);
 
-        let card_ui = get_card(
-            &mut commands,
-            Size::new(Val::Px(CARD_WIDTH), Val::Px(CARD_HEIGHT)),
-            is_active,
-            handle,
-        );
+        let card_ui = get_card(&mut commands, is_active, handle);
 
         commands.entity(card_ui).insert(CardButton(*card_entity));
 

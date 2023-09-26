@@ -22,11 +22,12 @@ fn create_timer_container(commands: &mut Commands) -> Entity {
             NodeBundle {
                 style: Style {
                     position_type: PositionType::Absolute,
-                    position: UiRect::bottom(Val::Px(0.)),
+                    bottom: Val::Px(0.),
                     justify_content: JustifyContent::Center,
                     align_items: AlignItems::Center,
                     flex_direction: FlexDirection::Column,
-                    size: Size::new(Val::Percent(100.), Val::Px(TIMER_CONTAINER_HEIGHT)),
+                    width: Val::Percent(100.),
+                    height: Val::Px(TIMER_CONTAINER_HEIGHT),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -35,12 +36,6 @@ fn create_timer_container(commands: &mut Commands) -> Entity {
         .id();
 
     timer_container
-}
-
-fn clear_counter(commands: &mut Commands, query: &Query<Entity, With<TimerContainer>>) {
-    for entity in query.iter() {
-        commands.entity(entity).despawn_recursive();
-    }
 }
 
 pub fn init_counter(mut commands: Commands, res: Res<UiAssets>) {

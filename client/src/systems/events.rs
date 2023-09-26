@@ -1,46 +1,35 @@
 use std::default::Default;
 
-use bevy::{
-    prelude::{
-        info, Color as BevyColor, Commands, EventReader, EventWriter, NextState, Query, Res,
-        ResMut, Sprite, SpriteBundle, Transform, Vec2,
-    },
-    sprite::MaterialMesh2dBundle,
-};
+use bevy::prelude::{info, Commands, EventReader, EventWriter, NextState, Query, ResMut};
 
 use naia_bevy_client::{
     events::{
-        ClientTickEvent, ConnectEvent, DespawnEntityEvent, DisconnectEvent, InsertComponentEvents,
-        MessageEvents, RejectEvent, RemoveComponentEvents, SpawnEntityEvent, UpdateComponentEvents,
+        ClientTickEvent, ConnectEvent, DespawnEntityEvent, DisconnectEvent, MessageEvents,
+        RejectEvent, SpawnEntityEvent,
     },
-    sequence_greater_than, Client, Replicate, Tick,
+    Client,
 };
 
 use naia_bevy_demo_shared::{
-    behavior as shared_behavior,
     channels::{
         EntityAssignmentChannel, GameSystemChannel, PlayerActionChannel, PlayerCommandChannel,
     },
-    components::{player::Player, Color, ColorValue, Position, Shape, ShapeValue},
+    components::player::Player,
     messages::{
-        Counter, EntityAssignment, ErrorCode, GameError, KeyCommand, NewMatch, NewPlayer, PlayCard,
+        EntityAssignment, ErrorCode, GameError, KeyCommand, NewMatch, NewPlayer, PlayCard,
         PlayerMessage, PlayerReady, StartGame, UpdateScore, UpdateTurn,
     },
 };
 
 use crate::{
-    components::{Confirmed, Interp, LocalPlayer},
+    components::LocalPlayer,
     game::{LocalStartGame, UpdatePlayerCards},
     resources::Global,
     states::MainState,
-    ui::{
-        DrawStatus, NewPlayerJoin, PlayerMessageEvent, ReloadBar, SpawnLocalPlayerEvent,
-        UpdateScoreUI,
-    },
+    ui::{DrawStatus, NewPlayerJoin, PlayerMessageEvent, ReloadBar, UpdateScoreUI},
 };
 
 pub fn connect_events(
-    // mut commands: Commands,
     mut client: Client,
     global: ResMut<Global>,
     mut next_state: ResMut<NextState<MainState>>,
@@ -178,95 +167,6 @@ pub fn spawn_entity_events(mut event_reader: EventReader<SpawnEntityEvent>) {
 pub fn despawn_entity_events(mut event_reader: EventReader<DespawnEntityEvent>) {
     for DespawnEntityEvent(_entity) in event_reader.iter() {
         info!("despawned entity");
-    }
-}
-
-pub fn insert_component_events(
-    mut commands: Commands,
-    mut event_reader: EventReader<InsertComponentEvents>,
-    sprite_query: Query<(&Shape, &Color)>,
-    position_query: Query<&Position>,
-) {
-    for events in event_reader.iter() {
-        for entity in events.read::<Color>() {
-            // When we receive a replicated Color component for a given Entity,
-            // use that value to also insert a local-only SpriteBundle component into this entity
-            info!("add Color Component to entity");
-
-            if let Ok((shape, color)) = sprite_query.get(entity) {}
-        }
-        for entity in events.read::<Position>() {
-            info!("add Position Component to entity");
-            if let Ok(position) = position_query.get(entity) {
-                // initialize interpolation
-                commands
-                    .entity(entity)
-                    .insert(Interp::new(*position.x, *position.y));
-            }
-        }
-    }
-}
-
-pub fn update_component_events(
-    mut global: ResMut<Global>,
-    mut event_reader: EventReader<UpdateComponentEvents>,
-    mut position_query: Query<&mut Position>,
-) {
-    // When we receive a new Position update for the Player's Entity,
-    // we must ensure the Client-side Prediction also remains in-sync
-    // So we roll the Prediction back to the authoritative Server state
-    // and then execute all Player Commands since that tick, using the CommandHistory helper struct
-    // if let Some(owned_entity) = &global.owned_entity {
-    //     let mut latest_tick: Option<Tick> = None;
-    //     let server_entity = owned_entity.confirmed;
-    //     let client_entity = owned_entity.predicted;
-    //
-    //     for events in event_reader.iter() {
-    //         // Update square position
-    //         for (server_tick, updated_entity) in events.read::<Position>() {
-    //             // If entity is owned
-    //             if updated_entity == server_entity {
-    //                 if let Some(last_tick) = &mut latest_tick {
-    //                     if sequence_greater_than(server_tick, *last_tick) {
-    //                         *last_tick = server_tick;
-    //                     }
-    //                 } else {
-    //                     latest_tick = Some(server_tick);
-    //                 }
-    //             }
-    //         }
-    //     }
-    //
-    //     if let Some(server_tick) = latest_tick {
-    //         if let Ok([server_position, mut client_position]) =
-    //             position_query.get_many_mut([server_entity, client_entity])
-    //         {
-    //             // Set to authoritative state
-    //             client_position.mirror(&*server_position);
-    //
-    //             // Replay all stored commands
-    //
-    //             // TODO: why is it necessary to subtract 1 Tick here?
-    //             // it's not like this in the Macroquad demo
-    //             let modified_server_tick = server_tick.wrapping_sub(1);
-    //
-    //             let replay_commands = global.command_history.replays(&modified_server_tick);
-    //             for (_command_tick, command) in replay_commands {
-    //                 shared_behavior::process_command(&command, &mut client_position);
-    //             }
-    //         }
-    //     }
-    // }
-}
-
-pub fn remove_component_events(mut event_reader: EventReader<RemoveComponentEvents>) {
-    for events in event_reader.iter() {
-        for (_entity, _component) in events.read::<Position>() {
-            info!("removed Position component from entity");
-        }
-        for (_entity, _component) in events.read::<Color>() {
-            info!("removed Color component from entity");
-        }
     }
 }
 

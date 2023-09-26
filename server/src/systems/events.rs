@@ -584,22 +584,11 @@ pub fn insert_component_events(
 }
 
 pub fn update_component_events(
-    global: ResMut<Global>,
+    _global: ResMut<Global>,
     mut event_reader: EventReader<UpdateComponentEvents>,
-    mut position_query: Query<&mut Position>,
+    mut _position_query: Query<&mut Position>,
 ) {
-    for events in event_reader.iter() {
-        for (_user_key, client_entity) in events.read::<Position>() {
-            if let Some(server_entity) = global.client_to_server_cursor_map.get(&client_entity) {
-                if let Ok([client_position, mut server_position]) =
-                    position_query.get_many_mut([client_entity, *server_entity])
-                {
-                    server_position.x.mirror(&client_position.x);
-                    server_position.y.mirror(&client_position.y);
-                }
-            }
-        }
-    }
+    for _events in event_reader.iter() {}
 }
 
 pub fn remove_component_events(mut event_reader: EventReader<RemoveComponentEvents>) {

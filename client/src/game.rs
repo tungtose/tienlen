@@ -23,21 +23,29 @@ impl Plugin for GamePlugin {
             .add_event::<SkipTurnEvent>()
             .add_event::<UpdatePlayerCards>()
             .add_event::<SelectCardEvent>()
-            .add_startup_system(local_init)
-            .add_system(spawn_player.run_if(on_event::<LocalStartGame>()))
-            .add_system(update_player_cards.run_if(on_event::<UpdatePlayerCards>()))
-            .add_system(play_card.run_if(on_event::<PlayerEvent>()))
-            .add_system(skip_turn.run_if(on_event::<SkipTurnEvent>()))
-            .add_system(select_card.run_if(on_event::<SelectCardEvent>()));
+            .add_systems(Startup, local_init)
+            .add_systems(Update, spawn_player.run_if(on_event::<LocalStartGame>()))
+            .add_systems(
+                Update,
+                update_player_cards.run_if(on_event::<UpdatePlayerCards>()),
+            )
+            .add_systems(Update, play_card.run_if(on_event::<PlayerEvent>()))
+            .add_systems(Update, skip_turn.run_if(on_event::<SkipTurnEvent>()))
+            .add_systems(Update, select_card.run_if(on_event::<SelectCardEvent>()));
     }
 }
 
+#[derive(Event)]
 pub struct LocalStartGame;
+#[derive(Event)]
 pub struct UpdatePlayerCards;
 
+#[derive(Event)]
 pub struct SelectCardEvent(pub usize);
 
+#[derive(Event)]
 pub struct PlayerEvent;
+#[derive(Event)]
 pub struct SkipTurnEvent;
 
 #[derive(Component)]
@@ -62,7 +70,7 @@ impl ActiveCards {
         self.0.keys().clone().collect::<Vec<&usize>>()
     }
 
-    pub fn to_vec(&mut self) -> Vec<Card> {
+    pub fn to_vec(&self) -> Vec<Card> {
         {
             let mut cards_vec = vec![];
             for card in self.0.values() {
@@ -72,7 +80,7 @@ impl ActiveCards {
         }
     }
 
-    pub fn to_string(&mut self) -> Result<String, &'static str> {
+    pub fn to_string(&self) -> Result<String, &'static str> {
         if self.is_empty() {
             return Err("Not have any active card");
         }
@@ -126,7 +134,7 @@ pub fn play_card(
     mut draw_status_ev: EventWriter<DrawStatus>,
 ) {
     info!("Play Card!");
-    let mut active_cards_map = active_cards_q.get_single_mut().unwrap();
+    let active_cards_map = active_cards_q.get_single_mut().unwrap();
 
     let Ok(cards) = active_cards_map.to_string() else {
         draw_status_ev.send(DrawStatus("Please select any cards".to_string()));

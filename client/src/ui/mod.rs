@@ -26,61 +26,102 @@ impl Plugin for UiPlugin {
             .add_event::<DrawStatus>()
             .add_event::<UpdateScoreUI>()
             .add_event::<NewPlayerJoin>()
-            .add_plugin(ShapePlugin)
-            .add_startup_system(assets::load_assets)
-            .add_system(playerui::draw_player_ui.run_if(in_state(MainState::Lobby)))
-            .add_system(playerui::circle_cooldown_update.run_if(in_state(MainState::Game)))
-            .add_system(playerui::update_score.run_if(in_state(MainState::Game)))
-            .add_system(playerui::update_player_message.run_if(on_event::<PlayerMessageEvent>()))
-            .add_system(playerui::clean_player_message.run_if(in_state(MainState::Game)))
-            .add_system(
-                playerui::animatetext_update
-                    .run_if(in_state(MainState::Game))
-                    .in_schedule(CoreSchedule::FixedUpdate),
+            .add_plugins(ShapePlugin)
+            .add_systems(Startup, assets::load_assets)
+            .add_systems(
+                Update,
+                playerui::draw_player_ui.run_if(in_state(MainState::Lobby)),
+            )
+            .add_systems(
+                Update,
+                playerui::circle_cooldown_update.run_if(in_state(MainState::Game)),
+            )
+            .add_systems(
+                Update,
+                playerui::update_score.run_if(in_state(MainState::Game)),
+            )
+            .add_systems(
+                Update,
+                playerui::update_player_message.run_if(on_event::<PlayerMessageEvent>()),
+            )
+            .add_systems(
+                Update,
+                playerui::clean_player_message.run_if(in_state(MainState::Game)),
+            )
+            .add_systems(
+                FixedUpdate,
+                playerui::animatetext_update.run_if(in_state(MainState::Game)),
             )
             .insert_resource(FixedTime::new_from_secs(FIXED_TIMESTEP))
-            .add_system(table::spawn_table.in_schedule(OnEnter(MainState::Lobby)))
-            .add_system(
+            .add_systems(OnEnter(MainState::Lobby), table::spawn_table)
+            .add_systems(
+                Update,
                 table::draw_table
                     .run_if(in_state(MainState::Lobby).or_else(in_state(MainState::Game))),
             )
             // .add_system(table::draw_table.run_if(in_state(MainState::Game)))
-            .add_system(table::draw_status.run_if(on_event::<DrawStatus>()))
-            .add_system(table::delete_status.run_if(in_state(MainState::Game)))
-            .add_system(play_btn::spawn_play_btn.run_if(in_state(MainState::Game)))
-            .add_system(
+            .add_systems(Update, table::draw_status.run_if(on_event::<DrawStatus>()))
+            .add_systems(
+                Update,
+                table::delete_status.run_if(in_state(MainState::Game)),
+            )
+            .add_systems(
+                Update,
+                play_btn::spawn_play_btn.run_if(in_state(MainState::Game)),
+            )
+            .add_systems(
+                Update,
                 player::card_click
                     .run_if(in_state(MainState::Game))
                     .before(player::draw_player),
             )
-            .add_system(timer::init_counter.in_schedule(OnEnter(MainState::Game)))
-            .add_system(timer::update_counter.run_if(in_state(MainState::Game)))
-            .add_system(player::draw_player.run_if(in_state(MainState::Game)))
-            .add_system(play_btn::spawn_start_btn.run_if(on_event::<ReloadBar>()))
-            .add_system(play_btn::player_btn_click.run_if(in_state(MainState::Lobby)))
-            .add_system(play_btn::player_btn_click.run_if(in_state(MainState::Game)))
-            .add_system(play_btn::hide_start_btn.in_schedule(OnEnter(MainState::Game)));
+            .add_systems(OnEnter(MainState::Game), timer::init_counter)
+            .add_systems(
+                Update,
+                timer::update_counter.run_if(in_state(MainState::Game)),
+            )
+            .add_systems(
+                Update,
+                player::draw_player.run_if(in_state(MainState::Game)),
+            )
+            .add_systems(
+                Update,
+                play_btn::spawn_start_btn.run_if(on_event::<ReloadBar>()),
+            )
+            .add_systems(
+                Update,
+                play_btn::player_btn_click.run_if(in_state(MainState::Lobby)),
+            )
+            .add_systems(
+                Update,
+                play_btn::player_btn_click.run_if(in_state(MainState::Game)),
+            )
+            .add_systems(OnEnter(MainState::Game), play_btn::hide_start_btn);
     }
 }
 
+#[derive(Default, Event)]
 pub struct ReloadUiEvent;
+#[derive(Default, Event)]
 pub struct ReloadBar;
 
-#[derive(Default)]
+#[derive(Default, Event)]
 pub struct UpdateScoreUI;
 
-#[derive(Default)]
+#[derive(Default, Event)]
 pub struct NewPlayerJoin;
 
-#[derive(Default)]
+#[derive(Default, Event)]
 pub struct SpawnLocalPlayerEvent;
 
-#[derive(Default)]
+#[derive(Default, Event)]
 pub struct PlayerMessageEvent(pub usize, pub String);
 
-#[derive(Default)]
+#[derive(Default, Event)]
 pub struct DrawPlayer;
+#[derive(Default, Event)]
 pub struct DrawStatus(pub String);
+#[derive(Default, Event)]
 pub struct UpdateCard;
 
 #[derive(Resource)]

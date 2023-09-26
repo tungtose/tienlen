@@ -1,6 +1,7 @@
 use rand;
 use std::cmp::Ordering;
 
+#[allow(unused_imports)]
 use crate::components::hand::Hand;
 
 use super::{card::Card, rank::Rank, suit::Suit};

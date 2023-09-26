@@ -25,7 +25,7 @@ pub fn my_cursor_system(
     let window = windows.single();
     let (camera, camera_transform) = camera_q.single();
 
-    if let Some(world_position) = window
+    if let Some(_world_position) = window
         .cursor_position()
         .and_then(|cursor| camera.viewport_to_world_2d(camera_transform, cursor))
     {

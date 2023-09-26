@@ -1,8 +1,8 @@
-use bevy::prelude::{info, EventWriter, Query, ResMut, Vec2, With, Without};
+use bevy::prelude::{Query, ResMut, Vec2, With, Without};
 
 use naia_bevy_demo_shared::components::{hand::Hand, Counter, Player, ServerHand, Table};
 
-use crate::{components::LocalPlayer, resources::Global, ui::DrawPlayer};
+use crate::{components::LocalPlayer, resources::Global};
 
 pub fn sync_main_player(
     main_player_q: Query<&Player, With<LocalPlayer>>,
