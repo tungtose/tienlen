@@ -33,7 +33,6 @@ fn main() {
         // Startup System
         .add_systems(Startup, (init, common::set_up_counter))
         // Test
-        // .add_startup_system(common::set_up_counter)
         .add_systems(
             Update,
             (

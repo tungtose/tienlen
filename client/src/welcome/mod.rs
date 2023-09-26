@@ -10,11 +10,14 @@ pub struct WelcomeScreenPlugin;
 
 impl Plugin for WelcomeScreenPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugin(EguiPlugin)
+        app.add_plugins(EguiPlugin)
             .add_event::<JoinEvent>()
             .init_resource::<UiState>()
-            .add_system(join.run_if(on_event::<JoinEvent>()))
-            .add_system(name_input_system.run_if(in_state(MainState::Welcome)));
+            .add_systems(Update, join.run_if(on_event::<JoinEvent>()))
+            .add_systems(
+                Update,
+                name_input_system.run_if(in_state(MainState::Welcome)),
+            );
     }
 }
 
@@ -24,7 +27,7 @@ struct UiState {
     can_join: bool,
 }
 
-#[derive(Default)]
+#[derive(Default, Event)]
 struct JoinEvent(String);
 
 impl JoinEvent {

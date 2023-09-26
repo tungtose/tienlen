@@ -53,10 +53,11 @@ pub fn spawn_start_btn(
             NodeBundle {
                 style: Style {
                     position_type: PositionType::Absolute,
-                    position: UiRect::top(Val::Px(150.)),
+                    top: Val::Px(150.),
                     justify_content: JustifyContent::Center,
                     align_items: AlignItems::Center,
-                    size: Size::new(Val::Percent(100.), Val::Px(100.)),
+                    width: Val::Percent(100.),
+                    height: Val::Px(100.),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -67,7 +68,8 @@ pub fn spawn_start_btn(
     let start_btn = commands
         .spawn(ButtonBundle {
             style: Style {
-                size: Size::new(Val::Px(60.), Val::Px(40.)),
+                width: Val::Px(60.),
+                height: Val::Px(40.),
                 margin: UiRect::all(Val::Px(4.)),
                 justify_content: JustifyContent::Center,
                 align_items: AlignItems::Center,
@@ -79,7 +81,8 @@ pub fn spawn_start_btn(
             parent
                 .spawn(ButtonBundle {
                     style: Style {
-                        size: Size::new(Val::Px(60.), Val::Px(40.)),
+                        width: Val::Px(60.),
+                        height: Val::Px(40.),
                         justify_content: JustifyContent::Center,
                         align_items: AlignItems::Center,
                         ..default()
@@ -119,8 +122,6 @@ pub fn spawn_play_btn(
         commands.entity(player_container_entity).despawn_recursive();
     }
 
-    info!("Player Active: {}", *player.active);
-
     let show_player_control = if *player.active {
         Visibility::Visible
     } else {
@@ -133,10 +134,11 @@ pub fn spawn_play_btn(
             NodeBundle {
                 style: Style {
                     position_type: PositionType::Absolute,
-                    position: UiRect::bottom(Val::Px(40.)),
+                    bottom: Val::Px(40.),
                     justify_content: JustifyContent::SpaceAround,
                     align_items: AlignItems::Center,
-                    size: Size::new(Val::Percent(100.), Val::Px(CONTAINER_HEIGHT)),
+                    width: Val::Percent(100.),
+                    height: Val::Px(CONTAINER_HEIGHT),
                     ..Default::default()
                 },
                 visibility: show_player_control,
@@ -148,7 +150,8 @@ pub fn spawn_play_btn(
     let play_btn = commands
         .spawn(ButtonBundle {
             style: Style {
-                size: Size::new(Val::Px(60.), Val::Px(40.)),
+                width: Val::Px(60.),
+                height: Val::Px(40.),
                 margin: UiRect::all(Val::Px(4.)),
                 justify_content: JustifyContent::Center,
                 align_items: AlignItems::Center,
@@ -160,7 +163,8 @@ pub fn spawn_play_btn(
             parent
                 .spawn(ButtonBundle {
                     style: Style {
-                        size: Size::new(Val::Px(60.), Val::Px(40.)),
+                        width: Val::Px(60.),
+                        height: Val::Px(40.),
                         justify_content: JustifyContent::Center,
                         align_items: AlignItems::Center,
                         ..default()
@@ -185,7 +189,8 @@ pub fn spawn_play_btn(
     let skip_btn = commands
         .spawn(ButtonBundle {
             style: Style {
-                size: Size::new(Val::Px(60.), Val::Px(40.)),
+                width: Val::Px(60.),
+                height: Val::Px(40.),
                 margin: UiRect::all(Val::Px(4.)),
                 justify_content: JustifyContent::Center,
                 align_items: AlignItems::Center,
@@ -197,7 +202,8 @@ pub fn spawn_play_btn(
             parent
                 .spawn(ButtonBundle {
                     style: Style {
-                        size: Size::new(Val::Px(90.), Val::Px(40.)),
+                        width: Val::Px(90.),
+                        height: Val::Px(40.),
                         justify_content: JustifyContent::Center,
                         align_items: AlignItems::Center,
                         ..default()
@@ -252,7 +258,7 @@ pub fn player_btn_click(
     mut skip_ev: EventWriter<SkipTurnEvent>,
 ) {
     for (interaction, (start_btn, play_btn, skip_btn)) in &mut interaction_query {
-        if let Interaction::Clicked = *interaction {
+        if let Interaction::Pressed = *interaction {
             if start_btn.is_some() {
                 info!("Clicked start!");
                 client.send_message::<PlayerActionChannel, StartGame>(&StartGame::default());

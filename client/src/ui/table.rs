@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use bevy::prelude::*;
-use naia_bevy_demo_shared::components::{hand::Hand, Table};
+use naia_bevy_demo_shared::components::hand::Hand;
 
 const DECK_HEIGHT: f32 = 50.;
 const CARD_WIDTH: f32 = 32.;
@@ -85,13 +85,14 @@ pub fn draw_status(
     }
 }
 
-pub fn get_card_button(commands: &mut Commands, size: Size, image: &Handle<Image>) -> Entity {
+pub fn get_card_button(commands: &mut Commands, image: &Handle<Image>) -> Entity {
     commands
         .spawn((
             TableCard,
             ImageBundle {
                 style: Style {
-                    size,
+                    width: Val::Px(CARD_WIDTH),
+                    height: Val::Px(CARD_HEIGHT),
                     margin: UiRect::all(Val::Px(CARD_MARGIN)),
                     justify_content: JustifyContent::Center,
                     align_items: AlignItems::Center,
@@ -124,11 +125,7 @@ pub fn draw_table(
 
     for card in hand.cards {
         let handle = res.cards.get(&card.name()).unwrap();
-        let card_ui = get_card_button(
-            &mut commands,
-            Size::new(Val::Px(CARD_WIDTH), Val::Px(CARD_HEIGHT)),
-            handle,
-        );
+        let card_ui = get_card_button(&mut commands, handle);
 
         commands.entity(table_card_container).add_child(card_ui);
     }
@@ -155,7 +152,8 @@ pub fn spawn_table(
                 style: Style {
                     justify_content: JustifyContent::Center,
                     align_items: AlignItems::Center,
-                    size: Size::new(Val::Percent(100.), Val::Px(DECK_HEIGHT)),
+                    width: Val::Percent(100.),
+                    height: Val::Px(DECK_HEIGHT),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -171,7 +169,8 @@ pub fn spawn_table(
                     justify_content: JustifyContent::Center,
                     align_items: AlignItems::Center,
                     flex_direction: FlexDirection::Column,
-                    size: Size::new(Val::Percent(100.), Val::Px(DECK_HEIGHT)),
+                    width: Val::Percent(100.),
+                    height: Val::Px(DECK_HEIGHT),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -187,7 +186,8 @@ pub fn spawn_table(
                 justify_content: JustifyContent::Center,
                 flex_direction: FlexDirection::Column,
                 align_items: AlignItems::Center,
-                size: Size::new(Val::Px(600.), Val::Px(300.)),
+                width: Val::Px(600.),
+                height: Val::Px(300.),
                 padding: UiRect::bottom(Val::Px(100.)),
                 ..Default::default()
             },
@@ -203,10 +203,11 @@ pub fn spawn_table(
             NodeBundle {
                 style: Style {
                     position_type: PositionType::Absolute,
-                    position: UiRect::top(Val::Px(80.)),
+                    top: Val::Px(80.),
                     justify_content: JustifyContent::Center,
                     align_items: AlignItems::Center,
-                    size: Size::new(Val::Percent(100.), Val::Px(300.)),
+                    width: Val::Percent(100.),
+                    height: Val::Px(300.),
                     ..Default::default()
                 },
                 ..Default::default()

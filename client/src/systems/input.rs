@@ -33,6 +33,7 @@ pub fn key_input(mut global: ResMut<Global>, client: Client, keyboard_input: Res
 
 pub fn cursor_input() {}
 
+#[allow(dead_code)]
 fn window_relative_mouse_position(window: &Window) -> Option<Vec2> {
     let Some(cursor_pos) = window.cursor_position() else {return None};
 

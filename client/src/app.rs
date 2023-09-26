@@ -36,39 +36,37 @@ pub fn run() {
             ..default()
         }))
         // Add Naia Client Plugin
-        .add_plugin(ClientPlugin::new(ClientConfig::default(), protocol()))
-        .add_plugin(UiPlugin)
-        .add_plugin(WelcomeScreenPlugin)
-        .add_plugin(GamePlugin)
-        .add_plugin(AssetPlugin)
+        .add_plugins(ClientPlugin::new(ClientConfig::default(), protocol()))
+        .add_plugins(UiPlugin)
+        .add_plugins(WelcomeScreenPlugin)
+        .add_plugins(GamePlugin)
+        .add_plugins(AssetPlugin)
         // Background Color
         .insert_resource(ClearColor(Color::BLACK))
         // Startup System
-        .add_startup_system(init)
-        .add_system(my_cursor_system)
+        .add_systems(Startup, init)
+        .add_systems(Update, my_cursor_system)
         // Receive Client Events
         .add_systems(
+            Update,
             (
                 events::connect_events,
                 events::disconnect_events,
                 events::reject_events,
                 events::spawn_entity_events,
                 events::despawn_entity_events,
-                events::insert_component_events,
-                events::update_component_events,
-                events::remove_component_events,
-                // common::playable,
                 events::message_events,
             )
                 .chain()
                 .in_set(ReceiveEvents),
         )
         // Tick Event
-        .configure_set(Tick.after(ReceiveEvents))
-        .add_system(events::tick_events.in_set(Tick))
+        .configure_set(Update, Tick.after(ReceiveEvents))
+        .add_systems(Update, events::tick_events.in_set(Tick))
         // Realtime Gameplay Loop
-        .configure_set(MainLoop.after(Tick))
+        .configure_set(Update, MainLoop.after(Tick))
         .add_systems(
+            Update,
             (
                 input::key_input,
                 input::cursor_input,
