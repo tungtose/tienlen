@@ -84,22 +84,6 @@ pub fn disconnect_events(
                 .remove_entity(&entity);
             info!("total player: {}", global.users_map.len());
         }
-
-        if let Some(entity) = global.user_to_square_map.remove(user_key) {
-            global.square_to_user_map.remove(&entity);
-            commands.entity(entity).despawn();
-            server
-                .room_mut(&global.main_room_key)
-                .remove_entity(&entity);
-        }
-        if let Some(client_entity) = global.user_to_cursor_map.remove(user_key) {
-            if let Some(server_entity) = global.client_to_server_cursor_map.remove(&client_entity) {
-                commands.entity(server_entity).despawn();
-                server
-                    .room_mut(&global.main_room_key)
-                    .remove_entity(&server_entity);
-            }
-        }
     }
 }
 

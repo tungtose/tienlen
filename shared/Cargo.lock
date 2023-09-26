@@ -482,7 +482,7 @@ checksum = "2dffe52ecf27772e601905b7522cb4ef790d2cc203488bbd0e2fe85fcb74566d"
 name = "naia-bevy-demo-shared"
 version = "0.1.0"
 dependencies = [
- "bevy_ecs 0.10.1",
+ "bevy_ecs 0.11.2",
  "cfg-if",
  "dotenv",
  "log",
