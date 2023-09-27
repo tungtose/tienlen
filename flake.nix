@@ -27,6 +27,7 @@
             libxkbcommon
             libGL
             just
+            sd
             cargo-watch
             cargo-release
             wasm-pack

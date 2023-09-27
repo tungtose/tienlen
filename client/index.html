@@ -27,8 +27,8 @@
   </main>
 </body>
 <script type="module">
-  import app from "/app.js";
-  import {progressiveFetch} from "/tools.js";
+  import app from "./wasm/app.js";
+  import {progressiveFetch} from "./assets/tools.js";
   const canvasEl = document.getElementById("thirteen");
   const progressStatusContainerEl = document.querySelector("#status");
   const progressStatusEl = document.querySelector("#progress");
@@ -76,7 +76,7 @@
       },
     });
   }
-  window.thirteenLoadingBarFetch = loadingBarFetch;
+  window.tFetch = loadingBarFetch;
 
   async function start() {
     await app().catch((error) => {
