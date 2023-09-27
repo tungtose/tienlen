@@ -1,4 +1,4 @@
-REMOTE="ubuntu@tienlen.cedrus.cloud"
+REMOTE="ubuntu@tienlen-api.cedrus.cloud"
 ECR_HOST=635506958747.dkr.ecr.ap-southeast-1.amazonaws.com
 DEST="/home/ubuntu/workspaces/"
 

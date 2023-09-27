@@ -17,10 +17,15 @@ build_wasm:
 wasm_bindgen:
   wasm-bindgen --out-dir wasm --out-name app --target web --no-typescript target/wasm32-unknown-unknown/release/app.wasm
 
+inject_custom_fetch:
+  sd -s 'input = fetch(input)' 'input = tFetch(input)' ./wasm/app.js
+
 gen_wasm:
   just install_build_tools
   just build_wasm
   just wasm_bindgen
+  just inject_custom_fetch
+
 
 serve path="./":
   just gen_wasm
