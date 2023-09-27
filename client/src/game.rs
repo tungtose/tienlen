@@ -114,6 +114,7 @@ pub fn select_card(
 ) {
     for event in select_card_ev.iter() {
         // BUG: there is a panic here!
+        info!("try select card: {:?}", &event.0);
         let card = global.player_cards.get(&event.0).unwrap();
         active_cards_q
             .get_single_mut()

@@ -92,7 +92,6 @@ pub fn card_click(
     for (interaction, button) in interactions.iter_mut() {
         match *interaction {
             Interaction::Pressed => {
-                info!("clicking on: {:?}", button.0);
                 select_card_ev.send(SelectCardEvent(button.0));
             }
             Interaction::Hovered => {}

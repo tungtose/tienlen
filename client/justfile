@@ -20,10 +20,15 @@ wasm_bindgen:
 inject_custom_fetch:
   sd -s 'input = fetch(input)' 'input = tFetch(input)' ./wasm/app.js
 
+optimize_wasm:
+  wasm-opt -Oz -o ./wasm/app_bg.wasm ./wasm/app_bg.wasm
+  wasm-opt -O3 -o ./wasm/app_bg.wasm ./wasm/app_bg.wasm 
+
 gen_wasm:
   just install_build_tools
   just build_wasm
   just wasm_bindgen
+  just optimize_wasm
   just inject_custom_fetch
 
 
