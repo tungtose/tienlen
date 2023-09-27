@@ -28,6 +28,7 @@
             libGL
             just
             sd
+            binaryen
             cargo-watch
             cargo-release
             wasm-pack

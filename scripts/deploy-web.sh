@@ -32,11 +32,10 @@ echo "Sync files..."
 
 aws s3 sync $TEMP_DIR "s3://$BUCKET_NAME"
 
-echo "--- Invalidate CDN cache ---"
-
 rm -rf $TEMP_DIR
 
-aws cloudfront create-invalidation --distribution-id "ETHH491PYHL4N" \
-  --path "/wasm" "/index.html" "/assets"
+echo "--- Invalidate CDN cache ---"
+
+aws cloudfront create-invalidation --distribution-id "ETHH491PYHL4N" --path "/*"
 
 echo "--- Done ---"
