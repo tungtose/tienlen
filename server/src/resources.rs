@@ -80,7 +80,6 @@ pub struct Global {
     pub leader_turn: bool,
     pub users_map: HashMap<UserKey, Entity>,
     pub players_map: PlayerMap,
-    pub player_data_map: HashMap<usize, PlayerData>,
     pub total_player: usize,
     pub cur_active_pos: usize,
     pub main_room_key: RoomKey,
