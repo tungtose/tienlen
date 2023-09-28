@@ -8,7 +8,6 @@ pub mod rank;
 pub mod suit;
 
 pub mod player;
-pub mod server_hand;
 pub mod table;
 pub mod timer;
 pub mod turn;
@@ -25,7 +24,6 @@ pub use shape::{Shape, ShapeValue};
 
 pub use {
     player::{Active, Host},
-    server_hand::ServerHand,
     table::Table,
     timer::Counter,
 };
@@ -41,7 +39,6 @@ impl ProtocolPlugin for ComponentsPlugin {
             .add_component::<Shape>()
             .add_component::<Player>()
             .add_component::<Active>()
-            .add_component::<ServerHand>()
             .add_component::<Table>()
             .add_component::<Counter>()
             .add_component::<Host>();

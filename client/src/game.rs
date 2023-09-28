@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use naia_bevy_client::Client;
 use naia_bevy_demo_shared::{
     channels::PlayerActionChannel,
-    components::{card::Card, hand::Hand, server_hand::ServerHand},
+    components::{card::Card, hand::Hand, Player},
     messages::{PlayCard, SkipTurn},
 };
 
@@ -156,17 +156,17 @@ pub fn play_card(
 }
 
 pub fn update_player_cards(
-    hand_q: Query<&ServerHand, With<LocalPlayer>>,
+    player_q: Query<&Player, With<LocalPlayer>>,
     mut global: ResMut<Global>,
     mut draw_player_ev: EventWriter<DrawPlayer>,
     mut active_cards_q: Query<&mut ActiveCards>,
 ) {
     info!("DRAW P CARDS!!!");
-    let Ok(server_hand) = hand_q.get_single() else {
+    let Ok(player) = player_q.get_single() else {
         return;
     };
 
-    let hand_str = server_hand.cards.clone();
+    let hand_str = player.cards.clone();
 
     let hand = Hand::from(hand_str);
 
@@ -192,17 +192,17 @@ pub fn update_player_cards(
 
 pub fn spawn_player(
     mut next_state: ResMut<NextState<MainState>>,
-    hand_q: Query<&ServerHand, With<LocalPlayer>>,
+    player_q: Query<&Player, With<LocalPlayer>>,
     mut global: ResMut<Global>,
     mut draw_player_ev: EventWriter<DrawPlayer>,
 ) {
-    let Ok(server_hand) = hand_q
+    let Ok(player) = player_q
         .get_single()
          else {
         return;
     };
 
-    let hand_str = server_hand.cards.clone();
+    let hand_str = player.cards.clone();
     let hand = Hand::from(hand_str);
 
     for card in hand.cards.as_slice() {

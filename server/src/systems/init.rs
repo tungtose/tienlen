@@ -36,7 +36,6 @@ pub fn init(mut commands: Commands, mut server: Server) {
 
     // Init Global Resource
     let global = Global {
-        can_start_game: false,
         counter,
         time: 0.,
         leader_turn: true,
