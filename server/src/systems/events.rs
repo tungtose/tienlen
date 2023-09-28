@@ -35,7 +35,12 @@ use naia_bevy_demo_shared::{
     },
 };
 
-use crate::resources::{Global, PlayerData};
+use crate::{
+    resources::{Global, PlayerData},
+    systems::common::PlayerIteratorMut,
+};
+
+use super::common::PlayerIterator;
 
 pub fn auth_events(mut server: Server, mut event_reader: EventReader<AuthEvents>) {
     for events in event_reader.iter() {
@@ -167,13 +172,9 @@ pub fn message_events(
                 return;
             }
 
-            for (_, entity) in global.users_map.iter() {
-                if let Ok(player) = player_q.get(*entity) {
-                    if !*player.ready {
-                        info!("There are players not ready yet");
-                        return;
-                    }
-                }
+            if player_q.iter().some_player_not_ready() {
+                info!("Game State: There are players not ready yet -> Discard Start Game!");
+                return;
             }
 
             // Add the table component to the room
@@ -256,12 +257,8 @@ pub fn message_events(
                     );
                 }
 
-                for mut player in player_q.iter_mut() {
-                    *player.active = false;
-                    if next_player == *player.pos {
-                        *player.active = true;
-                    }
-                }
+                player_q.iter_mut().set_next_active(next_player);
+
                 info!("TURN AFTER SKIP: {:?}", turn);
             };
         }
@@ -269,9 +266,21 @@ pub fn message_events(
         events
             .read::<PlayerActionChannel, PlayCard>()
             .into_iter()
-            .for_each(|(user_key, cards_str)| {
-                let put_hand = Hand::from_str(&cards_str.0);
-                info!("HAND: {}", put_hand);
+            .for_each(|(user_key, play_card)| {
+                let put_hand = Hand::from_str(&play_card.0);
+
+                // Get player info
+                let cur_player_entity = *global.users_map.get(&user_key).unwrap();
+                let cur_player = player_q.get(cur_player_entity).unwrap();
+
+                let player_name = cur_player.name();
+
+                info!(
+                    "================= Game State: Player {} Try to play cards ========================",
+                    player_name
+                );
+
+                info!("Cards: {}", put_hand);
 
                 if !put_hand.check_combination() {
                     server.send_message::<GameSystemChannel, ErrorCode>(
@@ -282,13 +291,11 @@ pub fn message_events(
                 }
 
                 // Check if is their turn?
-                let cur_player_entity = *global.users_map.get(&user_key).unwrap();
-                let cur_player = player_q.get(cur_player_entity).unwrap();
-
-                info!("Player: {:?}", *cur_player.pos);
 
                 if !*cur_player.active {
-                    info!("This player is not active!!!");
+                    info!(
+                        "Game State: Player is not in turn but able to play card -> Discard action"
+                    );
                     server.send_message::<GameSystemChannel, ErrorCode>(
                         &user_key,
                         &ErrorCode::from(GameError::WrongTurn),
@@ -296,16 +303,19 @@ pub fn message_events(
                     return;
                 }
 
+                info!("Game State: Play is in correct turn");
+
                 if let Some(last_played_hand) = global.table.back() {
                     // FIXME: Find better way for allow free combo. This feel like hacky
                     // Not check last hand played on the table because of leader turn
                     if !global.leader_turn {
-                        info!("In the check lasted {} \n {}", last_played_hand, put_hand);
                         if last_played_hand.len() != put_hand.len() {
                             server.send_message::<GameSystemChannel, ErrorCode>(
                                 &user_key,
                                 &ErrorCode::from(GameError::WrongCombination),
                             );
+
+                            info!("Game State: Wrong Combination!");
 
                             return;
                         }
@@ -316,10 +326,14 @@ pub fn message_events(
                                 &ErrorCode::from(GameError::InvalidCards),
                             );
 
+                            info!("Game State: Wrong Combination!");
                             return;
                         }
                     }
                 }
+
+                info!("Game State: Pass card validation");
+
                 global.leader_turn = false;
 
                 let mut turn = turn_q.get_single_mut().unwrap();
@@ -331,6 +345,9 @@ pub fn message_events(
                 // Keep track the history of the card being played
                 global.table.push_back(put_hand.clone());
 
+                info!("Game State: Updated Table Cards");
+
+                info!("Game State: Start update card to players");
                 // Update cards of the player
                 if let Ok(mut server_hand) = serverhand_q.get_mut(cur_player_entity) {
                     let hand_str = server_hand.cards.clone();
@@ -341,12 +358,16 @@ pub fn message_events(
                     let new_hand_str = player_hand.to_string();
                     *server_hand.cards = new_hand_str.clone();
 
+                    info!("Game State: Removed Card from the player");
+
                     global.players_map.update_cards(&user_key, new_hand_str);
 
                     // Check if run out of cards / update player score
                     if player_hand.is_empty() {
-                        info!("PLAYER WIN!!!");
+
+                        info!("Game State: The player run out of card -> calculate score or end game now");
                         let next_score = turn.next_score();
+
                         global.players_map.update_score(&user_key, next_score);
 
                         let mut player = player_q
@@ -355,8 +376,13 @@ pub fn message_events(
 
                         *player.score += next_score;
 
+                        info!("Game State: Updated score");
+                        
+
                         // Update turn pool
                         let next_player = turn.player_out();
+                        info!("Game State: Removed player out of turn pool");
+
                         for (u_key, player_data) in global.players_map.0.iter() {
                             server.send_message::<GameSystemChannel, UpdateTurn>(
                                 u_key,
@@ -369,22 +395,20 @@ pub fn message_events(
                             );
                         }
 
-                        // FIXME: pleaseeeeeee!!!!
-                        for mut player in player_q.iter_mut() {
-                            *player.active = false;
-                            if next_player == *player.pos {
-                                *player.active = true;
-                            }
-                        }
+                        player_q.iter_mut().set_next_active(next_player);
+
+                        info!("Game State: Sended new turn to all player");
+
+                        info!("=============== End play card action ====================");
                         // No need to update turn after then
                         return;
                     }
                 }
 
-                info!("IT GET OUT OF THE LOOP!!!");
-
                 // Handle Turn:
                 if let Some(next_player) = turn.next_turn() {
+                    info!("Game State: Update player turn");
+
                     global.players_map.update_active_player(next_player);
 
                     server.send_message::<GameSystemChannel, PlayCard>(
@@ -392,26 +416,29 @@ pub fn message_events(
                         &PlayCard::default(),
                     );
 
+                    info!("Game State: Sended Play Card Message");
+
                     for (u_key, _) in global.users_map.iter() {
                         server.send_message::<GameSystemChannel, UpdateTurn>(
                             u_key,
                             &UpdateTurn(next_player),
                         );
                     }
-                    for mut player in player_q.iter_mut() {
-                        *player.active = false;
-                        if next_player == *player.pos {
-                            *player.active = true;
-                        }
-                    }
+
+                    info!("Game State: Sended Update Turn Message");
+
+                    player_q.iter_mut().set_next_active(next_player);
 
                     if let Ok(mut counter) = counter_q.get_single_mut() {
                         counter.recount();
                     }
-                }
 
-                global.players_map.debug();
-                turn.debug();
+                    info!("Game State: Reseted Counter");
+
+                    info!("=============== End play card action ====================");
+                }
+                // global.players_map.debug();
+                // turn.debug();
             });
     }
 }
@@ -430,12 +457,11 @@ pub fn end_match(
         // End match here since only 1 player have cards left
         if turn.only_one_player_left() {
             // Clear player hand
-            info!("END MATCH - 1");
+            info!("------ Game State: End Match ---------");
 
             let mut deck = Deck::new();
 
             for (user_key, entity) in global.users_map.iter_mut() {
-                info!("END MATCH - 2");
                 let hand = Hand {
                     cards: deck.deal(13),
                 };
@@ -446,22 +472,14 @@ pub fn end_match(
 
                 server.send_message::<GameSystemChannel, NewMatch>(user_key, &NewMatch::default());
             }
-            info!("END MATCH - 3");
 
             // FIXME: let client verify & finish animation -> then reset
             global.new_match();
             turn.new_match();
 
             let next_player = turn.current_active_player().unwrap();
-            info!("END MATCH - 4");
 
-            // FIXME: again :((
-            for mut player in player_q.iter_mut() {
-                *player.active = false;
-                if next_player == *player.pos {
-                    *player.active = true;
-                }
-            }
+            player_q.iter_mut().set_next_active(next_player);
 
             if let Ok(mut table) = table_q.get_single_mut() {
                 table.new_match();
@@ -470,7 +488,9 @@ pub fn end_match(
             if let Ok(mut counter) = counter_q.get_single_mut() {
                 counter.recount();
             }
-            turn.debug();
+
+            info!("------ Game State: Finish End Match ---------");
+            // turn.debug();
         }
     }
 }

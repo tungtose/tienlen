@@ -37,7 +37,7 @@ fn main() {
             Update,
             (
                 common::countdown,
-                common::run_out_countdow,
+                common::run_out_countdown,
                 events::end_match,
             ),
         )

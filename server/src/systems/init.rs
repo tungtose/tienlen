@@ -34,13 +34,10 @@ pub fn init(mut commands: Commands, mut server: Server) {
     let counter = Counter::new(0.);
     let players_map = PlayerMap::new();
 
-    let player_data_map = HashMap::new();
-
     // Init Global Resource
     let global = Global {
         can_start_game: false,
         counter,
-        player_data_map,
         time: 0.,
         leader_turn: true,
         table,
