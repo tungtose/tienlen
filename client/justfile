@@ -12,10 +12,10 @@ build:
   cargo build --release
 
 build_wasm:
-  cargo build --target wasm32-unknown-unknown --lib --target-dir target --release --config env.SERVER_INIT_ADDRESS='"$SERVER_INIT_ADDRESS"'
+  cargo build  --profile wasm-release --target wasm32-unknown-unknown --lib --target-dir target --config env.SERVER_INIT_ADDRESS='"$SERVER_INIT_ADDRESS"'
 
 wasm_bindgen:
-  wasm-bindgen --out-dir wasm --out-name app --target web --no-typescript target/wasm32-unknown-unknown/release/app.wasm
+  wasm-bindgen --out-dir wasm --out-name app --target web --no-typescript target/wasm32-unknown-unknown/wasm-release/app.wasm
 
 inject_custom_fetch:
   sd -s 'input = fetch(input)' 'input = tFetch(input)' ./wasm/app.js

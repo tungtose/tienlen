@@ -22,6 +22,10 @@ impl Player {
 
         Self::new_complete(pos, active, 0, name.to_string(), false)
     }
+
+    pub fn name(&self) -> String {
+        self.name.clone().to_string()
+    }
 }
 
 #[derive(Component)]
