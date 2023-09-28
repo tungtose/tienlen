@@ -1,6 +1,6 @@
 use bevy::prelude::{Query, ResMut, Vec2, With, Without};
 
-use naia_bevy_demo_shared::components::{hand::Hand, Counter, Player, ServerHand, Table};
+use naia_bevy_demo_shared::components::{hand::Hand, Counter, Player, Table};
 
 use crate::{components::LocalPlayer, resources::Global};
 
@@ -101,21 +101,19 @@ pub fn sync_foreign_player(
 
 pub fn sync_main_player_cards(
     mut global: ResMut<Global>,
-    hand_q: Query<&ServerHand, With<LocalPlayer>>,
-    // mut draw_player_ev: EventWriter<DrawPlayer>,
+    player_q: Query<&Player, With<LocalPlayer>>,
 ) {
-    let Ok(server_hand) = hand_q.get_single() else {
+    let Ok(player) = player_q.get_single() else {
         return;
     };
 
-    let hand_str = server_hand.cards.clone();
+    let hand_str = player.cards.clone();
 
     let hand = Hand::from(hand_str);
 
     global.game.local_player.cards.clear();
 
     if hand.is_empty() {
-        // draw_player_ev.send(DrawPlayer);
         return;
     }
 

@@ -24,7 +24,6 @@ use naia_bevy_demo_shared::{
         deck::Deck,
         hand::Hand,
         player::{Host, Player},
-        server_hand::ServerHand,
         table::Table,
         turn::Turn,
         Color, ColorValue, Counter, Position, Shape, ShapeValue,
@@ -108,11 +107,13 @@ pub fn message_events(
     mut player_q: Query<&mut Player>,
     mut turn_q: Query<&mut Turn>,
     mut counter_q: Query<&mut Counter>,
-    mut serverhand_q: Query<&mut ServerHand>,
 ) {
     for events in event_reader.iter() {
         for (user_key, new_player_data) in events.read::<PlayerActionChannel, NewPlayer>() {
             let player_name = new_player_data.0.chars().take(10).collect::<String>();
+
+            info!("Game State: Player `{}` join", player_name);
+
             let player_num = global.users_map.len();
             let player = Player::new(player_num, &player_name);
 
@@ -147,7 +148,6 @@ pub fn message_events(
             assignment_message.entity.set(&server, &entity);
 
             for (u_key, _) in global.users_map.iter() {
-                info!("New Player JOIN!!!");
                 server.send_message::<GameSystemChannel, NewPlayer>(u_key, &NewPlayer::default());
             }
 
@@ -169,6 +169,7 @@ pub fn message_events(
             let total_player = global.total_player;
 
             if total_player < 2 {
+                info!("Game State: The game require 2 to 4 players -> Discard Start Game!");
                 return;
             }
 
@@ -205,20 +206,19 @@ pub fn message_events(
 
             // Draw card to players and start the game
             let mut deck = Deck::new();
-            for (_player_pos, player_data) in global.players_map.0.iter() {
+
+            for (user_key, p_entity) in global.users_map.iter() {
                 let hand = Hand {
                     cards: deck.deal(13),
                 };
 
                 let cards_str = hand.to_string();
-                let server_hand = ServerHand::new(cards_str);
 
-                commands.entity(player_data.entity).insert(server_hand);
+                let mut player = player_q.get_mut(*p_entity).unwrap();
+                *player.cards = cards_str;
 
-                server.send_message::<GameSystemChannel, StartGame>(
-                    &player_data.user_key,
-                    &StartGame::default(),
-                );
+                server
+                    .send_message::<GameSystemChannel, StartGame>(user_key, &StartGame::default());
             }
         }
 
@@ -243,7 +243,6 @@ pub fn message_events(
                 // they can not skip turn
 
                 global.leader_turn = leader_turn;
-                info!("==== AFTER SKIP: {}", global.leader_turn);
 
                 for (u_key, _) in global.users_map.iter() {
                     server.send_message::<GameSystemChannel, UpdateTurn>(
@@ -258,9 +257,10 @@ pub fn message_events(
                 }
 
                 player_q.iter_mut().set_next_active(next_player);
-
-                info!("TURN AFTER SKIP: {:?}", turn);
             };
+
+            // Reset  counter
+            counter_q.get_single_mut().unwrap().recount();
         }
 
         events
@@ -271,7 +271,7 @@ pub fn message_events(
 
                 // Get player info
                 let cur_player_entity = *global.users_map.get(&user_key).unwrap();
-                let cur_player = player_q.get(cur_player_entity).unwrap();
+                let mut cur_player = player_q.get_mut(cur_player_entity).unwrap();
 
                 let player_name = cur_player.name();
 
@@ -309,6 +309,7 @@ pub fn message_events(
                     // FIXME: Find better way for allow free combo. This feel like hacky
                     // Not check last hand played on the table because of leader turn
                     if !global.leader_turn {
+                        info!("last_played_hand: {}", last_played_hand);
                         if last_played_hand.len() != put_hand.len() {
                             server.send_message::<GameSystemChannel, ErrorCode>(
                                 &user_key,
@@ -349,14 +350,15 @@ pub fn message_events(
 
                 info!("Game State: Start update card to players");
                 // Update cards of the player
-                if let Ok(mut server_hand) = serverhand_q.get_mut(cur_player_entity) {
-                    let hand_str = server_hand.cards.clone();
-                    let mut player_hand = Hand::from(hand_str);
+
+                    let player_cards = cur_player.cards.clone();
+
+                    let mut player_hand = Hand::from(player_cards);
                     // remove cards
                     player_hand.remove_cards(put_hand.cards.as_slice());
 
                     let new_hand_str = player_hand.to_string();
-                    *server_hand.cards = new_hand_str.clone();
+                    *cur_player.cards =  new_hand_str.clone();
 
                     info!("Game State: Removed Card from the player");
 
@@ -403,7 +405,6 @@ pub fn message_events(
                         // No need to update turn after then
                         return;
                     }
-                }
 
                 // Handle Turn:
                 if let Some(next_player) = turn.next_turn() {
@@ -447,7 +448,6 @@ pub fn end_match(
     mut global: ResMut<Global>,
     mut turn_q: Query<&mut Turn>,
     mut server: Server,
-    mut serverhand_q: Query<&mut ServerHand>,
     mut counter_q: Query<&mut Counter>,
     mut player_q: Query<&mut Player>,
     mut table_q: Query<&mut Table>,
@@ -458,7 +458,6 @@ pub fn end_match(
         if turn.only_one_player_left() {
             // Clear player hand
             info!("------ Game State: End Match ---------");
-
             let mut deck = Deck::new();
 
             for (user_key, entity) in global.users_map.iter_mut() {
@@ -466,9 +465,8 @@ pub fn end_match(
                     cards: deck.deal(13),
                 };
 
-                if let Ok(mut server_hand) = serverhand_q.get_mut(*entity) {
-                    *server_hand.cards = hand.to_string();
-                }
+                let mut player = player_q.get_mut(*entity).unwrap();
+                *player.cards = hand.to_string();
 
                 server.send_message::<GameSystemChannel, NewMatch>(user_key, &NewMatch::default());
             }

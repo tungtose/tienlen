@@ -8,7 +8,7 @@ use bevy_log::info;
 use bevy_time::{Time, Timer, TimerMode};
 use naia_bevy_demo_shared::{
     channels::GameSystemChannel,
-    components::{timer::Counter, turn::Turn, Player},
+    components::{hand::Hand, timer::Counter, turn::Turn, Player, Table},
     messages::UpdateTurn,
 };
 use naia_bevy_server::Server;
@@ -55,6 +55,7 @@ where
 
 pub trait PlayerIteratorMut<'a>: Iterator {
     fn set_next_active(&'a mut self, pos: usize);
+    fn update_active_player_cards(&'a mut self, cards: &str);
 }
 
 impl<'a, T> PlayerIteratorMut<'a> for T
@@ -69,6 +70,14 @@ where
             }
         }
     }
+
+    fn update_active_player_cards(&'a mut self, cards: &str) {
+        for mut player in self.into_iter() {
+            if *player.active {
+                *player.cards = cards.to_string();
+            }
+        }
+    }
 }
 
 pub fn run_out_countdown(
@@ -76,11 +85,11 @@ pub fn run_out_countdown(
     mut countdown_q: Query<&mut Counter>,
     mut player_q: Query<&mut Player>,
     mut turn_q: Query<&mut Turn>,
+    mut table_q: Query<&mut Table>,
     mut server: Server,
 ) {
     if let Ok(mut counter) = countdown_q.get_single_mut() {
-        let is_over = counter.check_over();
-        if is_over {
+        if counter.check_over() {
             info!("------------------ Game State: Run Out Countdown -----------------------");
 
             let cur_player = player_q.iter().current_active_player().clone();
@@ -92,20 +101,35 @@ pub fn run_out_countdown(
 
             turn.debug();
 
-            let (leader_turn, Some(next_active_pos)) = turn.skip_turn() else {
+            let (next_active_leader_turn, Some(next_active_pos)) = turn.skip_turn() else {
                 info!("Not found any next_active_pos -> End");
                 return;
             };
 
-            #[allow(unused_parens)]
-            if (leader_turn) {
+            if next_active_leader_turn {
                 // TODO:
                 // Need to do some thing here,
                 // Ex: auto play a card if player not play any cards
-                info!("Leader turn not play card... Might counter some bug!");
+                // info!("Leader turn not play card... Might counter some bug!");
+                global.leader_turn = true;
             }
 
-            info!("SEND ACTIVE: {}", next_active_pos);
+            if global.leader_turn {
+                info!("cards: {}", cur_player.cards());
+                let mut hand = Hand::from(cur_player.cards());
+                let card_played = hand.remove_smallest_card().to_str();
+                info!("after remove : {}", hand);
+
+                player_q
+                    .iter_mut()
+                    .update_active_player_cards(&hand.to_string());
+
+                let mut table = table_q.get_single_mut().unwrap();
+                *table.cards = card_played.clone();
+                global.table.push_back(Hand::from(card_played));
+
+                global.leader_turn = false;
+            }
 
             for (u_key, _) in global.users_map.iter() {
                 server.send_message::<GameSystemChannel, UpdateTurn>(
@@ -116,14 +140,6 @@ pub fn run_out_countdown(
 
             player_q.iter_mut().set_next_active(next_active_pos);
             global.cur_active_pos = next_active_pos;
-
-            // for mut player in player_q.iter_mut() {
-            //     *player.active = false;
-            //     if next_active_pos == *player.pos {
-            //         *player.active = true;
-            //         global.cur_active_pos = next_active_pos;
-            //     }
-            // }
 
             info!("------------------ Game State: End Run Out Countdown -----------------------");
         }

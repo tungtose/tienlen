@@ -61,6 +61,21 @@ impl Cards for Hand {
     }
 }
 
+impl From<String> for Hand {
+    fn from(cards_str: String) -> Hand {
+        if cards_str.is_empty() {
+            return Hand::new();
+        }
+
+        let cards = cards_str
+            .split(',')
+            .map(|c_str| Card::from_str(c_str).unwrap())
+            .collect::<Vec<Card>>();
+
+        Hand { cards }
+    }
+}
+
 impl From<Property<String>> for Hand {
     fn from(cards_str: Property<String>) -> Hand {
         if cards_str.is_empty() {
@@ -161,6 +176,11 @@ impl Hand {
     /// Clears the `Hand` (makes it empty)
     pub fn clear(&mut self) {
         self.cards.clear();
+    }
+
+    pub fn remove_smallest_card(&mut self) -> Card {
+        self.sort();
+        self.cards.remove(0)
     }
 
     /// Removes a `Card` from the `Hand` and returns it, panics if index does not exist

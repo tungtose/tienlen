@@ -11,6 +11,7 @@ pub struct Player {
     pub score: Property<u32>,
     pub name: Property<String>,
     pub ready: Property<bool>,
+    pub cards: Property<String>,
 }
 
 impl Player {
@@ -20,11 +21,19 @@ impl Player {
             active = true;
         }
 
-        Self::new_complete(pos, active, 0, name.to_string(), false)
+        Self::new_complete(pos, active, 0, name.to_string(), false, String::new())
     }
 
     pub fn name(&self) -> String {
         self.name.clone().to_string()
+    }
+
+    pub fn cards(&self) -> String {
+        self.cards.clone().to_string()
+    }
+
+    pub fn update_cards(&mut self, cards: &str) {
+        *self.cards = cards.to_string();
     }
 }
 

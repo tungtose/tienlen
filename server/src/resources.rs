@@ -74,7 +74,6 @@ impl Global {
 #[derive(Resource)]
 pub struct Global {
     pub counter: Counter,
-    pub can_start_game: bool,
     pub time: f32,
     pub table: VecDeque<Hand>,
     pub leader_turn: bool,
