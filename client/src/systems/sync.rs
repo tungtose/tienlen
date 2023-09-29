@@ -2,6 +2,7 @@ use bevy::prelude::{Query, ResMut, Vec2, With, Without};
 
 use naia_bevy_demo_shared::components::{hand::Hand, Counter, Player, Table};
 
+use crate::game::LocalPlayerCards;
 use crate::{components::LocalPlayer, resources::Global};
 
 pub fn sync_main_player(
@@ -79,7 +80,7 @@ pub fn sync_foreign_player(
             1 => {
                 global.game.player_1.name = player.name.to_string();
                 global.game.player_1.is_join = true;
-                global.game.player_1.draw_pos = Vec2::new(-335., 35.);
+                global.game.player_1.draw_pos = Vec2::new(-345., 35.);
                 global.game.player_1.pos = *player.pos as i32;
             }
             2 => {
@@ -91,7 +92,7 @@ pub fn sync_foreign_player(
             3 => {
                 global.game.player_3.name = player.name.to_string();
                 global.game.player_3.is_join = true;
-                global.game.player_3.draw_pos = Vec2::new(335., 35.);
+                global.game.player_3.draw_pos = Vec2::new(345., 35.);
                 global.game.player_3.pos = *player.pos as i32;
             }
             _ => unreachable!(),
@@ -100,8 +101,8 @@ pub fn sync_foreign_player(
 }
 
 pub fn sync_main_player_cards(
-    mut global: ResMut<Global>,
     player_q: Query<&Player, With<LocalPlayer>>,
+    mut local_player_cards_q: Query<&mut LocalPlayerCards>,
 ) {
     let Ok(player) = player_q.get_single() else {
         return;
@@ -111,14 +112,21 @@ pub fn sync_main_player_cards(
 
     let hand = Hand::from(hand_str);
 
-    global.game.local_player.cards.clear();
-
     if hand.is_empty() {
         return;
     }
 
-    for card in hand.cards.as_slice() {
-        global.game.local_player.cards.insert(card.ordinal(), *card);
+    let Ok(mut ppp) = local_player_cards_q.get_single_mut() else {
+        return;
+    };
+
+    let cur_value: usize = ppp.0.values().map(|c| c.ordinal()).sum();
+
+    if hand.total_value() != cur_value {
+        ppp.0.clear();
+        for card in hand.cards.as_slice() {
+            ppp.0.insert(card.ordinal(), *card);
+        }
     }
 }
 

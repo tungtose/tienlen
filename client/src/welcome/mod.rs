@@ -1,6 +1,6 @@
 use crate::resources::Global;
 use bevy::prelude::*;
-use bevy_egui::{egui, EguiContexts, EguiPlugin};
+use bevy_egui::{egui, EguiContexts};
 use naia_bevy_client::{transport::webrtc, Client};
 use naia_bevy_demo_shared::messages::Auth;
 
@@ -10,8 +10,8 @@ pub struct WelcomeScreenPlugin;
 
 impl Plugin for WelcomeScreenPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(EguiPlugin)
-            .add_event::<JoinEvent>()
+        // app.add_plugins(EguiPlugin)
+        app.add_event::<JoinEvent>()
             .init_resource::<UiState>()
             .add_systems(Update, join.run_if(on_event::<JoinEvent>()))
             .add_systems(

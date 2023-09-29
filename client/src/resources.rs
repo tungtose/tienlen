@@ -18,7 +18,6 @@ pub struct Global {
     pub owned_entity: Option<OwnedEntity>,
     pub queued_command: Option<KeyCommand>,
     pub command_history: CommandHistory<KeyCommand>,
-    pub active_player_pos: i32,
     pub game: Game,
 }
 
@@ -92,7 +91,6 @@ impl Default for Global {
     fn default() -> Self {
         Self {
             player_name: String::new(),
-            active_player_pos: 0,
             player_entity: None,
             player_cards: BTreeMap::new(),
             owned_entity: None,

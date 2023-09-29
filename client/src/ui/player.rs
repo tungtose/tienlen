@@ -2,10 +2,7 @@ use std::collections::HashMap;
 
 use bevy::prelude::*;
 
-use crate::{
-    game::{ActiveCards, SelectCardEvent},
-    resources::Global,
-};
+use crate::game::{ActiveCards, LocalPlayerCards, SelectCardEvent};
 
 use super::{table::TableContainer, UiAssets};
 
@@ -111,7 +108,7 @@ pub fn draw_player(
     card_assets: Res<UiAssets>,
     hand_container_query: Query<Entity, With<HandContainer>>,
     table_container_query: Query<Entity, With<TableContainer>>,
-    global: Res<Global>,
+    local_player_cards_q: Query<&LocalPlayerCards>,
     active_cards_q: Query<&ActiveCards>,
 ) {
     let Ok(table_container_entity) = table_container_query.get_single() else {
@@ -122,9 +119,15 @@ pub fn draw_player(
 
     let hand_container = create_hand_container(&mut commands, false);
 
-    let active_cards = active_cards_q.get_single().unwrap();
+    let Ok(active_cards) = active_cards_q.get_single() else {
+        return;
+    };
 
-    for (card_entity, card) in global.game.local_player.cards.iter() {
+    let Ok(player_cards) = local_player_cards_q.get_single() else {
+        return;
+    };
+
+    for (card_entity, card) in player_cards.0.iter() {
         let handle = card_assets.cards.get(&card.name()).unwrap();
 
         let is_active = active_cards.is_active(card_entity);

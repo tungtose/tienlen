@@ -13,6 +13,7 @@ use crate::{
     ui::UiPlugin,
     welcome::WelcomeScreenPlugin,
 };
+use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
 struct MainLoop;
@@ -37,6 +38,7 @@ pub fn run() {
         }))
         // Add Naia Client Plugin
         .add_plugins(ClientPlugin::new(ClientConfig::default(), protocol()))
+        .add_plugins(WorldInspectorPlugin::new())
         .add_plugins(UiPlugin)
         .add_plugins(WelcomeScreenPlugin)
         .add_plugins(GamePlugin)
