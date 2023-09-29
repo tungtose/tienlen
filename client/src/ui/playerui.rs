@@ -14,6 +14,9 @@ const AVATAR_SIZE: f32 = 55.;
 pub struct ForeignPlayer;
 
 #[derive(Component)]
+pub struct PlayerTimerContainer;
+
+#[derive(Component)]
 pub struct PlayerMessageContainer;
 
 #[derive(Component)]
@@ -100,7 +103,7 @@ pub fn circle_cooldown_update(
     time: Res<Time>,
 ) {
     for (mut cir_setting, mut path, player_pos) in player_ui_q.iter_mut() {
-        if global.active_player_pos == player_pos.0 {
+        if global.game.active_player_pos == player_pos.0 {
             let delta = time.delta_seconds();
             let new_path = cir_setting.update_circle_path(delta);
             *path = new_path;
@@ -167,12 +170,56 @@ pub fn update_score(
 }
 
 #[allow(clippy::type_complexity)]
-pub fn animatetext_update(
-    mut text_q: Query<(&mut Visibility, &PlayerPos), (With<AnimateText>, With<Text>)>,
+pub fn update_timer(
+    mut text_q: Query<
+        (&mut Visibility, &PlayerPos, &mut Text),
+        (With<PlayerTimerContainer>, With<Text>),
+    >,
     global: Res<Global>,
+    res: Res<UiAssets>,
 ) {
-    for (mut vis, player_pos) in text_q.iter_mut() {
-        if player_pos.0 == global.active_player_pos {
+    let timer_text = TextStyle {
+        font: res.font.clone(),
+        font_size: 20.0,
+        color: Color::YELLOW_GREEN,
+    };
+
+    for (mut vis, player_pos, mut text) in text_q.iter_mut() {
+        let time = global.game.timer.parse::<f32>().unwrap();
+
+        if (0.0..5.0).contains(&time) {
+            if player_pos.0 == global.game.active_player_pos {
+                let time = &global.game.timer;
+                *text = Text::from_section(time, timer_text.clone());
+                *vis = Visibility::Visible;
+            }
+        } else {
+            *vis = Visibility::Hidden;
+        }
+    }
+}
+
+#[allow(clippy::type_complexity)]
+pub fn animatetext_update(
+    mut text_q: Query<(&mut Visibility, &PlayerPos, &mut Text), (With<AnimateText>, With<Text>)>,
+    global: Res<Global>,
+    res: Res<UiAssets>,
+) {
+    let playing_text = TextStyle {
+        font: res.font.clone(),
+        font_size: 16.0,
+        color: Color::ORANGE_RED,
+    };
+
+    let idle_text = TextStyle {
+        font: res.font.clone(),
+        font_size: 16.0,
+        color: Color::WHITE,
+    };
+    for (mut vis, player_pos, mut text) in text_q.iter_mut() {
+        if player_pos.0 == global.game.active_player_pos {
+            let name = text.sections.first().unwrap().value.clone();
+            *text = Text::from_section(name, playing_text.clone());
             match *vis {
                 Visibility::Hidden => *vis = Visibility::Visible,
                 Visibility::Visible => *vis = Visibility::Hidden,
@@ -181,6 +228,9 @@ pub fn animatetext_update(
 
             continue;
         }
+
+        let name = text.sections.first().unwrap().value.clone();
+        *text = Text::from_section(name, idle_text.clone());
 
         *vis = Visibility::Visible;
     }
@@ -293,8 +343,8 @@ pub fn update_player_message(
 ) {
     let text_style = TextStyle {
         font: res.font.clone(),
-        font_size: 20.0,
-        color: Color::RED,
+        font_size: 16.0,
+        color: Color::DARK_GREEN,
     };
 
     for message in message_ev.iter() {
@@ -323,7 +373,7 @@ pub fn create_player_ui(
 
     let path = cir_setting.create_circle_path();
 
-    let color = Color::with_a(Color::MIDNIGHT_BLUE, 0.7);
+    let color = Color::with_a(Color::YELLOW_GREEN, 0.85);
 
     let text_style = TextStyle {
         font: res.font.clone(),
@@ -398,13 +448,35 @@ pub fn create_player_ui(
                 PlayerMessageContainer,
                 PlayerPos(player_pos),
                 Text2dBundle {
-                    text: Text::from_section("".to_string(), text_style)
+                    text: Text::from_section("".to_string(), text_style.clone())
                         .with_alignment(TextAlignment::Center),
                     text_2d_bounds: Text2dBounds {
                         size: Vec2::new(100., 30.),
                     },
                     transform: Transform::from_translation(Vec3::from_array([
-                        draw_pos.x, draw_pos.y, 1.,
+                        draw_pos.x + 20.,
+                        draw_pos.y + 45.,
+                        1.,
+                    ])),
+                    ..default()
+                },
+            ));
+        })
+        .with_children(|builder| {
+            builder.spawn((
+                PlayerTimerContainer,
+                PlayerPos(player_pos),
+                Text2dBundle {
+                    text: Text::from_section("0".to_string(), text_style)
+                        .with_alignment(TextAlignment::Center),
+                    text_2d_bounds: Text2dBounds {
+                        size: Vec2::new(100., 30.),
+                    },
+                    visibility: Visibility::Hidden,
+                    transform: Transform::from_translation(Vec3::from_array([
+                        draw_pos.x + 40.,
+                        draw_pos.y,
+                        1.,
                     ])),
                     ..default()
                 },

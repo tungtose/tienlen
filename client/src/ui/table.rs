@@ -10,7 +10,7 @@ const CARD_MARGIN: f32 = 2.;
 
 use crate::resources::Global;
 
-use super::{DrawPlayer, DrawStatus, UiAssets};
+use super::{DrawStatus, UiAssets};
 
 #[derive(Component)]
 pub struct TableBg;
@@ -140,11 +140,7 @@ pub fn clear_table_cards(
     }
 }
 
-pub fn spawn_table(
-    mut commands: Commands,
-    assets: Res<UiAssets>,
-    mut draw_player_ev: EventWriter<DrawPlayer>,
-) {
+pub fn spawn_table(mut commands: Commands, assets: Res<UiAssets>) {
     let cards_container = commands
         .spawn((
             TableCardContainer,
@@ -218,7 +214,4 @@ pub fn spawn_table(
 
     let table_cards = TableCards { cards: vec![] };
     commands.spawn(table_cards);
-
-    draw_player_ev.send(DrawPlayer);
-    info!("SPAWNED TABLE!!!");
 }

@@ -8,12 +8,7 @@ use naia_bevy_demo_shared::{
     messages::{PlayCard, SkipTurn},
 };
 
-use crate::{
-    components::LocalPlayer,
-    resources::Global,
-    states::MainState,
-    ui::{DrawPlayer, DrawStatus},
-};
+use crate::{components::LocalPlayer, resources::Global, states::MainState, ui::DrawStatus};
 
 pub struct GamePlugin;
 impl Plugin for GamePlugin {
@@ -53,6 +48,9 @@ pub struct ActiveCard(pub bool);
 
 #[derive(Component, Default)]
 pub struct ActiveCards(BTreeMap<usize, Card>);
+
+#[derive(Component, Default)]
+pub struct LocalPlayerCards(pub BTreeMap<usize, Card>);
 
 impl ActiveCards {
     pub fn is_active(&self, key: &usize) -> bool {
@@ -104,12 +102,12 @@ impl ActiveCards {
 
 fn local_init(mut commands: Commands) {
     commands.spawn(ActiveCards::default());
+    commands.spawn(LocalPlayerCards::default());
 }
 
 pub fn select_card(
     mut active_cards_q: Query<&mut ActiveCards>,
     global: Res<Global>,
-    mut draw_player_ev: EventWriter<DrawPlayer>,
     mut select_card_ev: EventReader<SelectCardEvent>,
 ) {
     for event in select_card_ev.iter() {
@@ -120,7 +118,6 @@ pub fn select_card(
             .get_single_mut()
             .unwrap()
             .make_active(&event.0, card);
-        draw_player_ev.send(DrawPlayer);
     }
 }
 
@@ -158,10 +155,8 @@ pub fn play_card(
 pub fn update_player_cards(
     player_q: Query<&Player, With<LocalPlayer>>,
     mut global: ResMut<Global>,
-    mut draw_player_ev: EventWriter<DrawPlayer>,
     mut active_cards_q: Query<&mut ActiveCards>,
 ) {
-    info!("DRAW P CARDS!!!");
     let Ok(player) = player_q.get_single() else {
         return;
     };
@@ -173,7 +168,6 @@ pub fn update_player_cards(
     global.player_cards.clear();
 
     if hand.is_empty() {
-        draw_player_ev.send(DrawPlayer);
         return;
     }
 
@@ -186,15 +180,12 @@ pub fn update_player_cards(
         global.player_cards.remove(key);
     });
     active_cards_map.clear();
-
-    draw_player_ev.send(DrawPlayer);
 }
 
 pub fn spawn_player(
     mut next_state: ResMut<NextState<MainState>>,
     player_q: Query<&Player, With<LocalPlayer>>,
     mut global: ResMut<Global>,
-    mut draw_player_ev: EventWriter<DrawPlayer>,
 ) {
     let Ok(player) = player_q
         .get_single()
@@ -210,5 +201,4 @@ pub fn spawn_player(
     }
 
     next_state.set(MainState::Game);
-    draw_player_ev.send(DrawPlayer);
 }

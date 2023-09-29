@@ -1,4 +1,4 @@
-use std::default::Default;
+use std::{collections::BTreeMap, default::Default};
 
 use bevy::prelude::{info, Commands, EventReader, EventWriter, NextState, Query, ResMut};
 
@@ -82,7 +82,7 @@ pub fn message_events(
         }
 
         for _ in events.read::<GameSystemChannel, StartGame>() {
-            global.active_player_pos = 0;
+            global.game.active_player_pos = 0;
             start_game_ev.send(LocalStartGame);
         }
 
@@ -131,7 +131,7 @@ pub fn message_events(
 
         for update_turn in events.read::<GameSystemChannel, UpdateTurn>() {
             let active_player_pos = update_turn.0 as i32;
-            global.active_player_pos = active_player_pos;
+            global.game.active_player_pos = active_player_pos;
         }
 
         for message in events.read::<EntityAssignmentChannel, EntityAssignment>() {
@@ -144,12 +144,18 @@ pub fn message_events(
                 match player_query.get(entity) {
                     Ok(_) => {
                         info!("CONNECTED!!!");
+                        // let _player_cards_e =
+                        //     commands.spawn(LocalPlayerCards(BTreeMap::new())).id();
                         global.player_entity = Some(entity);
-                        commands.entity(entity).insert(LocalPlayer);
-                        bar_ev.send(ReloadBar);
+                        commands
+                            .entity(entity)
+                            // .insert(player_cards_e)
+                            .insert(LocalPlayer);
+
                         client.send_message::<PlayerActionChannel, PlayerReady>(
                             &PlayerReady::default(),
-                        )
+                        );
+                        bar_ev.send(ReloadBar);
                     }
                     Err(err) => info!("Gave Ownership Error: {}", err),
                 }

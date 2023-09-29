@@ -168,6 +168,10 @@ impl Hand {
         self.cards.len()
     }
 
+    pub fn total_value(&self) -> usize {
+        self.cards.iter().map(|c| c.ordinal()).sum()
+    }
+
     /// Returns the highest value card of the hand
     pub fn highest_value(&self) -> &Card {
         self.cards.iter().max().unwrap()

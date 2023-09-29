@@ -10,7 +10,6 @@ mod play_btn;
 pub mod player;
 pub mod playerui;
 pub mod table;
-pub mod timer;
 
 const FIXED_TIMESTEP: f32 = 0.5;
 
@@ -21,7 +20,6 @@ impl Plugin for UiPlugin {
             .add_event::<SpawnLocalPlayerEvent>()
             .add_event::<ReloadBar>()
             .add_event::<PlayerMessageEvent>()
-            .add_event::<DrawPlayer>()
             .add_event::<UpdateCard>()
             .add_event::<DrawStatus>()
             .add_event::<UpdateScoreUI>()
@@ -52,6 +50,10 @@ impl Plugin for UiPlugin {
                 FixedUpdate,
                 playerui::animatetext_update.run_if(in_state(MainState::Game)),
             )
+            .add_systems(
+                Update,
+                playerui::update_timer.run_if(in_state(MainState::Game)),
+            )
             .insert_resource(FixedTime::new_from_secs(FIXED_TIMESTEP))
             .add_systems(OnEnter(MainState::Lobby), table::spawn_table)
             .add_systems(
@@ -74,11 +76,6 @@ impl Plugin for UiPlugin {
                 player::card_click
                     .run_if(in_state(MainState::Game))
                     .before(player::draw_player),
-            )
-            .add_systems(OnEnter(MainState::Game), timer::init_counter)
-            .add_systems(
-                Update,
-                timer::update_counter.run_if(in_state(MainState::Game)),
             )
             .add_systems(
                 Update,
@@ -117,8 +114,6 @@ pub struct SpawnLocalPlayerEvent;
 #[derive(Default, Event)]
 pub struct PlayerMessageEvent(pub usize, pub String);
 
-#[derive(Default, Event)]
-pub struct DrawPlayer;
 #[derive(Default, Event)]
 pub struct DrawStatus(pub String);
 #[derive(Default, Event)]
