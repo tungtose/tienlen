@@ -249,7 +249,7 @@ pub fn draw_player_ui(mut commands: Commands, mut global: ResMut<Global>, res: R
     if local_player.is_join && !local_player.is_drawed {
         let local_player_ui = create_player_ui(
             &mut commands,
-            &Vec2::new(0., -175.),
+            &local_player.draw_pos,
             &res,
             local_player.pos,
             &local_player.score.to_string(),

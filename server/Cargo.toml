@@ -1,6 +1,6 @@
 [package]
 name = "tienlen-server"
-version = "0.0.41"
+version = "0.0.42"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 publish = false

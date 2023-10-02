@@ -62,6 +62,7 @@ pub struct LocalPlayer {
     pub name: String,
     pub cards: BTreeMap<usize, Card>,
     pub score: u32,
+    pub draw_pos: Vec2,
     pub is_join: bool,
     pub in_turn: bool,
     pub is_drawed: bool,
