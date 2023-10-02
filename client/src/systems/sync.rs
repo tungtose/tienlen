@@ -1,7 +1,8 @@
-use bevy::prelude::{Query, ResMut, Vec2, With, Without};
+use bevy::prelude::{info, Assets, Query, Res, ResMut, Vec2, With, Without};
 
 use naia_bevy_demo_shared::components::{hand::Hand, Counter, Player, Table};
 
+use crate::assets::{AssetList, GameConfig, GameConfigHandle};
 use crate::game::LocalPlayerCards;
 use crate::{components::LocalPlayer, resources::Global};
 
@@ -21,6 +22,8 @@ pub fn sync_main_player(
 pub fn sync_foreign_player(
     player_q: Query<&Player, Without<LocalPlayer>>,
     mut global: ResMut<Global>,
+    // config_res: Res<GameConfigHandle>,
+    // mut game_config: ResMut<Assets<GameConfig>>,
 ) {
     let main_player_pos = global.game.local_player.pos;
     let is_join = global.game.local_player.is_join;
@@ -28,6 +31,11 @@ pub fn sync_foreign_player(
     if !is_join {
         return;
     }
+
+    // let Some(config) = game_config.remove(config_res.0.id()) else {
+    //     info!("Error: cannot get game config");
+    //     return;
+    // };
 
     for player in player_q.iter() {
         let player_pos = *player.pos;
@@ -80,19 +88,19 @@ pub fn sync_foreign_player(
             1 => {
                 global.game.player_1.name = player.name.to_string();
                 global.game.player_1.is_join = true;
-                global.game.player_1.draw_pos = Vec2::new(-345., 35.);
+                // global.game.player_1.draw_pos = config.p1();
                 global.game.player_1.pos = *player.pos as i32;
             }
             2 => {
                 global.game.player_2.name = player.name.to_string();
                 global.game.player_2.is_join = true;
-                global.game.player_2.draw_pos = Vec2::new(0., 210.);
+                // global.game.player_2.draw_pos = config.p2();
                 global.game.player_2.pos = *player.pos as i32;
             }
             3 => {
                 global.game.player_3.name = player.name.to_string();
                 global.game.player_3.is_join = true;
-                global.game.player_3.draw_pos = Vec2::new(345., 35.);
+                // global.game.player_3.draw_pos = config.p3();
                 global.game.player_3.pos = *player.pos as i32;
             }
             _ => unreachable!(),

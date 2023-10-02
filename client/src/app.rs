@@ -1,4 +1,7 @@
+use std::time::Duration;
+
 use bevy::{
+    asset::ChangeWatcher,
     prelude::*,
     window::{Window, WindowPlugin},
 };
@@ -6,7 +9,7 @@ use naia_bevy_client::{ClientConfig, Plugin as ClientPlugin, ReceiveEvents};
 use naia_bevy_demo_shared::protocol;
 
 use crate::{
-    assets::AssetPlugin,
+    // assets::AssetPlugin,
     game::GamePlugin,
     states::MainState,
     systems::{events, init, input, my_cursor_system, sync},
@@ -25,24 +28,32 @@ pub fn run() {
     App::default()
         // Bevy Plugins
         .add_state::<MainState>()
-        .add_plugins(DefaultPlugins.set(WindowPlugin {
-            primary_window: Some(Window {
-                title: "thirteen".into(),
-                canvas: Some("#thirteen".into()),
-                resolution: (800., 500.).into(),
-                fit_canvas_to_parent: false,
-                prevent_default_event_handling: false,
-                ..default()
-            }),
-            ..default()
-        }))
+        .add_plugins(
+            DefaultPlugins
+                .set(WindowPlugin {
+                    primary_window: Some(Window {
+                        title: "thirteen".into(),
+                        canvas: Some("#thirteen".into()),
+                        resolution: (800., 500.).into(),
+                        fit_canvas_to_parent: false,
+                        prevent_default_event_handling: false,
+                        ..default()
+                    }),
+                    ..default()
+                })
+                .set(AssetPlugin {
+                    // Tell the asset server to watch for asset changes on disk:
+                    watch_for_changes: ChangeWatcher::with_delay(Duration::from_millis(200)),
+                    ..default()
+                }),
+        )
         // Add Naia Client Plugin
         .add_plugins(ClientPlugin::new(ClientConfig::default(), protocol()))
         // .add_plugins(WorldInspectorPlugin::new())
         .add_plugins(UiPlugin)
         .add_plugins(WelcomeScreenPlugin)
         .add_plugins(GamePlugin)
-        .add_plugins(AssetPlugin)
+        .add_plugins(crate::assets::AssetPlugin)
         // Background Color
         .insert_resource(ClearColor(Color::BLACK))
         // Startup System
