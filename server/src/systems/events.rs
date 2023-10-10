@@ -215,10 +215,12 @@ pub fn message_events(
                 let cards_str = hand.to_string();
 
                 let mut player = player_q.get_mut(*p_entity).unwrap();
-                *player.cards = cards_str;
+                *player.cards = cards_str.clone();
 
-                server
-                    .send_message::<GameSystemChannel, StartGame>(user_key, &StartGame::default());
+                server.send_message::<GameSystemChannel, StartGame>(
+                    user_key,
+                    &StartGame(cards_str.clone()),
+                );
             }
         }
 

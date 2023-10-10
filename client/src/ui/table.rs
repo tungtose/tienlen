@@ -187,6 +187,7 @@ pub fn spawn_table(mut commands: Commands, assets: Res<UiAssets>) {
                 padding: UiRect::bottom(Val::Px(100.)),
                 ..Default::default()
             },
+            visibility: Visibility::Hidden,
             ..default()
         })
         .add_child(status_container)

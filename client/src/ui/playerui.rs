@@ -102,17 +102,17 @@ pub fn circle_cooldown_update(
     global: Res<Global>,
     time: Res<Time>,
 ) {
-    for (mut cir_setting, mut path, player_pos) in player_ui_q.iter_mut() {
-        if global.game.active_player_pos == player_pos.0 {
-            let delta = time.delta_seconds();
-            let new_path = cir_setting.update_circle_path(delta);
-            *path = new_path;
-            continue;
-        }
-        cir_setting.set_zero_degree();
-        let new_path = create_circle_path(&cir_setting);
-        *path = new_path;
-    }
+    // for (mut cir_setting, mut path, player_pos) in player_ui_q.iter_mut() {
+    //     if global.game.active_player_pos == player_pos.0 {
+    //         let delta = time.delta_seconds();
+    //         let new_path = cir_setting.update_circle_path(delta);
+    //         *path = new_path;
+    //         continue;
+    //     }
+    //     cir_setting.set_zero_degree();
+    //     let new_path = create_circle_path(&cir_setting);
+    //     *path = new_path;
+    // }
 }
 
 fn create_circle_path(cir_setting: &CircleSetting) -> Path {

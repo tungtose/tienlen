@@ -111,35 +111,35 @@ pub fn draw_player(
     local_player_cards_q: Query<&LocalPlayerCards>,
     active_cards_q: Query<&ActiveCards>,
 ) {
-    let Ok(table_container_entity) = table_container_query.get_single() else {
-        return;
-    };
-
-    clear_hand_ui(&mut commands, &hand_container_query);
-
-    let hand_container = create_hand_container(&mut commands, false);
-
-    let Ok(active_cards) = active_cards_q.get_single() else {
-        return;
-    };
-
-    let Ok(player_cards) = local_player_cards_q.get_single() else {
-        return;
-    };
-
-    for (card_entity, card) in player_cards.0.iter() {
-        let handle = card_assets.cards.get(&card.name()).unwrap();
-
-        let is_active = active_cards.is_active(card_entity);
-
-        let card_ui = get_card(&mut commands, is_active, handle);
-
-        commands.entity(card_ui).insert(CardButton(*card_entity));
-
-        commands.entity(hand_container).add_child(card_ui);
-    }
-
-    commands
-        .entity(table_container_entity)
-        .add_child(hand_container);
+    // let Ok(table_container_entity) = table_container_query.get_single() else {
+    //     return;
+    // };
+    //
+    // clear_hand_ui(&mut commands, &hand_container_query);
+    //
+    // let hand_container = create_hand_container(&mut commands, false);
+    //
+    // let Ok(active_cards) = active_cards_q.get_single() else {
+    //     return;
+    // };
+    //
+    // let Ok(player_cards) = local_player_cards_q.get_single() else {
+    //     return;
+    // };
+    //
+    // for (card_entity, card) in player_cards.0.iter() {
+    //     let handle = card_assets.cards.get(&card.name()).unwrap();
+    //
+    //     let is_active = active_cards.is_active(card_entity);
+    //
+    //     let card_ui = get_card(&mut commands, is_active, handle);
+    //
+    //     commands.entity(card_ui).insert(CardButton(*card_entity));
+    //
+    //     commands.entity(hand_container).add_child(card_ui);
+    // }
+    //
+    // commands
+    //     .entity(table_container_entity)
+    //     .add_child(hand_container);
 }

@@ -2,6 +2,7 @@ use std::time::Duration;
 
 use bevy::{
     asset::ChangeWatcher,
+    log::{Level, LogPlugin},
     prelude::*,
     window::{Window, WindowPlugin},
 };
@@ -9,43 +10,48 @@ use naia_bevy_client::{ClientConfig, Plugin as ClientPlugin, ReceiveEvents};
 use naia_bevy_demo_shared::protocol;
 
 use crate::{
+    cards::CardPlugin,
     // assets::AssetPlugin,
     game::GamePlugin,
     states::MainState,
+    system_set::{MainLoop, SystemSetsPlugin, Tick},
     systems::{events, init, input, my_cursor_system, sync},
     ui::UiPlugin,
     welcome::WelcomeScreenPlugin,
 };
 // use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
-#[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
-struct MainLoop;
-
-#[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
-struct Tick;
-
 pub fn run() {
+    let window_plug = WindowPlugin {
+        primary_window: Some(Window {
+            title: "thirteen".into(),
+            canvas: Some("#thirteen".into()),
+            resolution: (800., 500.).into(),
+            fit_canvas_to_parent: false,
+            prevent_default_event_handling: false,
+            ..default()
+        }),
+        ..default()
+    };
+
+    let log_plug = LogPlugin {
+        filter: "bevy_mod_picking=error".into(),
+        level: Level::INFO,
+    };
+
+    let asset_plug = AssetPlugin {
+        watch_for_changes: ChangeWatcher::with_delay(Duration::from_millis(200)),
+        ..default()
+    };
+
     App::default()
         // Bevy Plugins
         .add_state::<MainState>()
         .add_plugins(
             DefaultPlugins
-                .set(WindowPlugin {
-                    primary_window: Some(Window {
-                        title: "thirteen".into(),
-                        canvas: Some("#thirteen".into()),
-                        resolution: (800., 500.).into(),
-                        fit_canvas_to_parent: false,
-                        prevent_default_event_handling: false,
-                        ..default()
-                    }),
-                    ..default()
-                })
-                .set(AssetPlugin {
-                    // Tell the asset server to watch for asset changes on disk:
-                    watch_for_changes: ChangeWatcher::with_delay(Duration::from_millis(200)),
-                    ..default()
-                }),
+                .set(window_plug)
+                .set(log_plug)
+                .set(asset_plug),
         )
         // Add Naia Client Plugin
         .add_plugins(ClientPlugin::new(ClientConfig::default(), protocol()))
@@ -53,6 +59,8 @@ pub fn run() {
         .add_plugins(UiPlugin)
         .add_plugins(WelcomeScreenPlugin)
         .add_plugins(GamePlugin)
+        .add_plugins(SystemSetsPlugin)
+        .add_plugins(CardPlugin)
         .add_plugins(crate::assets::AssetPlugin)
         // Background Color
         .insert_resource(ClearColor(Color::BLACK))
@@ -74,10 +82,7 @@ pub fn run() {
                 .in_set(ReceiveEvents),
         )
         // Tick Event
-        .configure_set(Update, Tick.after(ReceiveEvents))
         .add_systems(Update, events::tick_events.in_set(Tick))
-        // Realtime Gameplay Loop
-        .configure_set(Update, MainLoop.after(Tick))
         .add_systems(
             Update,
             (
