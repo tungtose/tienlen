@@ -3,7 +3,8 @@ extern crate cfg_if;
 
 cfg_if! {
     if #[cfg(not(target_arch = "wasm32"))] {
-
+        mod system_set;
+        mod cards;
         mod resources;
         mod systems;
         mod ui;

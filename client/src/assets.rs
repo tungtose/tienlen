@@ -61,7 +61,7 @@ fn setup(
 ) {
     let game_config = GameConfigHandle(asset_server.load("game.config.ron"));
 
-    // asset_list.0.push(game_config.0.clone_untyped());
+    asset_list.0.push(game_config.0.clone_untyped());
 
     commands.insert_resource(game_config);
 }

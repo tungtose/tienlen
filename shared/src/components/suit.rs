@@ -1,8 +1,10 @@
 use std::cmp::Ordering;
+use std::str::FromStr;
 
+use bevy_ecs::component::Component;
 use serde::{Deserialize, Serialize};
 
-#[derive(Copy, Clone, Hash, PartialEq, Eq, Debug, Serialize, Deserialize)]
+#[derive(Copy, Clone, Hash, PartialEq, Eq, Debug, Serialize, Deserialize, Component)]
 pub enum Suit {
     Hearts,
     Diamonds,
@@ -19,6 +21,20 @@ impl PartialOrd for Suit {
 impl Default for Suit {
     fn default() -> Self {
         Self::Hearts
+    }
+}
+
+impl FromStr for Suit {
+    type Err = Box<dyn std::error::Error>;
+
+    fn from_str(s: &str) -> Result<Self, <Self as FromStr>::Err> {
+        match s {
+            "S" => Ok(Suit::Spades),
+            "C" => Ok(Suit::Clubs),
+            "D" => Ok(Suit::Diamonds),
+            "H" => Ok(Suit::Hearts),
+            _ => Err("Invalid suit".into()),
+        }
     }
 }
 
@@ -66,6 +82,15 @@ impl Suit {
             Suit::Hearts => 'H',
             Suit::Diamonds => 'D',
             Suit::Clubs => 'C',
+        }
+    }
+
+    pub fn get_asset_path(&self) -> String {
+        match *self {
+            Suit::Spades => "spade".to_string(),
+            Suit::Hearts => "heart".to_string(),
+            Suit::Diamonds => "diamond".to_string(),
+            Suit::Clubs => "club".to_string(),
         }
     }
 

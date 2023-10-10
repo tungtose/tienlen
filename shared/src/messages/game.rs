@@ -9,7 +9,7 @@ pub struct PlayerMessage {
 }
 
 #[derive(Message, Default)]
-pub struct StartGame;
+pub struct StartGame(pub String);
 
 #[derive(Message, Debug, Default)]
 pub struct UpdatePlayerCards;

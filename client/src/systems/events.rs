@@ -22,6 +22,7 @@ use naia_bevy_demo_shared::{
 };
 
 use crate::{
+    cards::SpawnPlayerCardEvent,
     components::LocalPlayer,
     game::{LocalStartGame, UpdatePlayerCards},
     resources::Global,
@@ -69,6 +70,7 @@ pub fn message_events(
     player_query: Query<&Player>,
     mut bar_ev: EventWriter<ReloadBar>,
     mut start_game_ev: EventWriter<LocalStartGame>,
+    mut spawn_player_card_ev: EventWriter<SpawnPlayerCardEvent>,
     mut draw_status_ev: EventWriter<DrawStatus>,
     mut update_player_cards_ev: EventWriter<UpdatePlayerCards>,
     mut update_score_ev: EventWriter<UpdateScoreUI>,
@@ -81,8 +83,9 @@ pub fn message_events(
             player_message_ev.send(event);
         }
 
-        for _ in events.read::<GameSystemChannel, StartGame>() {
+        for player_card in events.read::<GameSystemChannel, StartGame>() {
             global.game.active_player_pos = 0;
+            spawn_player_card_ev.send(SpawnPlayerCardEvent(player_card.0));
             start_game_ev.send(LocalStartGame);
         }
 

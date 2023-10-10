@@ -1,11 +1,14 @@
 use std::cmp::Ordering;
 use std::slice::Iter;
 
+use bevy_ecs::component::Component;
 use serde::{Deserialize, Serialize};
 
 use Rank::*;
 
-#[derive(Copy, Clone, Hash, Eq, PartialEq, PartialOrd, Debug, Serialize, Deserialize)]
+#[derive(
+    Copy, Clone, Hash, Eq, PartialEq, PartialOrd, Debug, Serialize, Deserialize, Component,
+)]
 pub enum Rank {
     Two,
     Three,
@@ -122,6 +125,29 @@ impl Rank {
             Ace => "Ace",
         }
     }
+
+    pub fn get_asset_path(&self) -> String {
+        let mut path = "".to_string();
+
+        match *self {
+            Rank::Two => path.push('2'),
+            Rank::Three => path.push('3'),
+            Rank::Four => path.push('4'),
+            Rank::Five => path.push('5'),
+            Rank::Six => path.push('6'),
+            Rank::Seven => path.push('7'),
+            Rank::Eight => path.push('8'),
+            Rank::Nine => path.push('9'),
+            Rank::Ten => path.push_str("10"),
+            Rank::Jack => path.push_str("11"),
+            Rank::Queen => path.push_str("12"),
+            Rank::King => path.push_str("13"),
+            Rank::Ace => path.push('1'),
+        }
+
+        path
+    }
+
     pub fn ranks() -> &'static [Rank] {
         static RANKS: [Rank; 13] = [
             Two, Three, Four, Five, Six, Seven, Eight, Nine, Ten, Jack, Queen, King, Ace,
