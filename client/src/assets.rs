@@ -4,7 +4,7 @@ use bevy::reflect::{TypePath, TypeUuid};
 use bevy_common_assets::ron::RonAssetPlugin;
 
 use crate::resources::Global;
-use crate::states::{GameState, MainState};
+use crate::states::MainState;
 
 pub struct AssetPlugin;
 
@@ -30,6 +30,7 @@ pub struct AssetList(pub Vec<HandleUntyped>);
 pub struct GameConfig {
     pub window_title: String,
     window_size: (f32, f32),
+    pile_position: (f32, f32, f32),
     p0_position: (f32, f32),
     p1_position: (f32, f32),
     p2_position: (f32, f32),
@@ -37,6 +38,9 @@ pub struct GameConfig {
 }
 
 impl GameConfig {
+    pub fn pile_position(&self) -> Vec3 {
+        Vec3::from(self.pile_position)
+    }
     pub fn p0(&self) -> Vec2 {
         Vec2::from(self.p0_position)
     }
@@ -69,7 +73,6 @@ fn setup(
 fn spawn_level(
     config_res: Res<GameConfigHandle>,
     mut game_config: ResMut<Assets<GameConfig>>,
-
     mut global: ResMut<Global>,
 ) {
     if let Some(game_config) = game_config.remove(config_res.0.id()) {
@@ -77,6 +80,8 @@ fn spawn_level(
         global.game.player_2.draw_pos = game_config.p2();
         global.game.player_3.draw_pos = game_config.p3();
         global.game.local_player.draw_pos = game_config.p0();
+
+        global.game.local_player.pile_pos = game_config.pile_position();
 
         info!("Updated {:?}", game_config);
     }

@@ -3,8 +3,8 @@ extern crate cfg_if;
 
 cfg_if! {
     if #[cfg(target_arch = "wasm32")] {
+        mod game;
         mod system_set;
-        mod cards;
         mod welcome;
         mod resources;
         mod systems;
@@ -13,7 +13,6 @@ cfg_if! {
         mod components;
         mod states;
         mod assets;
-        mod game;
 
         use wasm_bindgen::prelude::*;
 

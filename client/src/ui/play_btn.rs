@@ -122,11 +122,12 @@ pub fn spawn_play_btn(
         commands.entity(player_container_entity).despawn_recursive();
     }
 
-    let show_player_control = if *player.active {
-        Visibility::Visible
-    } else {
-        Visibility::Hidden
-    };
+    // let show_player_control = if *player.active {
+    //     Visibility::Visible
+    // } else {
+    //     Visibility::Hidden
+    // };
+    let show_player_control = Visibility::Hidden;
 
     let play_container = commands
         .spawn((

@@ -1,8 +1,7 @@
-use bevy::prelude::{info, Assets, Query, Res, ResMut, Vec2, With, Without};
+use bevy::prelude::{Query, ResMut, With, Without};
 
 use naia_bevy_demo_shared::components::{hand::Hand, Counter, Player, Table};
 
-use crate::assets::{AssetList, GameConfig, GameConfigHandle};
 use crate::game::LocalPlayerCards;
 use crate::{components::LocalPlayer, resources::Global};
 
@@ -31,11 +30,6 @@ pub fn sync_foreign_player(
     if !is_join {
         return;
     }
-
-    // let Some(config) = game_config.remove(config_res.0.id()) else {
-    //     info!("Error: cannot get game config");
-    //     return;
-    // };
 
     for player in player_q.iter() {
         let player_pos = *player.pos;

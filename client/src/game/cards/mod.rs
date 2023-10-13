@@ -1,10 +1,19 @@
 use bevy::prelude::*;
 use bevy_mod_picking::prelude::*;
 use bevy_tweening::{lens::*, *};
-use naia_bevy_demo_shared::components::{deck::Deck, rank::Rank, suit::Suit};
+use naia_bevy_client::{events::MessageEvents, Client};
+use naia_bevy_demo_shared::{
+    channels::{GameSystemChannel, PlayerActionChannel},
+    components::{deck::Deck, hand::Hand, rank::Rank, suit::Suit},
+    messages::{AcceptPlayCard, PlayCard},
+};
 use std::{collections::HashMap, ops::Add};
 
-use crate::system_set::{Animating, Playing};
+use crate::{
+    game::LocalStartGame,
+    resources::Global,
+    system_set::{Animating, Playing},
+};
 
 pub struct CardPlugin;
 
@@ -13,16 +22,21 @@ impl Plugin for CardPlugin {
         app.add_plugins(TweeningPlugin)
             .add_plugins(DefaultPickingPlugins)
             .add_event::<SchedulePileEvent>()
-            .add_event::<SpawnPlayerCardEvent>()
             .add_event::<PlayEvent>()
             .add_systems(Startup, setup)
             .add_systems(
                 Update,
+                send_cards_to_server
+                    .in_set(Playing)
+                    .run_if(valid_cards_condition),
+            )
+            .add_systems(
+                Update,
                 (
                     player_btn_click,
+                    handle_accept_play_event,
                     spawn_player_card,
                     update_status,
-                    handle_play_event.in_set(Playing),
                     handle_reschedule_pile.in_set(Animating),
                 ),
             );
@@ -35,10 +49,7 @@ const NORMAL_BUTTON: Color = Color::rgb(0.15, 0.15, 0.15);
 struct SchedulePileEvent(Vec<Entity>);
 
 #[derive(Event, Clone, Default)]
-pub struct SpawnPlayerCardEvent(pub String);
-
-#[derive(Event, Clone, Default)]
-struct PlayEvent;
+struct PlayEvent(pub Vec<Entity>);
 
 #[derive(Component)]
 struct PlayBtn;
@@ -47,7 +58,7 @@ struct PlayBtn;
 struct AnimatingEvent;
 
 #[derive(Component)]
-struct Card;
+pub struct Card;
 
 #[derive(Component)]
 struct Position(Vec3);
@@ -59,11 +70,35 @@ enum CStatus {
     Animating,
 }
 
+#[derive(Component, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+struct Ordinal(usize);
+
+impl Ordinal {
+    pub fn new(rank: Rank, suilt: Suit) -> Self {
+        Self(rank.ordinal() * 13 + suilt.ordinal())
+    }
+
+    pub fn get(&self) -> usize {
+        self.0
+    }
+}
+
+#[derive(Component, Clone)]
+pub struct Raw(String);
+
+impl Raw {
+    pub fn get(&self) -> String {
+        self.0.clone()
+    }
+}
+
 #[derive(Bundle)]
 struct CardBundle {
     marker: Card,
     rank: Rank,
     suit: Suit,
+    raw: Raw,
+    ordinal: Ordinal,
     sprite: SpriteBundle,
 }
 
@@ -102,16 +137,22 @@ impl CardBundle {
                     },
                     texture: asset_server.load(asset_path),
                     visibility: Visibility::Hidden,
-                    transform: Transform::from_xyz(0., 0., 0.),
+                    transform: Transform::from_xyz(0., 0., 10.),
                     ..Default::default()
                 };
+
+                let ordinal = Ordinal::new(rank, suit);
+
+                let raw = Raw(str);
 
                 let entity = commands
                     .spawn((
                         CardBundle {
                             marker: Card,
+                            raw,
                             rank,
                             suit,
+                            ordinal,
                             sprite,
                         },
                         CStatus::Idle,
@@ -130,81 +171,160 @@ impl CardBundle {
 fn handle_reschedule_pile(
     mut commands: Commands,
     mut reschedule_pile_ev: EventReader<SchedulePileEvent>,
-    pile_q: Query<&Children, With<Pile>>,
-    mut card_q: Query<(&Transform, &mut CStatus), With<Card>>,
+    mut card_q: Query<(&Transform, &mut CStatus, &Ordinal), With<Card>>,
 ) {
     for event in reschedule_pile_ev.iter() {
-        info!("GOT EVENT! {:?}", pile_q.iter().len());
-        let mut pile_pos = Vec3::new(0., 0., 0.);
+        let mut pile_pos = Vec3::new(0., 0., 10.);
+        let mut cards = vec![];
+
         for c in event.0.iter() {
-            info!("GoT CHILD");
-            let (trans, mut status) = card_q.get_mut(*c).unwrap();
+            let (_trans, status, ordinal) = card_q.get_mut(*c).unwrap();
             if let CStatus::Idle = *status {
-                info!("==== GoT Idle");
-                let tween = Tween::new(
-                    EaseFunction::QuarticIn,
-                    std::time::Duration::from_millis(300),
-                    TransformPositionLens {
-                        start: trans.translation,
-                        end: pile_pos,
-                    },
-                )
-                .with_completed_event(4);
-
-                pile_pos.x += 35.;
-
-                *status = CStatus::Animating;
-
-                commands.entity(*c).insert(Animator::new(tween));
+                cards.push((*c, ordinal.get()));
             }
+        }
+
+        cards.sort_by_key(|o| o.1);
+
+        for c in cards.iter().map(|d| d.0) {
+            let (trans, mut status, _) = card_q.get_mut(c).unwrap();
+            let tween = Tween::new(
+                EaseFunction::QuarticIn,
+                std::time::Duration::from_millis(300),
+                TransformPositionLens {
+                    start: trans.translation,
+                    end: pile_pos,
+                },
+            )
+            .with_completed_event(4);
+
+            pile_pos.x += 35.;
+
+            *status = CStatus::Animating;
+
+            commands.entity(c).insert(Animator::new(tween));
         }
     }
 }
 
-fn handle_play_event(
-    mut commands: Commands,
+fn valid_cards_condition(card_q: Query<(&CStatus, &Raw), With<Card>>) -> bool {
+    let mut active_cards = vec![];
+    for (status, raw) in card_q.iter() {
+        if let CStatus::Active = *status {
+            active_cards.push(raw.get());
+        }
+    }
+
+    if active_cards.is_empty() {
+        // info!("No active card!");
+        return false;
+    }
+
+    let hand = Hand::from_str(active_cards.join(",").as_str());
+
+    if !hand.check_combination() {
+        // info!("Wrong combination");
+        return false;
+    }
+
+    true
+}
+
+fn send_cards_to_server(
+    mut client: Client,
     mut play_event_reader: EventReader<PlayEvent>,
-    mut active_card_q: Query<
-        (&mut CStatus, &mut Transform, &mut GlobalTransform, Entity),
+    card_q: Query<&Raw, With<Card>>,
+) {
+    for event in play_event_reader.iter() {
+        let cards: Vec<String> = event
+            .0
+            .iter()
+            .map(|entity| card_q.get(*entity).unwrap().get())
+            .collect();
+
+        let cards = cards.join(",");
+
+        info!("Sending card to server: {:?}", event.0);
+        client.send_message::<PlayerActionChannel, PlayCard>(&PlayCard(cards));
+    }
+}
+
+fn handle_accept_play_event(
+    mut commands: Commands,
+    global: Res<Global>,
+    card_map: Res<CardMap>,
+    mut event_reader: EventReader<MessageEvents>,
+    mut pile_q: Query<(Entity, &Children), With<Pile>>,
+    mut card_q: Query<
+        (
+            &mut Visibility,
+            &GlobalTransform,
+            &mut Transform,
+            &mut CStatus,
+        ),
         With<Card>,
     >,
-    mut pile_q: Query<(Entity, &Children), With<Pile>>,
     mut reschedule_pile_ev: EventWriter<SchedulePileEvent>,
 ) {
-    for _ev in play_event_reader.iter() {
-        let mut need_reschedule = false;
-        let (pile_entity, pile_child) = pile_q.get_single_mut().unwrap();
-        let mut table_pos = Vec3::new(-150., 10., 0.);
-        let mut active_cards = vec![];
-        for (mut status, mut trans, glb_trans, entity) in active_card_q.iter_mut() {
-            if let CStatus::Active = *status {
-                need_reschedule = true;
+    for events in event_reader.iter() {
+        for data in events.read::<GameSystemChannel, AcceptPlayCard>() {
+            let mut table_pos = Vec3::new(-150., 15., 10.);
+            let cards = card_map.list_from_str(&data.cards);
 
-                active_cards.push(entity);
+            if global.game.local_player.pos as usize == data.cur_player {
+                let mut need_reschedule = false;
+                let (pile_entity, pile_child) = pile_q.get_single_mut().unwrap();
 
-                trans.translation = glb_trans.translation();
-                commands.entity(pile_entity).remove_children(&[entity]);
+                for entity in cards.iter() {
+                    need_reschedule = true;
+                    let (_, glb_trans, mut trans, mut status) = card_q.get_mut(*entity).unwrap();
+                    trans.translation = glb_trans.translation();
+                    commands.entity(pile_entity).remove_children(&[*entity]);
 
-                let tween = Tween::new(
-                    EaseFunction::CubicIn,
-                    std::time::Duration::from_millis(150),
-                    TransformPositionLens {
-                        start: glb_trans.translation(),
-                        end: table_pos,
-                    },
-                )
-                .with_completed_event(2);
+                    let tween = Tween::new(
+                        EaseFunction::CubicIn,
+                        std::time::Duration::from_millis(150),
+                        TransformPositionLens {
+                            start: glb_trans.translation(),
+                            end: table_pos,
+                        },
+                    )
+                    .with_completed_event(2);
 
-                table_pos.x += 35.;
+                    table_pos.x += 35.;
 
-                commands.entity(entity).insert(Animator::new(tween));
+                    commands.entity(*entity).insert(Animator::new(tween));
 
-                *status = CStatus::Animating;
+                    *status = CStatus::Animating;
+                }
+
+                if need_reschedule {
+                    let cards = pile_child.iter().copied().collect::<Vec<Entity>>();
+                    reschedule_pile_ev.send(SchedulePileEvent(cards));
+                }
+            } else {
+                for entity in cards.iter() {
+                    let mut card = card_q.get_mut(*entity).unwrap();
+
+                    *card.0 = Visibility::Visible;
+
+                    let p1_pos = global.game.player_1.draw_pos;
+
+                    let tween = Tween::new(
+                        EaseFunction::CubicIn,
+                        std::time::Duration::from_millis(150),
+                        TransformPositionLens {
+                            start: Vec3::new(p1_pos.x, p1_pos.y, 10.),
+                            end: table_pos,
+                        },
+                    )
+                    .with_completed_event(2);
+
+                    table_pos.x += 35.;
+
+                    commands.entity(*entity).insert(Animator::new(tween));
+                }
             }
-        }
-        if need_reschedule {
-            let cards = pile_child.iter().copied().collect::<Vec<Entity>>();
-            reschedule_pile_ev.send(SchedulePileEvent(cards));
         }
     }
 }
@@ -216,12 +336,21 @@ fn player_btn_click(
         (Changed<Interaction>, With<Button>),
     >,
     mut play_event_writer: EventWriter<PlayEvent>,
+    card_q: Query<(Entity, &CStatus, &Ordinal), With<Card>>,
 ) {
     for (interaction, play_btn) in &mut interaction_query {
         if let Interaction::Pressed = *interaction {
             if play_btn.is_some() {
-                info!("Clicked play!");
-                play_event_writer.send_default();
+                let mut cards = vec![];
+
+                for (entity, status, ordinal) in card_q.iter() {
+                    if let CStatus::Active = *status {
+                        cards.push((entity, ordinal.get()));
+                    }
+                }
+
+                cards.sort_by_key(|c| c.1);
+                play_event_writer.send(PlayEvent(cards.iter().map(|c| c.0).collect()));
             }
         }
     }
@@ -256,7 +385,7 @@ fn click_card(
                 std::time::Duration::from_millis(100),
                 TransformPositionLens {
                     start: tran.translation,
-                    end: tran.translation.add(Vec3::new(0., 10., 0.)),
+                    end: tran.translation.add(Vec3::new(0., 15., 0.)),
                 },
             )
             .with_completed_event(0);
@@ -267,10 +396,10 @@ fn click_card(
         CStatus::Active => {
             let tween = Tween::new(
                 EaseFunction::CubicIn,
-                std::time::Duration::from_millis(200),
+                std::time::Duration::from_millis(100),
                 TransformPositionLens {
                     start: tran.translation,
-                    end: tran.translation.add(Vec3::new(0., -10., 0.)),
+                    end: tran.translation.add(Vec3::new(0., -15., 0.)),
                 },
             )
             .with_completed_event(1);
@@ -285,12 +414,20 @@ fn click_card(
 #[derive(Resource, Default)]
 pub struct CardMap(pub HashMap<String, Entity>);
 
+impl CardMap {
+    pub fn list_from_str(&self, input: &str) -> Vec<Entity> {
+        input
+            .split(',')
+            .map(|c| *self.0.get(c).unwrap())
+            .collect::<Vec<Entity>>()
+    }
+}
+
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     let mut desk = Deck::new();
     let mut card_map = CardMap::default();
 
     for c in desk.deal(52).as_slice() {
-        info!(" C STR = {:?}", c.to_str());
         let card_entity = CardBundle::from_str(&c.to_str(), &mut commands, &asset_server).unwrap();
         card_map.0.insert(c.to_str(), card_entity);
     }
@@ -300,13 +437,13 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
 
 fn spawn_player_card(
     mut commands: Commands,
-    // asset_server: Res<AssetServer>,
     card_map: Res<CardMap>,
-    mut spawn_card_event: EventReader<SpawnPlayerCardEvent>,
+    mut start_game_event: EventReader<LocalStartGame>,
     mut schedule_pile_event: EventWriter<SchedulePileEvent>,
     mut card_q: Query<&mut Visibility, With<Card>>,
+    global: Res<Global>,
 ) {
-    for ev in spawn_card_event.iter() {
+    for ev in start_game_event.iter() {
         let cards: Vec<Entity> =
             ev.0.split(',')
                 .map(|card| *card_map.0.get(card).unwrap())
@@ -320,7 +457,7 @@ fn spawn_player_card(
         commands
             .spawn((
                 SpatialBundle {
-                    transform: Transform::from_xyz(-100., -150., 0.),
+                    transform: Transform::from_translation(global.game.local_player.pile_pos),
                     ..Default::default()
                 },
                 Pile,
