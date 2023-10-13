@@ -1,6 +1,6 @@
 use std::{collections::BTreeMap, default::Default};
 
-use bevy::prelude::{Entity, Resource, Vec2};
+use bevy::prelude::{Entity, Resource, Vec2, Vec3};
 
 use naia_bevy_client::CommandHistory;
 use naia_bevy_demo_shared::{components::card::Card, messages::KeyCommand};
@@ -32,6 +32,54 @@ pub struct Game {
     pub timer: String,
 }
 
+impl Game {
+    pub fn get_relative_player_position(&self, player_pos: usize) -> usize {
+        let mut player_num: usize = 0;
+        match self.local_player.pos {
+            0 => {
+                player_num = player_pos;
+            }
+            1 => {
+                if player_pos == 2 {
+                    player_num = 1;
+                }
+                if player_pos == 3 {
+                    player_num = 2;
+                }
+                if player_pos == 0 {
+                    player_num = 3;
+                }
+            }
+            2 => {
+                if player_pos == 3 {
+                    player_num = 1;
+                }
+                if player_pos == 0 {
+                    player_num = 2;
+                }
+                if player_pos == 1 {
+                    player_num = 3;
+                }
+            }
+            3 => {
+                if player_pos == 0 {
+                    player_num = 1;
+                }
+                if player_pos == 1 {
+                    player_num = 2;
+                }
+
+                if player_pos == 2 {
+                    player_num = 3;
+                }
+            }
+            _ => unreachable!(),
+        }
+
+        return player_num;
+    }
+}
+
 #[derive(Default, Debug)]
 pub struct Player {
     pub name: String,
@@ -61,6 +109,7 @@ impl Player {
 pub struct LocalPlayer {
     pub name: String,
     pub cards: BTreeMap<usize, Card>,
+    pub pile_pos: Vec3,
     pub score: u32,
     pub draw_pos: Vec2,
     pub is_join: bool,

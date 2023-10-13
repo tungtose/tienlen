@@ -2,6 +2,8 @@
   window_size: (800., 500.),
   window_title: "tienlen",
 
+  pile_position: (-200., -150., 10.),
+
   p0_position: (0., -195.),
 
   p1_position: (-345., 35.),

@@ -16,13 +16,12 @@ use naia_bevy_demo_shared::{
     },
     components::player::Player,
     messages::{
-        EntityAssignment, ErrorCode, GameError, KeyCommand, NewMatch, NewPlayer, PlayCard,
-        PlayerMessage, PlayerReady, StartGame, UpdateScore, UpdateTurn,
+        AcceptPlayCard, EntityAssignment, ErrorCode, GameError, KeyCommand, NewMatch, NewPlayer,
+        PlayCard, PlayerMessage, PlayerReady, StartGame, UpdateScore, UpdateTurn,
     },
 };
 
 use crate::{
-    cards::SpawnPlayerCardEvent,
     components::LocalPlayer,
     game::{LocalStartGame, UpdatePlayerCards},
     resources::Global,
@@ -70,7 +69,6 @@ pub fn message_events(
     player_query: Query<&Player>,
     mut bar_ev: EventWriter<ReloadBar>,
     mut start_game_ev: EventWriter<LocalStartGame>,
-    mut spawn_player_card_ev: EventWriter<SpawnPlayerCardEvent>,
     mut draw_status_ev: EventWriter<DrawStatus>,
     mut update_player_cards_ev: EventWriter<UpdatePlayerCards>,
     mut update_score_ev: EventWriter<UpdateScoreUI>,
@@ -85,8 +83,7 @@ pub fn message_events(
 
         for player_card in events.read::<GameSystemChannel, StartGame>() {
             global.game.active_player_pos = 0;
-            spawn_player_card_ev.send(SpawnPlayerCardEvent(player_card.0));
-            start_game_ev.send(LocalStartGame);
+            start_game_ev.send(LocalStartGame(player_card.0));
         }
 
         for _ in events.read::<GameSystemChannel, NewPlayer>() {
@@ -128,9 +125,10 @@ pub fn message_events(
             update_player_cards_ev.send(UpdatePlayerCards)
         }
 
-        for _ in events.read::<GameSystemChannel, PlayCard>() {
-            update_player_cards_ev.send(UpdatePlayerCards)
-        }
+        // for data in events.read::<GameSystemChannel, AcceptPlayCard>() {
+        //     info!("Got card from server: {:?}", data);
+        //     update_player_cards_ev.send(UpdatePlayerCards);
+        // }
 
         for update_turn in events.read::<GameSystemChannel, UpdateTurn>() {
             let active_player_pos = update_turn.0 as i32;

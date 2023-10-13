@@ -1,3 +1,6 @@
+mod cards;
+mod status;
+mod table;
 use std::collections::BTreeMap;
 
 use bevy::prelude::*;
@@ -10,6 +13,8 @@ use naia_bevy_demo_shared::{
 
 use crate::{components::LocalPlayer, resources::Global, states::MainState, ui::DrawStatus};
 
+use self::{cards::CardPlugin, table::TablePlugin};
+
 pub struct GamePlugin;
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
@@ -18,6 +23,8 @@ impl Plugin for GamePlugin {
             .add_event::<SkipTurnEvent>()
             .add_event::<UpdatePlayerCards>()
             .add_event::<SelectCardEvent>()
+            .add_plugins(CardPlugin)
+            .add_plugins(TablePlugin)
             .add_systems(Startup, local_init)
             .add_systems(Update, spawn_player.run_if(on_event::<LocalStartGame>()))
             .add_systems(
@@ -31,7 +38,7 @@ impl Plugin for GamePlugin {
 }
 
 #[derive(Event)]
-pub struct LocalStartGame;
+pub struct LocalStartGame(pub String);
 #[derive(Event)]
 pub struct UpdatePlayerCards;
 
@@ -53,9 +60,6 @@ pub struct ActiveCards(BTreeMap<usize, Card>);
 pub struct LocalPlayerCards(pub BTreeMap<usize, Card>);
 
 impl ActiveCards {
-    pub fn is_active(&self, key: &usize) -> bool {
-        self.0.contains_key(key)
-    }
     pub fn make_active(&mut self, key: &usize, card: &Card) {
         if self.0.contains_key(key) {
             self.0.remove(key);

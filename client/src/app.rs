@@ -10,7 +10,6 @@ use naia_bevy_client::{ClientConfig, Plugin as ClientPlugin, ReceiveEvents};
 use naia_bevy_demo_shared::protocol;
 
 use crate::{
-    cards::CardPlugin,
     // assets::AssetPlugin,
     game::GamePlugin,
     states::MainState,
@@ -60,7 +59,6 @@ pub fn run() {
         .add_plugins(WelcomeScreenPlugin)
         .add_plugins(GamePlugin)
         .add_plugins(SystemSetsPlugin)
-        .add_plugins(CardPlugin)
         .add_plugins(crate::assets::AssetPlugin)
         // Background Color
         .insert_resource(ClearColor(Color::BLACK))
