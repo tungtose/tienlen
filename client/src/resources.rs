@@ -33,7 +33,7 @@ pub struct Game {
 }
 
 impl Game {
-    pub fn get_relative_player_position(&self, player_pos: usize) -> usize {
+    pub fn get_relative_player_position(&self, player_pos: usize) -> Vec3 {
         let mut player_num: usize = 0;
         match self.local_player.pos {
             0 => {
@@ -76,8 +76,17 @@ impl Game {
             _ => unreachable!(),
         }
 
-        return player_num;
+        match player_num {
+            1 => Vec3::new(self.player_1.draw_pos.x, self.player_1.draw_pos.y, 10.),
+            2 => Vec3::new(self.player_2.draw_pos.x, self.player_2.draw_pos.y, 10.),
+            3 => Vec3::new(self.player_3.draw_pos.x, self.player_3.draw_pos.y, 10.),
+            _ => unreachable!(),
+        }
     }
+
+    // pub fn player_1_render_pos(&self) -> Vec3 {
+    //     Vec3::new(self.player_1.draw_pos.x, self.player_1.draw_pos.y, 10.)
+    // }
 }
 
 #[derive(Default, Debug)]
