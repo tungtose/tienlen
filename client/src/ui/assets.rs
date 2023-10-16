@@ -15,6 +15,14 @@ pub fn load_assets(
     let board = asset_server.load("cards/tables/table_blue.png");
     asset_list.0.push(board.clone_untyped());
 
+    let back_card =
+        asset_server.load("cards/standard/solitaire/individuals/card_back/card_back.png");
+
+    asset_list.0.push(back_card.clone_untyped());
+
+    let background: Handle<Image> = asset_server.load("cards/backgrounds/background_1.png");
+    asset_list.0.push(background.clone_untyped());
+
     let mut avatars = HashMap::new();
 
     for i in 0..5 {
@@ -36,6 +44,8 @@ pub fn load_assets(
     commands.insert_resource(UiAssets {
         cards,
         font,
+        background,
+        back_card,
         board,
         avatars,
     });

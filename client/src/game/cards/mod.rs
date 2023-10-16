@@ -58,6 +58,9 @@ struct PlayBtn;
 struct AnimatingEvent;
 
 #[derive(Component)]
+pub struct PlayContainer;
+
+#[derive(Component)]
 pub struct Card;
 
 #[derive(Component)]
@@ -270,7 +273,7 @@ fn handle_accept_play_event(
 ) {
     for events in event_reader.iter() {
         for data in events.read::<GameSystemChannel, AcceptPlayCard>() {
-            let mut table_pos = Vec3::new(-150., 15., 10.);
+            let mut table_pos = Vec3::new(-150., 50., 10.);
             let cards = card_map.list_from_str(&data.cards);
 
             if global.game.local_player.pos as usize == data.cur_player {
@@ -310,11 +313,12 @@ fn handle_accept_play_event(
 
                     *card.0 = Visibility::Visible;
 
-                    let render_pos = global.game.get_relative_player_position(data.cur_player);
+                    let mut render_pos = global.game.get_relative_player_position(data.cur_player);
+                    render_pos.x += 60.;
 
                     let tween = Tween::new(
                         EaseFunction::CubicIn,
-                        std::time::Duration::from_millis(150),
+                        std::time::Duration::from_millis(200),
                         TransformPositionLens {
                             start: render_pos,
                             end: table_pos,
@@ -466,7 +470,25 @@ fn spawn_player_card(
             ))
             .push_children(&cards);
 
-        let _play_btn = commands
+        let play_container = commands
+            .spawn((
+                PlayContainer,
+                NodeBundle {
+                    style: Style {
+                        position_type: PositionType::Absolute,
+                        bottom: Val::Px(40.),
+                        justify_content: JustifyContent::SpaceAround,
+                        align_items: AlignItems::Center,
+                        width: Val::Percent(100.),
+                        height: Val::Px(48.),
+                        ..Default::default()
+                    },
+                    ..Default::default()
+                },
+            ))
+            .id();
+
+        let play_btn = commands
             .spawn(ButtonBundle {
                 style: Style {
                     width: Val::Px(60.),
@@ -502,7 +524,10 @@ fn spawn_player_card(
                         ));
                     })
                     .insert(PlayBtn);
-            });
+            })
+            .id();
+
+        commands.entity(play_container).add_child(play_btn);
 
         schedule_pile_event.send(SchedulePileEvent(cards));
     }

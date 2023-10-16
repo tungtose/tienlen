@@ -25,7 +25,7 @@ pub fn run() {
         primary_window: Some(Window {
             title: "thirteen".into(),
             canvas: Some("#thirteen".into()),
-            resolution: (800., 500.).into(),
+            resolution: (960., 600.).into(),
             fit_canvas_to_parent: false,
             prevent_default_event_handling: false,
             ..default()
