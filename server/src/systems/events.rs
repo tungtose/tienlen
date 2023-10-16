@@ -30,7 +30,7 @@ use naia_bevy_demo_shared::{
     },
     messages::{
         error::GameError, Auth, EntityAssignment, ErrorCode, KeyCommand, NewMatch, NewPlayer,
-        PlayCard, PlayerMessage, PlayerReady, SkipTurn, StartGame, UpdateScore, UpdateTurn,
+        PlayCard, PlayerMessage, PlayerReady, SkipTurn, StartGame, UpdateScore, UpdateTurn, AcceptPlayCard,
     },
 };
 
@@ -340,6 +340,7 @@ pub fn message_events(
                 global.leader_turn = false;
 
                 let mut turn = turn_q.get_single_mut().unwrap();
+                let current_active_player = turn.current_active_player().unwrap();
 
                 // Update cards on the table
                 let mut table = table_q.get_single_mut().unwrap();
@@ -414,10 +415,19 @@ pub fn message_events(
 
                     global.players_map.update_active_player(next_player);
 
-                    server.send_message::<GameSystemChannel, PlayCard>(
-                        &user_key,
-                        &PlayCard::default(),
-                    );
+                    let data = AcceptPlayCard {
+                        cur_player: current_active_player,
+                        cards: play_card.0,
+                        next_player,
+                        is_win: false,
+                    };
+
+                    for (u_key, _) in global.users_map.iter() {
+                        server.send_message::<GameSystemChannel, AcceptPlayCard>(
+                            u_key,
+                            &data,
+                        );
+                    }
 
                     info!("Game State: Sended Play Card Message");
 

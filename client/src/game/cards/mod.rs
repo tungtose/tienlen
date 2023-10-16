@@ -216,6 +216,7 @@ fn valid_cards_condition(card_q: Query<(&CStatus, &Raw), With<Card>>) -> bool {
     }
 
     if active_cards.is_empty() {
+        // TODO
         // info!("No active card!");
         return false;
     }
@@ -223,6 +224,7 @@ fn valid_cards_condition(card_q: Query<(&CStatus, &Raw), With<Card>>) -> bool {
     let hand = Hand::from_str(active_cards.join(",").as_str());
 
     if !hand.check_combination() {
+        // TODO
         // info!("Wrong combination");
         return false;
     }
@@ -308,13 +310,13 @@ fn handle_accept_play_event(
 
                     *card.0 = Visibility::Visible;
 
-                    let p1_pos = global.game.player_1.draw_pos;
+                    let render_pos = global.game.get_relative_player_position(data.cur_player);
 
                     let tween = Tween::new(
                         EaseFunction::CubicIn,
                         std::time::Duration::from_millis(150),
                         TransformPositionLens {
-                            start: Vec3::new(p1_pos.x, p1_pos.y, 10.),
+                            start: render_pos,
                             end: table_pos,
                         },
                     )

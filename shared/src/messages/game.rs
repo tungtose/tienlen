@@ -18,6 +18,14 @@ pub struct UpdatePlayerCards;
 pub struct PlayCard(pub String);
 
 #[derive(Message, Debug, Default)]
+pub struct AcceptPlayCard {
+    pub cur_player: usize,
+    pub cards: String,
+    pub next_player: usize,
+    pub is_win: bool,
+}
+
+#[derive(Message, Debug, Default)]
 pub struct SkipTurn;
 
 #[derive(Message, Debug, Default)]
