@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
 use bevy::prelude::*;
-use bevy_prototype_lyon::prelude::ShapePlugin;
 
 use crate::states::MainState;
 
@@ -24,37 +23,7 @@ impl Plugin for UiPlugin {
             .add_event::<DrawStatus>()
             .add_event::<UpdateScoreUI>()
             .add_event::<NewPlayerJoin>()
-            .add_plugins(ShapePlugin)
             .add_systems(Startup, assets::load_assets)
-            .add_systems(
-                Update,
-                playerui::draw_player_ui.run_if(in_state(MainState::Lobby)),
-            )
-            .add_systems(
-                Update,
-                playerui::circle_cooldown_update.run_if(in_state(MainState::Game)),
-            )
-            .add_systems(
-                Update,
-                playerui::update_score.run_if(in_state(MainState::Game)),
-            )
-            .add_systems(
-                Update,
-                playerui::update_player_message.run_if(on_event::<PlayerMessageEvent>()),
-            )
-            .add_systems(
-                Update,
-                playerui::clean_player_message.run_if(in_state(MainState::Game)),
-            )
-            .add_systems(
-                FixedUpdate,
-                playerui::animatetext_update.run_if(in_state(MainState::Game)),
-            )
-            .add_systems(
-                Update,
-                playerui::update_timer.run_if(in_state(MainState::Game)),
-            )
-            .insert_resource(FixedTime::new_from_secs(FIXED_TIMESTEP))
             .add_systems(OnEnter(MainState::Lobby), table::spawn_table)
             .add_systems(
                 Update,
@@ -124,5 +93,7 @@ pub struct UiAssets {
     pub font: Handle<Font>,
     pub cards: HashMap<String, Handle<Image>>,
     pub board: Handle<Image>,
+    pub back_card: Handle<Image>,
+    pub background: Handle<Image>,
     pub avatars: HashMap<i32, Handle<Image>>,
 }

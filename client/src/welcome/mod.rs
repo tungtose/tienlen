@@ -1,4 +1,4 @@
-use crate::resources::Global;
+use crate::{resources::Global, ui::UiAssets};
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts, EguiPlugin};
 use naia_bevy_client::{transport::webrtc, Client};
@@ -13,6 +13,7 @@ impl Plugin for WelcomeScreenPlugin {
         app.add_plugins(EguiPlugin)
             .add_event::<JoinEvent>()
             .init_resource::<UiState>()
+            .add_systems(OnEnter(MainState::Welcome), setup)
             .add_systems(Update, join.run_if(on_event::<JoinEvent>()))
             .add_systems(
                 Update,
@@ -34,6 +35,16 @@ impl JoinEvent {
     pub fn player_name(&self) -> String {
         self.0.clone()
     }
+}
+
+pub fn setup(mut commands: Commands, res: Res<UiAssets>) {
+    let background = res.background.clone();
+
+    commands.spawn(SpriteBundle {
+        texture: background,
+        transform: Transform::from_scale(Vec3::new(1.5, 1.5, 0.0)),
+        ..Default::default()
+    });
 }
 
 fn join(mut client: Client, mut join_ev: EventReader<JoinEvent>, mut global: ResMut<Global>) {

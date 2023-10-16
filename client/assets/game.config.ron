@@ -1,14 +1,14 @@
 (
-  window_size: (800., 500.),
+  window_size: (960., 500.),
   window_title: "tienlen",
 
-  pile_position: (-200., -150., 10.),
+  pile_position: (-200., -100., 10.),
 
-  p0_position: (0., -195.),
+  p0_position: (0., -180.),
 
-  p1_position: (-345., 35.),
+  p1_position: (-315., 45.),
 
-  p2_position: (0., 210.),
+  p2_position: (0., 200.),
 
-  p3_position: (345., 35.),
+  p3_position: (315., 45.),
 )

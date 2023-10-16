@@ -1,4 +1,5 @@
 mod cards;
+mod player_ui;
 mod status;
 mod table;
 use std::collections::BTreeMap;
@@ -13,7 +14,7 @@ use naia_bevy_demo_shared::{
 
 use crate::{components::LocalPlayer, resources::Global, states::MainState, ui::DrawStatus};
 
-use self::{cards::CardPlugin, table::TablePlugin};
+use self::{cards::CardPlugin, player_ui::PlayerUiPlugin, table::TablePlugin};
 
 pub struct GamePlugin;
 impl Plugin for GamePlugin {
@@ -24,6 +25,7 @@ impl Plugin for GamePlugin {
             .add_event::<UpdatePlayerCards>()
             .add_event::<SelectCardEvent>()
             .add_plugins(CardPlugin)
+            .add_plugins(PlayerUiPlugin)
             .add_plugins(TablePlugin)
             .add_systems(Startup, local_init)
             .add_systems(Update, spawn_player.run_if(on_event::<LocalStartGame>()))

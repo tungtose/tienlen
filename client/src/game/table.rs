@@ -64,7 +64,7 @@ pub fn setup(mut commands: Commands, res: Res<UiAssets>) {
                 ..Default::default()
             },
             texture: res.board.clone(),
-            transform: Transform::from_xyz(0., 0., 0.),
+            transform: Transform::from_xyz(0., 50., 3.),
             ..Default::default()
         })
         .id();

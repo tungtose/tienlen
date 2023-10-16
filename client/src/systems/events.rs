@@ -16,8 +16,8 @@ use naia_bevy_demo_shared::{
     },
     components::player::Player,
     messages::{
-        AcceptPlayCard, EntityAssignment, ErrorCode, GameError, KeyCommand, NewMatch, NewPlayer,
-        PlayCard, PlayerMessage, PlayerReady, StartGame, UpdateScore, UpdateTurn,
+        EntityAssignment, ErrorCode, GameError, KeyCommand, NewMatch, NewPlayer, PlayerMessage,
+        PlayerReady, StartGame, UpdateScore, UpdateTurn,
     },
 };
 
