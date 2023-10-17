@@ -1,33 +1,46 @@
-use std::time::Duration;
+use std::{ops::Add, time::Duration};
 
 use bevy::{prelude::*, text::Text2dBounds, time::common_conditions::on_fixed_timer};
+use naia_bevy_client::events::MessageEvents;
+use naia_bevy_demo_shared::{channels::GameSystemChannel, messages::AcceptPlayerReady};
 
-use crate::{resources::Global, states::MainState, ui::UiAssets};
+use naia_bevy_demo_shared::components::Player;
+
+use crate::{components::LocalPlayer, resources::Global, states::MainState, ui::UiAssets};
 
 pub struct PlayerUiPlugin;
 
 impl Plugin for PlayerUiPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<PlayerMessageEvent>()
-            .add_systems(Update, draw_player_ui.run_if(in_state(MainState::Lobby)))
-            .add_systems(Update, update_score.run_if(in_state(MainState::Game)))
+            .add_event::<LoadExistPlayerEvent>()
             .add_systems(
                 Update,
-                clean_player_message.run_if(in_state(MainState::Game)),
+                (new_player_join, handle_load_exist_player).run_if(in_state(MainState::Lobby)),
             )
             .add_systems(
                 Update,
-                update_player_message.run_if(in_state(MainState::Game)),
+                (
+                    clean_player_message,
+                    update_player_message,
+                    update_timer,
+                    update_score,
+                )
+                    .run_if(in_state(MainState::Game)),
             )
             .add_systems(
                 Update,
-                animatetext_update.run_if(on_fixed_timer(Duration::from_millis(500))),
-            )
-            .add_systems(Update, update_timer.run_if(in_state(MainState::Game)));
+                animatetext_update.run_if(
+                    in_state(MainState::Game).and_then(on_fixed_timer(Duration::from_millis(800))),
+                ),
+            );
     }
 }
 
 const AVATAR_SIZE: f32 = 55.;
+
+#[derive(Event, Default)]
+pub struct LoadExistPlayerEvent(pub usize);
 
 #[derive(Default, Event)]
 pub struct PlayerMessageEvent(pub usize, pub String);
@@ -57,9 +70,289 @@ pub struct Score;
 pub struct Name;
 
 #[derive(Component)]
+pub struct Playing;
+
+#[derive(Component)]
+pub struct PlayerUiMarker;
+
+#[derive(Component)]
 pub struct CleanMessageCounter {
     timer: Timer,
     pos: i32,
+}
+
+#[derive(Component, Copy, Clone)]
+pub struct Bottom(usize);
+
+#[derive(Component, Copy, Clone)]
+pub struct Left(usize);
+
+#[derive(Component, Copy, Clone)]
+pub struct Top(usize);
+
+#[derive(Component, Copy, Clone)]
+pub struct Right(usize);
+
+pub trait PlayerDirection {
+    fn from_server_pos(pos: usize) -> Self;
+    fn get_translation(&self) -> Vec3;
+    fn back_card_translation(&self) -> Vec3;
+}
+
+impl PlayerDirection for Bottom {
+    fn from_server_pos(pos: usize) -> Self {
+        Self(pos)
+    }
+
+    fn get_translation(&self) -> Vec3 {
+        Vec3::new(0., -180., 5.)
+    }
+
+    fn back_card_translation(&self) -> Vec3 {
+        self.get_translation().add(Vec3::new(60., 0., 0.))
+    }
+}
+
+impl PlayerDirection for Left {
+    fn get_translation(&self) -> Vec3 {
+        Vec3::new(-315., 45., 5.)
+    }
+
+    fn from_server_pos(pos: usize) -> Self {
+        Self(pos)
+    }
+
+    fn back_card_translation(&self) -> Vec3 {
+        self.get_translation().add(Vec3::new(60., 0., 0.))
+    }
+}
+
+impl PlayerDirection for Top {
+    fn get_translation(&self) -> Vec3 {
+        Vec3::new(0., 200., 5.)
+    }
+
+    fn from_server_pos(pos: usize) -> Self {
+        Self(pos)
+    }
+
+    fn back_card_translation(&self) -> Vec3 {
+        self.get_translation().add(Vec3::new(60., 0., 0.))
+    }
+}
+
+impl PlayerDirection for Right {
+    fn get_translation(&self) -> Vec3 {
+        Vec3::new(315., 45., 5.)
+    }
+
+    fn from_server_pos(pos: usize) -> Self {
+        Self(pos)
+    }
+
+    fn back_card_translation(&self) -> Vec3 {
+        self.get_translation().add(Vec3::new(-60., 0., 0.))
+    }
+}
+
+pub fn handle_load_exist_player(
+    mut commands: Commands,
+    res: Res<UiAssets>,
+    mut event_reader: EventReader<LoadExistPlayerEvent>,
+    player_q: Query<&Player, Without<LocalPlayer>>,
+) {
+    for event in event_reader.iter() {
+        let cur_local_pos = event.0;
+
+        if cur_local_pos == 0 {
+            return;
+        }
+
+        if cur_local_pos == 1 {
+            for p in player_q.iter() {
+                let right = Right::from_server_pos(*p.pos);
+
+                let entity = create_player_ui(
+                    &mut commands,
+                    right,
+                    &res,
+                    *p.pos as i32,
+                    &p.score.to_string(),
+                    &p.name.to_string(),
+                );
+
+                commands.entity(entity).insert(right);
+            }
+        }
+
+        if cur_local_pos == 2 {
+            for p in player_q.iter() {
+                if *p.pos == 0 {
+                    let top = Top::from_server_pos(*p.pos);
+                    let entity = create_player_ui(
+                        &mut commands,
+                        top,
+                        &res,
+                        *p.pos as i32,
+                        &p.score.to_string(),
+                        &p.name.to_string(),
+                    );
+
+                    commands.entity(entity).insert(top);
+                }
+
+                if *p.pos == 1 {
+                    let right = Right::from_server_pos(*p.pos);
+                    let entity = create_player_ui(
+                        &mut commands,
+                        right,
+                        &res,
+                        *p.pos as i32,
+                        &p.score.to_string(),
+                        &p.name.to_string(),
+                    );
+
+                    commands.entity(entity).insert(right);
+                }
+            }
+        }
+
+        if cur_local_pos == 3 {
+            for p in player_q.iter() {
+                if *p.pos == 0 {
+                    let left = Left::from_server_pos(*p.pos);
+                    let entity = create_player_ui(
+                        &mut commands,
+                        left,
+                        &res,
+                        *p.pos as i32,
+                        &p.score.to_string(),
+                        &p.name.to_string(),
+                    );
+
+                    commands.entity(entity).insert(left);
+                }
+
+                if *p.pos == 2 {
+                    let right = Right::from_server_pos(*p.pos);
+                    let entity = create_player_ui(
+                        &mut commands,
+                        right,
+                        &res,
+                        *p.pos as i32,
+                        &p.score.to_string(),
+                        &p.name.to_string(),
+                    );
+
+                    commands.entity(entity).insert(right);
+                }
+
+                if *p.pos == 1 {
+                    let top = Top::from_server_pos(*p.pos);
+                    let entity = create_player_ui(
+                        &mut commands,
+                        top,
+                        &res,
+                        *p.pos as i32,
+                        &p.score.to_string(),
+                        &p.name.to_string(),
+                    );
+
+                    commands.entity(entity).insert(top);
+                }
+            }
+        }
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+pub fn new_player_join(
+    mut commands: Commands,
+    res: Res<UiAssets>,
+    mut event_reader: EventReader<MessageEvents>,
+    mut load_exist_player_event: EventWriter<LoadExistPlayerEvent>,
+    bottom_player_q: Query<(), With<Bottom>>,
+    left_player_q: Query<(), With<Left>>,
+    top_player_q: Query<(), With<Top>>,
+    right_player_q: Query<(), With<Right>>,
+) {
+    for events in event_reader.iter() {
+        for new_player in events.read::<GameSystemChannel, AcceptPlayerReady>() {
+            let player_name = new_player.name;
+            let player_pos = new_player.server_pos as i32;
+            let player_score = "0";
+
+            if bottom_player_q.is_empty() {
+                let bottom = Bottom::from_server_pos(player_pos as usize);
+
+                let entity = create_player_ui(
+                    &mut commands,
+                    bottom,
+                    &res,
+                    player_pos,
+                    player_score,
+                    &player_name,
+                );
+
+                commands.entity(entity).insert(bottom);
+
+                load_exist_player_event.send(LoadExistPlayerEvent(new_player.server_pos));
+
+                return;
+            }
+
+            if left_player_q.is_empty() {
+                let left = Left::from_server_pos(player_pos as usize);
+
+                let entity = create_player_ui(
+                    &mut commands,
+                    left,
+                    &res,
+                    player_pos,
+                    player_score,
+                    &player_name,
+                );
+
+                commands.entity(entity).insert(left);
+
+                return;
+            }
+
+            if top_player_q.is_empty() {
+                let top = Top::from_server_pos(player_pos as usize);
+
+                let entity = create_player_ui(
+                    &mut commands,
+                    top,
+                    &res,
+                    player_pos,
+                    player_score,
+                    &player_name,
+                );
+
+                commands.entity(entity).insert(top);
+
+                return;
+            }
+
+            if right_player_q.is_empty() {
+                let right = Right::from_server_pos(player_pos as usize);
+
+                let entity = create_player_ui(
+                    &mut commands,
+                    right,
+                    &res,
+                    player_pos,
+                    player_score,
+                    &player_name,
+                );
+
+                commands.entity(entity).insert(right);
+
+                return;
+            }
+        }
+    }
 }
 
 pub fn update_score(
@@ -198,65 +491,6 @@ pub struct ForeignPlayer2;
 #[derive(Component)]
 pub struct ForeignPlayer3;
 
-pub fn draw_player_ui(mut commands: Commands, mut global: ResMut<Global>, res: Res<UiAssets>) {
-    let local_player = &global.game.local_player;
-
-    if local_player.is_join && !local_player.is_drawed {
-        create_player_ui(
-            &mut commands,
-            &local_player.draw_pos,
-            &res,
-            local_player.pos,
-            &local_player.score.to_string(),
-            &local_player.name,
-        );
-
-        global.game.local_player.is_drawed = true;
-    }
-
-    if global.game.player_1.is_join && !global.game.player_1.is_drawed {
-        let p1 = &global.game.player_1;
-        create_player_ui(
-            &mut commands,
-            &p1.draw_pos,
-            &res,
-            p1.pos,
-            &p1.score.to_string(),
-            &p1.name,
-        );
-
-        global.game.player_1.is_drawed = true;
-    }
-
-    let p2 = &global.game.player_2;
-    if p2.is_join && !p2.is_drawed {
-        create_player_ui(
-            &mut commands,
-            &p2.draw_pos,
-            &res,
-            p2.pos,
-            &p2.score.to_string(),
-            &p2.name,
-        );
-
-        global.game.player_2.is_drawed = true;
-    }
-
-    let p3 = &global.game.player_3;
-    if p3.is_join && !p3.is_drawed {
-        create_player_ui(
-            &mut commands,
-            &p3.draw_pos,
-            &res,
-            p3.pos,
-            &p3.score.to_string(),
-            &p3.name,
-        );
-
-        global.game.player_3.is_drawed = true;
-    }
-}
-
 pub fn clean_player_message(
     mut commands: Commands,
     time: Res<Time>,
@@ -283,14 +517,16 @@ pub fn clean_player_message(
     }
 }
 
-pub fn create_player_ui(
+pub fn create_player_ui<T: PlayerDirection>(
     commands: &mut Commands,
-    draw_pos: &Vec2,
+    direction: T,
     res: &Res<UiAssets>,
     player_pos: i32,
     player_score: &str,
     player_name: &str,
-) {
+) -> Entity {
+    let draw_pos = direction.get_translation();
+
     let text_style = TextStyle {
         font: res.font.clone(),
         font_size: 15.0,
@@ -301,7 +537,7 @@ pub fn create_player_ui(
     let score = format!("Score: {}", player_score);
 
     let avatar = SpriteBundle {
-        transform: Transform::from_xyz(draw_pos.x, draw_pos.y, 5.),
+        transform: Transform::from_xyz(draw_pos.x, draw_pos.y, draw_pos.z),
         texture: avatar_handle,
         sprite: Sprite {
             custom_size: Some(Vec2::new(AVATAR_SIZE, AVATAR_SIZE)),
@@ -385,7 +621,6 @@ pub fn create_player_ui(
     ));
 
     let back_card_handle = res.back_card.clone();
-    let back_card_margin = 60.;
 
     commands.spawn((
         BackCard,
@@ -396,14 +631,12 @@ pub fn create_player_ui(
                 custom_size: Some(Vec2::new(30., 45.)),
                 ..default()
             },
-            transform: Transform::from_translation(Vec3::from_array([
-                draw_pos.x + back_card_margin,
-                draw_pos.y,
-                15.,
-            ])),
+            transform: Transform::from_translation(direction.back_card_translation()),
             ..default()
         },
     ));
 
-    commands.spawn((avatar, PlayerPos(player_pos)));
+    let entity = commands.spawn((avatar, PlayerPos(player_pos))).id();
+
+    entity
 }

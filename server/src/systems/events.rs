@@ -30,7 +30,7 @@ use naia_bevy_demo_shared::{
     },
     messages::{
         error::GameError, Auth, EntityAssignment, ErrorCode, KeyCommand, NewMatch, NewPlayer,
-        PlayCard, PlayerMessage, PlayerReady, SkipTurn, StartGame, UpdateScore, UpdateTurn, AcceptPlayCard,
+        PlayCard, PlayerMessage, PlayerReady, SkipTurn, StartGame, UpdateScore, UpdateTurn, AcceptPlayCard, AcceptPlayerReady,
     },
 };
 
@@ -147,9 +147,14 @@ pub fn message_events(
             let mut assignment_message = EntityAssignment::new(true);
             assignment_message.entity.set(&server, &entity);
 
-            for (u_key, _) in global.users_map.iter() {
-                server.send_message::<GameSystemChannel, NewPlayer>(u_key, &NewPlayer::default());
-            }
+            // let new_player=  NewPlayer {
+            //     name: player_name,
+            //     server_pos: player_num
+            // };
+
+            // for (u_key, _) in global.users_map.iter() {
+            //     server.send_message::<GameSystemChannel, NewPlayer>(u_key, &new_player);
+            // }
 
             server.send_message::<EntityAssignmentChannel, EntityAssignment>(
                 &user_key,
@@ -162,6 +167,12 @@ pub fn message_events(
 
             if let Ok(mut player) = player_q.get_mut(*player_entity) {
                 *player.ready = true;
+
+                let new_player = AcceptPlayerReady { name: player.name(), server_pos: *player.pos  };
+
+                for (u_key, _) in global.users_map.iter() {
+                    server.send_message::<GameSystemChannel, AcceptPlayerReady>(u_key, &new_player);
+                }
             }
         }
 
