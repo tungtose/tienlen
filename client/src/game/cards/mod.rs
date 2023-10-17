@@ -15,6 +15,8 @@ use crate::{
     system_set::{Animating, Playing},
 };
 
+use super::player_ui::{BackCard, PlayerPos};
+
 pub struct CardPlugin;
 
 impl Plugin for CardPlugin {
@@ -254,6 +256,8 @@ fn send_cards_to_server(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
+#[allow(clippy::type_complexity)]
 fn handle_accept_play_event(
     mut commands: Commands,
     global: Res<Global>,
@@ -269,6 +273,7 @@ fn handle_accept_play_event(
         ),
         With<Card>,
     >,
+    back_card_q: Query<(&Transform, &PlayerPos), (With<BackCard>, Without<Card>)>,
     mut reschedule_pile_ev: EventWriter<SchedulePileEvent>,
 ) {
     for events in event_reader.iter() {
@@ -287,8 +292,8 @@ fn handle_accept_play_event(
                     commands.entity(pile_entity).remove_children(&[*entity]);
 
                     let tween = Tween::new(
-                        EaseFunction::CubicIn,
-                        std::time::Duration::from_millis(150),
+                        EaseFunction::QuadraticInOut,
+                        std::time::Duration::from_millis(300),
                         TransformPositionLens {
                             start: glb_trans.translation(),
                             end: table_pos,
@@ -313,14 +318,19 @@ fn handle_accept_play_event(
 
                     *card.0 = Visibility::Visible;
 
-                    let mut render_pos = global.game.get_relative_player_position(data.cur_player);
-                    render_pos.x += 60.;
+                    let mut back_card_pos = Vec3::splat(0.);
+
+                    for (trans, p_pos) in back_card_q.iter() {
+                        if p_pos.0 == data.cur_player as i32 {
+                            back_card_pos = trans.translation;
+                        }
+                    }
 
                     let tween = Tween::new(
-                        EaseFunction::CubicIn,
-                        std::time::Duration::from_millis(200),
+                        EaseFunction::QuadraticIn,
+                        std::time::Duration::from_millis(300),
                         TransformPositionLens {
-                            start: render_pos,
+                            start: back_card_pos,
                             end: table_pos,
                         },
                     )
