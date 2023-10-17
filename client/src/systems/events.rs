@@ -125,11 +125,6 @@ pub fn message_events(
             update_player_cards_ev.send(UpdatePlayerCards)
         }
 
-        // for data in events.read::<GameSystemChannel, AcceptPlayCard>() {
-        //     info!("Got card from server: {:?}", data);
-        //     update_player_cards_ev.send(UpdatePlayerCards);
-        // }
-
         for update_turn in events.read::<GameSystemChannel, UpdateTurn>() {
             let active_player_pos = update_turn.0 as i32;
             global.game.active_player_pos = active_player_pos;
@@ -145,13 +140,8 @@ pub fn message_events(
                 match player_query.get(entity) {
                     Ok(_) => {
                         info!("CONNECTED!!!");
-                        // let _player_cards_e =
-                        //     commands.spawn(LocalPlayerCards(BTreeMap::new())).id();
                         global.player_entity = Some(entity);
-                        commands
-                            .entity(entity)
-                            // .insert(player_cards_e)
-                            .insert(LocalPlayer);
+                        commands.entity(entity).insert(LocalPlayer);
 
                         client.send_message::<PlayerActionChannel, PlayerReady>(
                             &PlayerReady::default(),

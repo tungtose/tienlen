@@ -44,4 +44,10 @@ pub struct NewPlayer(pub String);
 pub struct PlayerReady;
 
 #[derive(Message, Debug, Default)]
+pub struct AcceptPlayerReady {
+    pub name: String,
+    pub server_pos: usize,
+}
+
+#[derive(Message, Debug, Default)]
 pub struct NewPlayerJoin;
