@@ -109,7 +109,7 @@ impl PlayerDirection for Bottom {
     }
 
     fn back_card_translation(&self) -> Vec3 {
-        self.get_translation().add(Vec3::new(60., 0., 0.))
+        self.get_translation().add(Vec3::new(-1000., 0., 0.))
     }
 }
 
@@ -464,6 +464,7 @@ pub fn animatetext_update(
         font_size: 16.0,
         color: Color::WHITE,
     };
+
     for (mut vis, player_pos, mut text) in text_q.iter_mut() {
         if player_pos.0 == global.game.active_player_pos {
             let name = text.sections.first().unwrap().value.clone();
@@ -483,13 +484,6 @@ pub fn animatetext_update(
         *vis = Visibility::Visible;
     }
 }
-
-#[derive(Component)]
-pub struct ForeignPlayer1;
-#[derive(Component)]
-pub struct ForeignPlayer2;
-#[derive(Component)]
-pub struct ForeignPlayer3;
 
 pub fn clean_player_message(
     mut commands: Commands,
