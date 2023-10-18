@@ -15,7 +15,10 @@ use crate::{
     system_set::{Animating, Playing},
 };
 
-use super::player_ui::{BackCard, PlayerPos};
+use super::{
+    controller::PlayEvent,
+    player_ui::{BackCard, PlayerPos},
+};
 
 pub struct CardPlugin;
 
@@ -24,7 +27,6 @@ impl Plugin for CardPlugin {
         app.add_plugins(TweeningPlugin)
             .add_plugins(DefaultPickingPlugins)
             .add_event::<SchedulePileEvent>()
-            .add_event::<PlayEvent>()
             .add_systems(Startup, setup)
             .add_systems(
                 Update,
@@ -35,7 +37,7 @@ impl Plugin for CardPlugin {
             .add_systems(
                 Update,
                 (
-                    player_btn_click,
+                    // player_btn_click,
                     handle_accept_play_event,
                     spawn_player_card,
                     update_status,
@@ -49,9 +51,6 @@ const NORMAL_BUTTON: Color = Color::rgb(0.15, 0.15, 0.15);
 
 #[derive(Event, Clone, Default)]
 struct SchedulePileEvent(Vec<Entity>);
-
-#[derive(Event, Clone, Default)]
-struct PlayEvent(pub Vec<Entity>);
 
 #[derive(Component)]
 struct PlayBtn;
@@ -69,14 +68,14 @@ pub struct Card;
 struct Position(Vec3);
 
 #[derive(Component, Clone)]
-enum CStatus {
+pub enum CStatus {
     Idle,
     Active,
     Animating,
 }
 
 #[derive(Component, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-struct Ordinal(usize);
+pub struct Ordinal(usize);
 
 impl Ordinal {
     pub fn new(rank: Rank, suilt: Suit) -> Self {
@@ -345,32 +344,32 @@ fn handle_accept_play_event(
     }
 }
 
-#[allow(clippy::type_complexity)]
-fn player_btn_click(
-    mut interaction_query: Query<
-        (&Interaction, Option<&PlayBtn>),
-        (Changed<Interaction>, With<Button>),
-    >,
-    mut play_event_writer: EventWriter<PlayEvent>,
-    card_q: Query<(Entity, &CStatus, &Ordinal), With<Card>>,
-) {
-    for (interaction, play_btn) in &mut interaction_query {
-        if let Interaction::Pressed = *interaction {
-            if play_btn.is_some() {
-                let mut cards = vec![];
+// #[allow(clippy::type_complexity)]
+// fn player_btn_click(
+//     mut interaction_query: Query<
+//         (&Interaction, Option<&PlayBtn>),
+//         (Changed<Interaction>, With<Button>),
+//     >,
+//     mut play_event_writer: EventWriter<PlayEvent>,
+//     card_q: Query<(Entity, &CStatus, &Ordinal), With<Card>>,
+// ) {
+//     for (interaction, play_btn) in &mut interaction_query {
+//         if let Interaction::Pressed = *interaction {
+//             if play_btn.is_some() {
+//                 let mut cards = vec![];
 
-                for (entity, status, ordinal) in card_q.iter() {
-                    if let CStatus::Active = *status {
-                        cards.push((entity, ordinal.get()));
-                    }
-                }
+//                 for (entity, status, ordinal) in card_q.iter() {
+//                     if let CStatus::Active = *status {
+//                         cards.push((entity, ordinal.get()));
+//                     }
+//                 }
 
-                cards.sort_by_key(|c| c.1);
-                play_event_writer.send(PlayEvent(cards.iter().map(|c| c.0).collect()));
-            }
-        }
-    }
-}
+//                 cards.sort_by_key(|c| c.1);
+//                 play_event_writer.send(PlayEvent(cards.iter().map(|c| c.0).collect()));
+//             }
+//         }
+//     }
+// }
 
 fn update_status(
     mut query_event: EventReader<TweenCompleted>,
@@ -479,65 +478,6 @@ fn spawn_player_card(
                 Pile,
             ))
             .push_children(&cards);
-
-        let play_container = commands
-            .spawn((
-                PlayContainer,
-                NodeBundle {
-                    style: Style {
-                        position_type: PositionType::Absolute,
-                        bottom: Val::Px(40.),
-                        justify_content: JustifyContent::SpaceAround,
-                        align_items: AlignItems::Center,
-                        width: Val::Percent(100.),
-                        height: Val::Px(48.),
-                        ..Default::default()
-                    },
-                    ..Default::default()
-                },
-            ))
-            .id();
-
-        let play_btn = commands
-            .spawn(ButtonBundle {
-                style: Style {
-                    width: Val::Px(60.),
-                    height: Val::Px(40.),
-                    margin: UiRect::all(Val::Px(4.)),
-                    justify_content: JustifyContent::Center,
-                    align_items: AlignItems::Center,
-                    ..Default::default()
-                },
-                ..Default::default()
-            })
-            .with_children(|parent| {
-                parent
-                    .spawn(ButtonBundle {
-                        style: Style {
-                            width: Val::Px(60.),
-                            height: Val::Px(40.),
-                            justify_content: JustifyContent::Center,
-                            align_items: AlignItems::Center,
-                            ..default()
-                        },
-                        background_color: NORMAL_BUTTON.into(),
-                        ..default()
-                    })
-                    .with_children(|parent| {
-                        parent.spawn(TextBundle::from_section(
-                            "Play",
-                            TextStyle {
-                                font_size: 16.0,
-                                color: Color::rgb(0.9, 0.9, 0.9),
-                                ..Default::default()
-                            },
-                        ));
-                    })
-                    .insert(PlayBtn);
-            })
-            .id();
-
-        commands.entity(play_container).add_child(play_btn);
 
         schedule_pile_event.send(SchedulePileEvent(cards));
     }

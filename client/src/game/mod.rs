@@ -1,4 +1,5 @@
 mod cards;
+mod controller;
 mod player_ui;
 mod status;
 mod table;
@@ -14,17 +15,19 @@ use naia_bevy_demo_shared::{
 
 use crate::{components::LocalPlayer, resources::Global, states::MainState, ui::DrawStatus};
 
-use self::{cards::CardPlugin, player_ui::PlayerUiPlugin, table::TablePlugin};
+use self::controller::SkipTurnEvent;
+use self::{
+    cards::CardPlugin, controller::ControllerPlugin, player_ui::PlayerUiPlugin, table::TablePlugin,
+};
 
 pub struct GamePlugin;
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<LocalStartGame>()
-            .add_event::<PlayerEvent>()
-            .add_event::<SkipTurnEvent>()
             .add_event::<UpdatePlayerCards>()
             .add_event::<SelectCardEvent>()
             .add_plugins(CardPlugin)
+            .add_plugins(ControllerPlugin)
             .add_plugins(PlayerUiPlugin)
             .add_plugins(TablePlugin)
             .add_systems(Startup, local_init)
@@ -33,7 +36,7 @@ impl Plugin for GamePlugin {
                 Update,
                 update_player_cards.run_if(on_event::<UpdatePlayerCards>()),
             )
-            .add_systems(Update, play_card.run_if(on_event::<PlayerEvent>()))
+            // .add_systems(Update, play_card.run_if(on_event::<PlayerEvent>()))
             .add_systems(Update, skip_turn.run_if(on_event::<SkipTurnEvent>()))
             .add_systems(Update, select_card.run_if(on_event::<SelectCardEvent>()));
     }
@@ -46,11 +49,6 @@ pub struct UpdatePlayerCards;
 
 #[derive(Event)]
 pub struct SelectCardEvent(pub usize);
-
-#[derive(Event)]
-pub struct PlayerEvent;
-#[derive(Event)]
-pub struct SkipTurnEvent;
 
 #[derive(Component)]
 pub struct ActiveCard(pub bool);

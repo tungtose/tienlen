@@ -38,10 +38,6 @@ impl Plugin for UiPlugin {
             )
             .add_systems(
                 Update,
-                play_btn::spawn_play_btn.run_if(in_state(MainState::Game)),
-            )
-            .add_systems(
-                Update,
                 player::card_click
                     .run_if(in_state(MainState::Game))
                     .before(player::draw_player),
@@ -49,21 +45,9 @@ impl Plugin for UiPlugin {
             .add_systems(
                 Update,
                 player::draw_player.run_if(in_state(MainState::Game)),
-            )
-            .add_systems(
-                Update,
-                play_btn::spawn_start_btn.run_if(on_event::<ReloadBar>()),
-            )
-            .add_systems(
-                Update,
-                play_btn::player_btn_click.run_if(in_state(MainState::Lobby)),
-            )
-            .add_systems(
-                Update,
-                play_btn::player_btn_click.run_if(in_state(MainState::Game)),
-            )
-            .add_systems(OnEnter(MainState::Game), play_btn::hide_start_btn);
+            );
     }
+    // .add_systems(OnEnter(MainState::Game), play_btn::hide_start_btn);
 }
 
 #[derive(Default, Event)]
@@ -95,5 +79,7 @@ pub struct UiAssets {
     pub board: Handle<Image>,
     pub back_card: Handle<Image>,
     pub background: Handle<Image>,
+    pub play_btn: Handle<Image>,
+    pub skip_btn: Handle<Image>,
     pub avatars: HashMap<i32, Handle<Image>>,
 }
