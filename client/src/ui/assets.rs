@@ -20,6 +20,14 @@ pub fn load_assets(
 
     asset_list.0.push(back_card.clone_untyped());
 
+    let play_btn = asset_server.load("play.png");
+
+    asset_list.0.push(play_btn.clone_untyped());
+
+    let skip_btn = asset_server.load("skip.png");
+
+    asset_list.0.push(skip_btn.clone_untyped());
+
     let background: Handle<Image> = asset_server.load("cards/backgrounds/background_1.png");
     asset_list.0.push(background.clone_untyped());
 
@@ -44,6 +52,8 @@ pub fn load_assets(
     commands.insert_resource(UiAssets {
         cards,
         font,
+        play_btn,
+        skip_btn,
         background,
         back_card,
         board,

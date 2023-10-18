@@ -30,7 +30,7 @@ use naia_bevy_demo_shared::{
     },
     messages::{
         error::GameError, Auth, EntityAssignment, ErrorCode, KeyCommand, NewMatch, NewPlayer,
-        PlayCard, PlayerMessage, PlayerReady, SkipTurn, StartGame, UpdateScore, UpdateTurn, AcceptPlayCard, AcceptPlayerReady,
+        PlayCard, PlayerMessage, PlayerReady, SkipTurn, StartGame, UpdateScore, UpdateTurn, AcceptPlayCard, AcceptPlayerReady, AcceptStartGame,
     },
 };
 
@@ -228,9 +228,15 @@ pub fn message_events(
                 let mut player = player_q.get_mut(*p_entity).unwrap();
                 *player.cards = cards_str.clone();
 
-                server.send_message::<GameSystemChannel, StartGame>(
+                let message = AcceptStartGame {
+                    cards: cards_str.clone(),
+                    // TODO
+                    active_player: 0,
+                };
+
+                server.send_message::<GameSystemChannel, AcceptStartGame>(
                     user_key,
-                    &StartGame(cards_str.clone()),
+                    &message
                 );
             }
         }

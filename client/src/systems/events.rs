@@ -16,8 +16,8 @@ use naia_bevy_demo_shared::{
     },
     components::player::Player,
     messages::{
-        EntityAssignment, ErrorCode, GameError, KeyCommand, NewMatch, NewPlayer, PlayerMessage,
-        PlayerReady, StartGame, UpdateScore, UpdateTurn,
+        AcceptStartGame, EntityAssignment, ErrorCode, GameError, KeyCommand, NewMatch, NewPlayer,
+        PlayerMessage, PlayerReady, StartGame, UpdateScore, UpdateTurn,
     },
 };
 
@@ -26,7 +26,7 @@ use crate::{
     game::{LocalStartGame, UpdatePlayerCards},
     resources::Global,
     states::MainState,
-    ui::{DrawStatus, NewPlayerJoin, PlayerMessageEvent, ReloadBar, UpdateScoreUI},
+    ui::{DrawStatus, NewPlayerJoin, PlayerMessageEvent, UpdateScoreUI},
 };
 
 pub fn connect_events(
@@ -67,7 +67,6 @@ pub fn message_events(
     mut global: ResMut<Global>,
     mut event_reader: EventReader<MessageEvents>,
     player_query: Query<&Player>,
-    mut bar_ev: EventWriter<ReloadBar>,
     mut start_game_ev: EventWriter<LocalStartGame>,
     mut draw_status_ev: EventWriter<DrawStatus>,
     mut update_player_cards_ev: EventWriter<UpdatePlayerCards>,
@@ -81,9 +80,9 @@ pub fn message_events(
             player_message_ev.send(event);
         }
 
-        for player_card in events.read::<GameSystemChannel, StartGame>() {
+        for message in events.read::<GameSystemChannel, AcceptStartGame>() {
             global.game.active_player_pos = 0;
-            start_game_ev.send(LocalStartGame(player_card.0));
+            start_game_ev.send(LocalStartGame(message.cards));
         }
 
         for _ in events.read::<GameSystemChannel, NewPlayer>() {
@@ -146,7 +145,6 @@ pub fn message_events(
                         client.send_message::<PlayerActionChannel, PlayerReady>(
                             &PlayerReady::default(),
                         );
-                        bar_ev.send(ReloadBar);
                     }
                     Err(err) => info!("Gave Ownership Error: {}", err),
                 }

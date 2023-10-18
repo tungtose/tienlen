@@ -11,6 +11,12 @@ pub struct PlayerMessage {
 #[derive(Message, Default)]
 pub struct StartGame(pub String);
 
+#[derive(Message, Default)]
+pub struct AcceptStartGame {
+    pub cards: String,
+    pub active_player: usize,
+}
+
 #[derive(Message, Debug, Default)]
 pub struct UpdatePlayerCards;
 
