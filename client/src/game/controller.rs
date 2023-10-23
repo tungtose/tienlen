@@ -3,7 +3,9 @@ use naia_bevy_client::{events::MessageEvents, Client};
 use naia_bevy_demo_shared::{
     channels::{EntityAssignmentChannel, GameSystemChannel, PlayerActionChannel},
     components::Host,
-    messages::{AcceptPlayCard, AcceptStartGame, EntityAssignment, StartGame, UpdateTurn},
+    messages::{
+        AcceptPlayCard, AcceptStartGame, EntityAssignment, NewMatch, StartGame, UpdateTurn,
+    },
 };
 
 use crate::{resources::Global, states::MainState, ui::UiAssets};
@@ -179,6 +181,17 @@ pub fn update_play_controller(
             let mut vis = vis_q.get_single_mut().unwrap();
             for player_pos in player_q.iter() {
                 if player_pos.0 == message.next_player as i32 {
+                    *vis = Visibility::Visible;
+                } else {
+                    *vis = Visibility::Hidden;
+                }
+            }
+        }
+
+        for message in event.read::<GameSystemChannel, NewMatch>() {
+            let mut vis = vis_q.get_single_mut().unwrap();
+            for player_pos in player_q.iter() {
+                if player_pos.0 == message.active_player as i32 {
                     *vis = Visibility::Visible;
                 } else {
                     *vis = Visibility::Hidden;
