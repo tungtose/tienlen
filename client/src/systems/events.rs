@@ -69,7 +69,7 @@ pub fn message_events(
     player_query: Query<&Player>,
     mut start_game_ev: EventWriter<LocalStartGame>,
     mut draw_status_ev: EventWriter<DrawStatus>,
-    mut update_player_cards_ev: EventWriter<UpdatePlayerCards>,
+    // mut update_player_cards_ev: EventWriter<UpdatePlayerCards>,
     mut update_score_ev: EventWriter<UpdateScoreUI>,
     mut new_player_join_ev: EventWriter<NewPlayerJoin>,
     mut player_message_ev: EventWriter<PlayerMessageEvent>,
@@ -120,9 +120,9 @@ pub fn message_events(
             }
         }
 
-        for _ in events.read::<GameSystemChannel, NewMatch>() {
-            update_player_cards_ev.send(UpdatePlayerCards)
-        }
+        // for _ in events.read::<GameSystemChannel, NewMatch>() {
+        //     update_player_cards_ev.send(UpdatePlayerCards)
+        // }
 
         for update_turn in events.read::<GameSystemChannel, UpdateTurn>() {
             let active_player_pos = update_turn.0 as i32;

@@ -5,7 +5,7 @@ use naia_bevy_client::{events::MessageEvents, Client};
 use naia_bevy_demo_shared::{
     channels::{GameSystemChannel, PlayerActionChannel},
     components::{deck::Deck, hand::Hand, rank::Rank, suit::Suit},
-    messages::{AcceptPlayCard, PlayCard},
+    messages::{AcceptPlayCard, NewMatch, PlayCard},
 };
 use std::{collections::HashMap, ops::Add};
 
@@ -41,16 +41,15 @@ impl Plugin for CardPlugin {
                     handle_accept_play_event,
                     spawn_player_card,
                     update_status,
+                    handle_endgame,
                     handle_reschedule_pile.in_set(Animating),
                 ),
             );
     }
 }
 
-const NORMAL_BUTTON: Color = Color::rgb(0.15, 0.15, 0.15);
-
 #[derive(Event, Clone, Default)]
-struct SchedulePileEvent(Vec<Entity>);
+pub struct SchedulePileEvent(Vec<Entity>);
 
 #[derive(Component)]
 struct PlayBtn;
@@ -107,7 +106,7 @@ struct CardBundle {
 }
 
 #[derive(Component)]
-struct Pile;
+pub struct Pile;
 
 impl CardBundle {
     pub fn from_str(
@@ -175,14 +174,15 @@ impl CardBundle {
 fn handle_reschedule_pile(
     mut commands: Commands,
     mut reschedule_pile_ev: EventReader<SchedulePileEvent>,
-    mut card_q: Query<(&Transform, &mut CStatus, &Ordinal), With<Card>>,
+    mut card_q: Query<(&Transform, &mut CStatus, &Ordinal, &mut Visibility), With<Card>>,
 ) {
     for event in reschedule_pile_ev.iter() {
         let mut pile_pos = Vec3::new(0., 0., 10.);
         let mut cards = vec![];
 
         for c in event.0.iter() {
-            let (_trans, status, ordinal) = card_q.get_mut(*c).unwrap();
+            let (_trans, status, ordinal, mut vis) = card_q.get_mut(*c).unwrap();
+            *vis = Visibility::Visible;
             if let CStatus::Idle = *status {
                 cards.push((*c, ordinal.get()));
             }
@@ -191,7 +191,7 @@ fn handle_reschedule_pile(
         cards.sort_by_key(|o| o.1);
 
         for c in cards.iter().map(|d| d.0) {
-            let (trans, mut status, _) = card_q.get_mut(c).unwrap();
+            let (trans, mut status, _, _) = card_q.get_mut(c).unwrap();
             let tween = Tween::new(
                 EaseFunction::QuarticIn,
                 std::time::Duration::from_millis(300),
@@ -312,6 +312,7 @@ fn handle_accept_play_event(
                     reschedule_pile_ev.send(SchedulePileEvent(cards));
                 }
             } else {
+                // Foregin player play card animation
                 for entity in cards.iter() {
                     let mut card = card_q.get_mut(*entity).unwrap();
 
@@ -343,33 +344,6 @@ fn handle_accept_play_event(
         }
     }
 }
-
-// #[allow(clippy::type_complexity)]
-// fn player_btn_click(
-//     mut interaction_query: Query<
-//         (&Interaction, Option<&PlayBtn>),
-//         (Changed<Interaction>, With<Button>),
-//     >,
-//     mut play_event_writer: EventWriter<PlayEvent>,
-//     card_q: Query<(Entity, &CStatus, &Ordinal), With<Card>>,
-// ) {
-//     for (interaction, play_btn) in &mut interaction_query {
-//         if let Interaction::Pressed = *interaction {
-//             if play_btn.is_some() {
-//                 let mut cards = vec![];
-
-//                 for (entity, status, ordinal) in card_q.iter() {
-//                     if let CStatus::Active = *status {
-//                         cards.push((entity, ordinal.get()));
-//                     }
-//                 }
-
-//                 cards.sort_by_key(|c| c.1);
-//                 play_event_writer.send(PlayEvent(cards.iter().map(|c| c.0).collect()));
-//             }
-//         }
-//     }
-// }
 
 fn update_status(
     mut query_event: EventReader<TweenCompleted>,
@@ -459,10 +433,7 @@ fn spawn_player_card(
     global: Res<Global>,
 ) {
     for ev in start_game_event.iter() {
-        let cards: Vec<Entity> =
-            ev.0.split(',')
-                .map(|card| *card_map.0.get(card).unwrap())
-                .collect();
+        let cards: Vec<Entity> = card_map.list_from_str(&ev.0);
 
         for c in cards.iter() {
             let mut vis = card_q.get_mut(*c).unwrap();
@@ -480,5 +451,39 @@ fn spawn_player_card(
             .push_children(&cards);
 
         schedule_pile_event.send(SchedulePileEvent(cards));
+    }
+}
+
+pub fn handle_endgame(
+    mut commands: Commands,
+    card_map: Res<CardMap>,
+    mut event_reader: EventReader<MessageEvents>,
+    mut schedule_pile_event: EventWriter<SchedulePileEvent>,
+    mut pile_q: Query<Entity, With<Pile>>,
+    mut card_q: Query<&mut Visibility, With<Card>>,
+    mut global: ResMut<Global>,
+) {
+    for events in event_reader.iter() {
+        for message in events.read::<GameSystemChannel, NewMatch>() {
+            for mut old_card_vis in card_q.iter_mut() {
+                *old_card_vis = Visibility::Hidden;
+            }
+
+            let pile = pile_q.get_single_mut().unwrap();
+
+            commands.entity(pile).clear_children();
+
+            let new_cards: Vec<Entity> = card_map.list_from_str(&message.cards);
+
+            commands.entity(pile).push_children(&new_cards);
+
+            for c in new_cards.iter() {
+                let mut vis = card_q.get_mut(*c).unwrap();
+                *vis = Visibility::Visible;
+            }
+            schedule_pile_event.send(SchedulePileEvent(new_cards));
+
+            global.game.active_player_pos = message.active_player as i32;
+        }
     }
 }

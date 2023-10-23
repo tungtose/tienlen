@@ -10,10 +10,10 @@ use naia_bevy_client::Client;
 use naia_bevy_demo_shared::{
     channels::PlayerActionChannel,
     components::{card::Card, hand::Hand, Player},
-    messages::{PlayCard, SkipTurn},
+    messages::SkipTurn,
 };
 
-use crate::{components::LocalPlayer, resources::Global, states::MainState, ui::DrawStatus};
+use crate::{components::LocalPlayer, resources::Global, states::MainState};
 
 use self::controller::SkipTurnEvent;
 use self::{
@@ -128,32 +128,6 @@ pub fn select_card(
 pub fn skip_turn(mut client: Client) {
     info!("skip turn!!!");
     client.send_message::<PlayerActionChannel, SkipTurn>(&SkipTurn::default());
-}
-
-pub fn play_card(
-    mut active_cards_q: Query<&mut ActiveCards>,
-    mut client: Client,
-    mut draw_status_ev: EventWriter<DrawStatus>,
-) {
-    info!("Play Card!");
-    let active_cards_map = active_cards_q.get_single_mut().unwrap();
-
-    let Ok(cards) = active_cards_map.to_string() else {
-        draw_status_ev.send(DrawStatus("Please select any cards".to_string()));
-        return;
-    };
-
-    let hand = Hand::from_str(&cards);
-
-    if !hand.check_combination() {
-        draw_status_ev.send(DrawStatus(
-            "Your hand is not in any combination!".to_string(),
-        ));
-        return;
-    }
-    client.send_message::<PlayerActionChannel, PlayCard>(&PlayCard(cards));
-
-    info!("Sended Cards");
 }
 
 pub fn update_player_cards(

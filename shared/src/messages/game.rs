@@ -28,7 +28,7 @@ pub struct AcceptPlayCard {
     pub cur_player: usize,
     pub cards: String,
     pub next_player: usize,
-    pub is_win: bool,
+    pub run_out_card: bool,
 }
 
 #[derive(Message, Debug, Default)]
@@ -41,7 +41,10 @@ pub struct UpdateTurn(pub usize);
 pub struct UpdateScore(pub u32);
 
 #[derive(Message, Debug, Default)]
-pub struct NewMatch;
+pub struct NewMatch {
+    pub cards: String,
+    pub active_player: usize,
+}
 
 #[derive(Message, Debug, Default)]
 pub struct NewPlayer(pub String);

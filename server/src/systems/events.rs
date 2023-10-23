@@ -346,7 +346,7 @@ pub fn message_events(
                                 &ErrorCode::from(GameError::InvalidCards),
                             );
 
-                            info!("Game State: Wrong Combination!");
+                            info!("Game State: Weaker card!");
                             return;
                         }
                     }
@@ -405,19 +405,22 @@ pub fn message_events(
                         let next_player = turn.player_out();
                         info!("Game State: Removed player out of turn pool");
 
-                        for (u_key, player_data) in global.players_map.0.iter() {
-                            server.send_message::<GameSystemChannel, UpdateTurn>(
-                                u_key,
-                                &UpdateTurn(next_player),
-                            );
-
-                            server.send_message::<GameSystemChannel, UpdateScore>(
-                                u_key,
-                                &UpdateScore(player_data.score),
-                            );
-                        }
-
                         player_q.iter_mut().set_next_active(next_player);
+
+                    let data = AcceptPlayCard {
+                        cur_player: current_active_player,
+                        cards: play_card.0,
+                        next_player,
+                        run_out_card: true,
+                    };
+
+
+                    for (u_key, _) in global.users_map.iter() {
+                        server.send_message::<GameSystemChannel, AcceptPlayCard>(
+                            u_key,
+                            &data,
+                        );
+                    }
 
                         info!("Game State: Sended new turn to all player");
 
@@ -436,7 +439,7 @@ pub fn message_events(
                         cur_player: current_active_player,
                         cards: play_card.0,
                         next_player,
-                        is_win: false,
+                        run_out_card: false,
                     };
 
                     for (u_key, _) in global.users_map.iter() {
@@ -482,11 +485,19 @@ pub fn end_match(
     mut table_q: Query<&mut Table>,
 ) {
     if let Ok(mut turn) = turn_q.get_single_mut() {
-        // info!("END MATCH - 0");
         // End match here since only 1 player have cards left
         if turn.only_one_player_left() {
             // Clear player hand
             info!("------ Game State: End Match ---------");
+
+            // FIXME: let client verify & finish animation -> then reset
+            global.new_match();
+            turn.new_match();
+
+            let next_player = turn.current_active_player().unwrap();
+
+            player_q.iter_mut().set_next_active(next_player);
+
             let mut deck = Deck::new();
 
             for (user_key, entity) in global.users_map.iter_mut() {
@@ -497,16 +508,13 @@ pub fn end_match(
                 let mut player = player_q.get_mut(*entity).unwrap();
                 *player.cards = hand.to_string();
 
-                server.send_message::<GameSystemChannel, NewMatch>(user_key, &NewMatch::default());
+                let data = NewMatch {
+                    cards: hand.to_string(),
+                    active_player: next_player,
+                };
+
+                server.send_message::<GameSystemChannel, NewMatch>(user_key, &data);
             }
-
-            // FIXME: let client verify & finish animation -> then reset
-            global.new_match();
-            turn.new_match();
-
-            let next_player = turn.current_active_player().unwrap();
-
-            player_q.iter_mut().set_next_active(next_player);
 
             if let Ok(mut table) = table_q.get_single_mut() {
                 table.new_match();
