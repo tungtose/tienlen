@@ -6,8 +6,6 @@ alias sl := stream_log
 alias dw := deploy_web
 alias rs := run_server
 alias rc := run_client
-# alias rcr := run_client_remote
-
 
 bump_patch:
   cargo-release release version patch --manifest-path ./server/Cargo.toml --execute --no-confirm
@@ -40,7 +38,6 @@ deploy_web:
   export ENVIRONMENT=PROD
   just ./client/gen_wasm
   sh ./scripts/deploy-web.sh
-
 
 run_client:
   just ./client/run

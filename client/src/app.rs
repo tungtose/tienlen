@@ -84,12 +84,12 @@ pub fn run() {
         .add_systems(
             Update,
             (
-                input::key_input,
-                input::cursor_input,
+                // input::key_input,
+                // input::cursor_input,
                 sync::sync_main_player,
                 sync::sync_foreign_player,
-                sync::sync_main_player_cards,
-                sync::sync_table_cards,
+                // sync::sync_main_player_cards,
+                // sync::sync_table_cards,
                 sync::sync_timer,
                 sync::sync_player,
             )

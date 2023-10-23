@@ -1,6 +1,6 @@
+use bevy::prelude::*;
 use std::collections::VecDeque;
 
-use bevy::prelude::*;
 use naia_bevy_client::events::MessageEvents;
 use naia_bevy_demo_shared::{channels::GameSystemChannel, messages::AcceptPlayCard};
 
