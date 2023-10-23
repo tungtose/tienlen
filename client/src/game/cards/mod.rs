@@ -18,6 +18,7 @@ use crate::{
 use super::{
     controller::PlayEvent,
     player_ui::{BackCard, PlayerPos},
+    status::DrawStatus,
 };
 
 pub struct CardPlugin;
@@ -30,9 +31,7 @@ impl Plugin for CardPlugin {
             .add_systems(Startup, setup)
             .add_systems(
                 Update,
-                send_cards_to_server
-                    .in_set(Playing)
-                    .run_if(valid_cards_condition),
+                send_cards_to_server.in_set(Playing), // .run_if(valid_cards_condition),
             )
             .add_systems(
                 Update,
@@ -220,16 +219,12 @@ fn valid_cards_condition(card_q: Query<(&CStatus, &Raw), With<Card>>) -> bool {
     }
 
     if active_cards.is_empty() {
-        // TODO
-        // info!("No active card!");
         return false;
     }
 
     let hand = Hand::from_str(active_cards.join(",").as_str());
 
     if !hand.check_combination() {
-        // TODO
-        // info!("Wrong combination");
         return false;
     }
 
@@ -240,6 +235,7 @@ fn send_cards_to_server(
     mut client: Client,
     mut play_event_reader: EventReader<PlayEvent>,
     card_q: Query<&Raw, With<Card>>,
+    mut draw_status_ev: EventWriter<DrawStatus>,
 ) {
     for event in play_event_reader.iter() {
         let cards: Vec<String> = event
@@ -250,7 +246,18 @@ fn send_cards_to_server(
 
         let cards = cards.join(",");
 
-        info!("Sending card to server: {:?}", event.0);
+        if cards.is_empty() {
+            return draw_status_ev
+                .send(DrawStatus::Error("You must select at least 1 card".into()));
+        }
+
+        let hand = Hand::from_str(&cards);
+
+        if !hand.check_combination() {
+            return draw_status_ev
+                .send(DrawStatus::Error("Your selected cards is not valid".into()));
+        }
+
         client.send_message::<PlayerActionChannel, PlayCard>(&PlayCard(cards));
     }
 }

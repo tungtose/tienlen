@@ -16,7 +16,6 @@ use naia_bevy_server::{
 };
 
 use naia_bevy_demo_shared::{
-    behavior as shared_behavior,
     channels::{
         EntityAssignmentChannel, GameSystemChannel, PlayerActionChannel, PlayerCommandChannel,
     },
@@ -30,7 +29,7 @@ use naia_bevy_demo_shared::{
     },
     messages::{
         error::GameError, Auth, EntityAssignment, ErrorCode, KeyCommand, NewMatch, NewPlayer,
-        PlayCard, PlayerMessage, PlayerReady, SkipTurn, StartGame, UpdateScore, UpdateTurn, AcceptPlayCard, AcceptPlayerReady, AcceptStartGame,
+        PlayCard, PlayerMessage, PlayerReady, SkipTurn, StartGame, UpdateTurn, AcceptPlayCard, AcceptPlayerReady, AcceptStartGame,
     },
 };
 
@@ -543,15 +542,15 @@ pub fn tick_events(
         // All game logic should happen here, on a tick event
         let mut messages = server.receive_tick_buffer_messages(server_tick);
 
-        for (_user_key, key_command) in messages.read::<PlayerCommandChannel, KeyCommand>() {
-            let Some(entity) = &key_command.entity.get(&server) else {
-                continue;
-            };
-            let Ok(mut position) = position_query.get_mut(*entity) else {
-                continue;
-            };
-            shared_behavior::process_command(&key_command, &mut position);
-        }
+        // for (_user_key, key_command) in messages.read::<PlayerCommandChannel, KeyCommand>() {
+        //     let Some(entity) = &key_command.entity.get(&server) else {
+        //         continue;
+        //     };
+        //     let Ok(mut position) = position_query.get_mut(*entity) else {
+        //         continue;
+        //     };
+        //     // shared_behavior::process_command(&key_command, &mut position);
+        // }
     }
 
     if has_ticked {

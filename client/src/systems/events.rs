@@ -10,23 +10,23 @@ use naia_bevy_client::{
     Client,
 };
 
+use naia_bevy_demo_shared::messages::{
+    AcceptStartGame, EntityAssignment, KeyCommand, NewPlayer, PlayerMessage, PlayerReady,
+    UpdateScore, UpdateTurn,
+};
 use naia_bevy_demo_shared::{
     channels::{
         EntityAssignmentChannel, GameSystemChannel, PlayerActionChannel, PlayerCommandChannel,
     },
     components::player::Player,
-    messages::{
-        AcceptStartGame, EntityAssignment, ErrorCode, GameError, KeyCommand, NewMatch, NewPlayer,
-        PlayerMessage, PlayerReady, StartGame, UpdateScore, UpdateTurn,
-    },
 };
 
 use crate::{
     components::LocalPlayer,
-    game::{LocalStartGame, UpdatePlayerCards},
+    game::LocalStartGame,
     resources::Global,
     states::MainState,
-    ui::{DrawStatus, NewPlayerJoin, PlayerMessageEvent, UpdateScoreUI},
+    ui::{NewPlayerJoin, PlayerMessageEvent, UpdateScoreUI},
 };
 
 pub fn connect_events(
@@ -68,7 +68,7 @@ pub fn message_events(
     mut event_reader: EventReader<MessageEvents>,
     player_query: Query<&Player>,
     mut start_game_ev: EventWriter<LocalStartGame>,
-    mut draw_status_ev: EventWriter<DrawStatus>,
+    // mut draw_status_ev: EventWriter<DrawStatus>,
     // mut update_player_cards_ev: EventWriter<UpdatePlayerCards>,
     mut update_score_ev: EventWriter<UpdateScoreUI>,
     mut new_player_join_ev: EventWriter<NewPlayerJoin>,
@@ -91,33 +91,6 @@ pub fn message_events(
 
         for _ in events.read::<GameSystemChannel, UpdateScore>() {
             update_score_ev.send_default();
-        }
-
-        for error_code in events.read::<GameSystemChannel, ErrorCode>() {
-            let game_error = GameError::from(error_code);
-            match game_error {
-                GameError::InvalidCards => {
-                    draw_status_ev.send(DrawStatus("Your cards are week!".to_string()));
-                }
-                GameError::WrongCombination => {
-                    draw_status_ev.send(DrawStatus(
-                        "Your cards are not the same combination".to_string(),
-                    ));
-                }
-                GameError::CanNotSkipTurn => {
-                    draw_status_ev.send(DrawStatus(
-                        "You can not skip turn, you can play any card now".to_string(),
-                    ));
-                }
-                GameError::WrongTurn => {
-                    draw_status_ev.send(DrawStatus(
-                        "Not your turn now! Game bug probably".to_string(),
-                    ));
-                }
-                GameError::UnknownError => {
-                    draw_status_ev.send(DrawStatus("Unexpected error happend".to_string()));
-                }
-            }
         }
 
         // for _ in events.read::<GameSystemChannel, NewMatch>() {
