@@ -49,6 +49,7 @@ fn main() {
                 events::connect_events,
                 events::disconnect_events,
                 events::error_events,
+                events::accept_start_game,
                 events::message_events,
                 events::tick_events,
                 events::spawn_entity_events,
