@@ -38,6 +38,8 @@ pub fn init(mut commands: Commands, mut server: Server) {
     let global = Global {
         counter,
         time: 0.,
+        total_request_play: 0,
+        pre_start: true,
         leader_turn: true,
         table,
         players_map,

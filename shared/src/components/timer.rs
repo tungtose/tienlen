@@ -1,6 +1,12 @@
 use bevy_ecs::prelude::Component;
 use naia_bevy_shared::{Property, Replicate};
 
+#[derive(Component)]
+pub struct TurnCounter;
+
+#[derive(Component)]
+pub struct PrestartCounter;
+
 #[derive(Replicate, Component)]
 pub struct Counter {
     pub counter: Property<f32>,
@@ -21,7 +27,7 @@ impl Counter {
 
     pub fn check_over(&mut self) -> bool {
         if *self.counter < 0. {
-            *self.counter = TIMEOUT;
+            // *self.counter = next_timeout;
             return true;
         }
 

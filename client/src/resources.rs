@@ -30,6 +30,7 @@ pub struct Game {
     pub table_cards: String,
     pub active_player_pos: i32,
     pub timer: String,
+    pub wait_for_start: usize,
 }
 
 impl Game {
@@ -83,10 +84,6 @@ impl Game {
             _ => unreachable!(),
         }
     }
-
-    // pub fn player_1_render_pos(&self) -> Vec3 {
-    //     Vec3::new(self.player_1.draw_pos.x, self.player_1.draw_pos.y, 10.)
-    // }
 }
 
 #[derive(Default, Debug)]
@@ -141,6 +138,7 @@ impl Default for Game {
             table_cards: String::new(),
             local_player: Default::default(),
             timer: "0".to_string(),
+            wait_for_start: 5,
         }
     }
 }

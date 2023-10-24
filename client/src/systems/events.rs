@@ -12,7 +12,7 @@ use naia_bevy_client::{
 
 use naia_bevy_demo_shared::messages::{
     AcceptStartGame, EntityAssignment, KeyCommand, NewPlayer, PlayerMessage, PlayerReady,
-    UpdateScore, UpdateTurn,
+    UpdateScore, UpdateTurn, WaitForStart,
 };
 use naia_bevy_demo_shared::{
     channels::{
@@ -93,9 +93,10 @@ pub fn message_events(
             update_score_ev.send_default();
         }
 
-        // for _ in events.read::<GameSystemChannel, NewMatch>() {
-        //     update_player_cards_ev.send(UpdatePlayerCards)
-        // }
+        for update_turn in events.read::<GameSystemChannel, UpdateTurn>() {
+            let active_player_pos = update_turn.0 as i32;
+            global.game.active_player_pos = active_player_pos;
+        }
 
         for update_turn in events.read::<GameSystemChannel, UpdateTurn>() {
             let active_player_pos = update_turn.0 as i32;

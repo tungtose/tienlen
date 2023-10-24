@@ -1,6 +1,7 @@
 use std::time::Duration;
 
 use bevy_ecs::{
+    query::With,
     system::{Commands, Query, Res, ResMut, Resource},
     world::Mut,
 };
@@ -8,7 +9,12 @@ use bevy_log::info;
 use bevy_time::{Time, Timer, TimerMode};
 use naia_bevy_demo_shared::{
     channels::GameSystemChannel,
-    components::{hand::Hand, timer::Counter, turn::Turn, Player, Table},
+    components::{
+        hand::Hand,
+        timer::{Counter, TurnCounter},
+        turn::Turn,
+        Player, Table,
+    },
     messages::UpdateTurn,
 };
 use naia_bevy_server::Server;
@@ -29,7 +35,7 @@ pub fn countdown(
     config.timer.tick(time.delta());
 
     if config.timer.finished() {
-        if let Ok(mut counter) = countdown_q.get_single_mut() {
+        for mut counter in countdown_q.iter_mut() {
             counter.decr_counter();
         }
     }
@@ -82,7 +88,7 @@ where
 
 pub fn run_out_countdown(
     mut global: ResMut<Global>,
-    mut countdown_q: Query<&mut Counter>,
+    mut countdown_q: Query<&mut Counter, With<TurnCounter>>,
     mut player_q: Query<&mut Player>,
     mut turn_q: Query<&mut Turn>,
     mut table_q: Query<&mut Table>,
@@ -140,6 +146,8 @@ pub fn run_out_countdown(
 
             player_q.iter_mut().set_next_active(next_active_pos);
             global.cur_active_pos = next_active_pos;
+
+            counter.recount();
 
             info!("------------------ Game State: End Run Out Countdown -----------------------");
         }

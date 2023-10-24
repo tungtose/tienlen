@@ -68,6 +68,7 @@ impl Global {
         self.table.clear();
         self.cur_active_pos = 0;
         self.leader_turn = true;
+        self.total_request_play = 0;
     }
 }
 
@@ -76,6 +77,8 @@ pub struct Global {
     pub counter: Counter,
     pub time: f32,
     pub table: VecDeque<Hand>,
+    pub total_request_play: usize,
+    pub pre_start: bool,
     pub leader_turn: bool,
     pub users_map: HashMap<UserKey, Entity>,
     pub players_map: PlayerMap,

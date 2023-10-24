@@ -1,8 +1,8 @@
 use bevy::prelude::*;
-use naia_bevy_client::events::MessageEvents;
+use naia_bevy_client::{events::MessageEvents, Client};
 use naia_bevy_demo_shared::{
-    channels::GameSystemChannel,
-    messages::{ErrorCode, GameError},
+    channels::{GameSystemChannel, PlayerActionChannel},
+    messages::{ErrorCode, GameError, RequestStart, WaitForStart},
 };
 use std::time::Duration;
 
@@ -14,10 +14,11 @@ impl Plugin for StatusPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<DrawStatus>()
             .add_systems(OnEnter(MainState::Game), setup)
-            .add_systems(Update, handle_server_error_event)
+            .add_systems(Update, (handle_server_error_event, handle_wait_event))
             .add_systems(
                 Update,
-                (draw_status, delete_status).run_if(in_state(MainState::Game)),
+                (draw_status, delete_status, update_wait_for_status)
+                    .run_if(in_state(MainState::Game)),
             );
     }
 }
@@ -25,18 +26,27 @@ impl Plugin for StatusPlugin {
 #[derive(Event)]
 pub enum DrawStatus {
     Info(String),
+    WaitFor(usize),
     Error(String),
 }
 
 #[derive(Component)]
+pub struct WaitForText(usize);
+
+#[derive(Component)]
 pub struct StatusContainer;
+
+#[derive(Component)]
+pub struct WaitForCounterConfig {
+    timer: Timer,
+}
 
 #[derive(Component)]
 pub struct CounterConfig {
     timer: Timer,
 }
 
-pub fn setup(mut commands: Commands, res: Res<UiAssets>) {
+pub fn setup(mut commands: Commands) {
     commands.spawn((
         StatusContainer,
         NodeBundle {
@@ -44,6 +54,7 @@ pub fn setup(mut commands: Commands, res: Res<UiAssets>) {
                 justify_content: JustifyContent::Center,
                 align_items: AlignItems::Center,
                 flex_direction: FlexDirection::Column,
+                top: Val::Px(200.),
                 width: Val::Percent(100.),
                 height: Val::Px(48.),
                 ..Default::default()
@@ -51,6 +62,45 @@ pub fn setup(mut commands: Commands, res: Res<UiAssets>) {
             ..Default::default()
         },
     ));
+}
+
+pub fn update_wait_for_status(
+    mut commands: Commands,
+    mut counter_q: Query<(Entity, &mut WaitForCounterConfig)>,
+    mut text_q: Query<(&mut Text, &mut WaitForText)>,
+    res: Res<UiAssets>,
+    status_container_q: Query<Entity, With<StatusContainer>>,
+    time: Res<Time>,
+    mut client: Client,
+) {
+    for (entity, mut counter) in counter_q.iter_mut() {
+        counter.timer.tick(time.delta());
+
+        if counter.timer.finished() {
+            let status_container = status_container_q.get_single().unwrap();
+
+            for (mut text, mut wait_for) in text_q.iter_mut() {
+                let text_style = TextStyle {
+                    font: res.font.clone(),
+                    font_size: 16.0,
+                    color: Color::YELLOW_GREEN,
+                };
+
+                wait_for.0 -= 1;
+
+                let new_status = format!("Game start in {} seconds", wait_for.0);
+                *text = Text::from_section(new_status, text_style.clone());
+
+                if wait_for.0 == 0 {
+                    commands.entity(entity).despawn();
+                    commands.entity(status_container).despawn_descendants();
+
+                    client
+                        .send_message::<PlayerActionChannel, RequestStart>(&RequestStart::default());
+                }
+            }
+        }
+    }
 }
 
 pub fn delete_status(
@@ -100,6 +150,44 @@ pub fn draw_status(
                 });
             }
             DrawStatus::Info(_) => todo!(),
+            DrawStatus::WaitFor(time) => {
+                let msg = format!("Game start in {} seconds", time);
+                let status_text = commands
+                    .spawn((
+                        TextBundle::from_section(
+                            msg,
+                            TextStyle {
+                                font: res.font.clone(),
+                                font_size: 16.0,
+                                color: Color::YELLOW_GREEN,
+                            },
+                        ),
+                        WaitForText(*time),
+                    ))
+                    .id();
+
+                commands.entity(status_container).add_child(status_text);
+
+                commands.spawn(WaitForCounterConfig {
+                    timer: Timer::new(Duration::from_secs(1), TimerMode::Repeating),
+                });
+                // commands.spawn(CounterConfig {
+                //     timer: Timer::new(Duration::from_secs(*time as u64), TimerMode::Once),
+                // });
+            }
+        }
+    }
+}
+
+pub fn handle_wait_event(
+    mut event_reader: EventReader<MessageEvents>,
+    mut draw_status_ev: EventWriter<DrawStatus>,
+    mut next_state: ResMut<NextState<MainState>>,
+) {
+    for events in event_reader.iter() {
+        for wait in events.read::<GameSystemChannel, WaitForStart>() {
+            draw_status_ev.send(DrawStatus::WaitFor(wait.0));
+            next_state.set(MainState::Game);
         }
     }
 }

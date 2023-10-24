@@ -337,11 +337,11 @@ pub fn player_btn_click(
     for (interaction, (start_btn, play_btn, skip_btn)) in &mut interaction_query {
         if let Interaction::Pressed = *interaction {
             if start_btn.is_some() {
-                info!("Clicked start!");
+                // info!("Clicked start!");
                 client.send_message::<PlayerActionChannel, StartGame>(&StartGame::default());
             }
             if play_btn.is_some() {
-                info!("Clicked play!");
+                // info!("Clicked play!");
                 let mut cards = vec![];
 
                 for (entity, status, ordinal) in card_q.iter() {
@@ -354,7 +354,7 @@ pub fn player_btn_click(
                 play_event_writer.send(PlayEvent(cards.iter().map(|c| c.0).collect()));
             }
             if skip_btn.is_some() {
-                info!("Clicked skip!");
+                // info!("Clicked skip!");
                 skip_ev.send_default()
             }
         }
