@@ -6,11 +6,11 @@ mod table;
 use std::collections::BTreeMap;
 
 use bevy::prelude::*;
-use naia_bevy_client::Client;
+use naia_bevy_client::{events::MessageEvents, Client};
 use naia_bevy_demo_shared::{
-    channels::PlayerActionChannel,
+    channels::{GameSystemChannel, PlayerActionChannel},
     components::{card::Card, hand::Hand, Player},
-    messages::SkipTurn,
+    messages::{AcceptStartGame, SkipTurn},
 };
 
 use crate::{components::LocalPlayer, resources::Global, states::MainState};
@@ -32,7 +32,8 @@ impl Plugin for GamePlugin {
             .add_plugins(PlayerUiPlugin)
             .add_plugins(TablePlugin)
             .add_systems(Startup, local_init)
-            .add_systems(Update, spawn_player.run_if(on_event::<LocalStartGame>()))
+            // .add_systems(Update, spawn_player.run_if(on_event::<LocalStartGame>()))
+            .add_systems(Update, wait_to_ingame.run_if(in_state(MainState::Wait)))
             // .add_systems(Update, play_card.run_if(on_event::<PlayerEvent>()))
             .add_systems(Update, skip_turn.run_if(on_event::<SkipTurnEvent>()));
     }
@@ -84,4 +85,16 @@ pub fn spawn_player(
     }
 
     next_state.set(MainState::Game);
+}
+
+pub fn wait_to_ingame(
+    mut event_reader: EventReader<MessageEvents>,
+    mut next_state: ResMut<NextState<MainState>>,
+) {
+    for event in event_reader.iter() {
+        for _ in event.read::<GameSystemChannel, AcceptStartGame>() {
+            info!("Switching to InGame");
+            next_state.set(MainState::Game);
+        }
+    }
 }

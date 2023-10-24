@@ -23,7 +23,7 @@ impl Plugin for ControllerPlugin {
             .add_event::<SkipTurnEvent>()
             .add_systems(Update, (spawn_start_btn, handle_start_game_event))
             .add_systems(OnEnter(MainState::Lobby), spawn_play_controller)
-            .add_systems(OnEnter(MainState::Game), hide_start_btn)
+            .add_systems(OnEnter(MainState::Wait), hide_start_btn)
             .add_systems(Update, player_btn_click.run_if(in_state(MainState::Lobby)))
             .add_systems(
                 Update,

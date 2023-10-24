@@ -175,37 +175,6 @@ pub fn message_events(
             }
         }
 
-        // for (_, _) in events.read::<PlayerActionChannel, RequestStart>() {
-        //     global.total_request_play += 1;
-
-        //     if global.total_request_play == global.total_player {
-                
-        //     let mut deck = Deck::new();
-
-        //     for (user_key, p_entity) in global.users_map.iter() {
-        //         let hand = Hand {
-        //             cards: deck.deal(13),
-        //         };
-
-        //         let cards_str = hand.to_string();
-
-        //         let mut player = player_q.get_mut(*p_entity).unwrap();
-        //         *player.cards = cards_str.clone();
-
-        //         let message = AcceptStartGame {
-        //             cards: cards_str.clone(),
-        //             // TODO: decide who play first
-        //             active_player: 0,
-        //         };
-
-        //         server.send_message::<GameSystemChannel, AcceptStartGame>(
-        //             user_key,
-        //             &message
-        //         );
-        //     }
-        //     }
-        // }
-
         for (_, _) in events.read::<PlayerActionChannel, StartGame>() {
             let total_player = global.total_player;
 
@@ -250,32 +219,6 @@ pub fn message_events(
                 .room_mut(&global.main_room_key)
                 .add_entity(&server_table_entity)
                 .add_entity(&server_counter_entity);
-
-
-            // Draw card to players and start the game
-            // let mut deck = Deck::new();
-
-            // for (user_key, p_entity) in global.users_map.iter() {
-            //     let hand = Hand {
-            //         cards: deck.deal(13),
-            //     };
-
-            //     let cards_str = hand.to_string();
-
-            //     let mut player = player_q.get_mut(*p_entity).unwrap();
-            //     *player.cards = cards_str.clone();
-
-            //     let message = AcceptStartGame {
-            //         cards: cards_str.clone(),
-            //         // TODO: decide who play first
-            //         active_player: 0,
-            //     };
-
-            //     server.send_message::<GameSystemChannel, AcceptStartGame>(
-            //         user_key,
-            //         &message
-            //     );
-            // }
         }
 
         for (user_key, _) in events.read::<PlayerActionChannel, SkipTurn>().into_iter() {

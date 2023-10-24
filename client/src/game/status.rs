@@ -13,12 +13,12 @@ pub struct StatusPlugin;
 impl Plugin for StatusPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<DrawStatus>()
-            .add_systems(OnEnter(MainState::Game), setup)
+            .add_systems(Startup, setup)
             .add_systems(Update, (handle_server_error_event, handle_wait_event))
             .add_systems(
                 Update,
                 (draw_status, delete_status, update_wait_for_status)
-                    .run_if(in_state(MainState::Game)),
+                    .run_if(in_state(MainState::Wait).or_else(in_state(MainState::Game))),
             );
     }
 }
@@ -75,6 +75,7 @@ pub fn update_wait_for_status(
 ) {
     for (entity, mut counter) in counter_q.iter_mut() {
         counter.timer.tick(time.delta());
+        info!("TICK");
 
         if counter.timer.finished() {
             let status_container = status_container_q.get_single().unwrap();
@@ -171,9 +172,6 @@ pub fn draw_status(
                 commands.spawn(WaitForCounterConfig {
                     timer: Timer::new(Duration::from_secs(1), TimerMode::Repeating),
                 });
-                // commands.spawn(CounterConfig {
-                //     timer: Timer::new(Duration::from_secs(*time as u64), TimerMode::Once),
-                // });
             }
         }
     }
@@ -187,7 +185,7 @@ pub fn handle_wait_event(
     for events in event_reader.iter() {
         for wait in events.read::<GameSystemChannel, WaitForStart>() {
             draw_status_ev.send(DrawStatus::WaitFor(wait.0));
-            next_state.set(MainState::Game);
+            next_state.set(MainState::Wait);
         }
     }
 }
