@@ -9,12 +9,7 @@ use bevy_log::info;
 use bevy_time::{Time, Timer, TimerMode};
 use naia_bevy_demo_shared::{
     channels::GameSystemChannel,
-    components::{
-        hand::Hand,
-        timer::{Counter, TurnCounter},
-        turn::Turn,
-        Player, Table,
-    },
+    components::{hand::Hand, timer::Counter, turn::Turn, Player, Table},
     messages::UpdateTurn,
 };
 use naia_bevy_server::Server;
@@ -88,7 +83,7 @@ where
 
 pub fn run_out_countdown(
     mut global: ResMut<Global>,
-    mut countdown_q: Query<&mut Counter, With<TurnCounter>>,
+    mut countdown_q: Query<&mut Counter>,
     mut player_q: Query<&mut Player>,
     mut turn_q: Query<&mut Turn>,
     mut table_q: Query<&mut Table>,
