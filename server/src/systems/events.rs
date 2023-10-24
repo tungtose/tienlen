@@ -175,36 +175,36 @@ pub fn message_events(
             }
         }
 
-        for (_, _) in events.read::<PlayerActionChannel, RequestStart>() {
-            global.total_request_play += 1;
+        // for (_, _) in events.read::<PlayerActionChannel, RequestStart>() {
+        //     global.total_request_play += 1;
 
-            if global.total_request_play == global.total_player {
+        //     if global.total_request_play == global.total_player {
                 
-            let mut deck = Deck::new();
+        //     let mut deck = Deck::new();
 
-            for (user_key, p_entity) in global.users_map.iter() {
-                let hand = Hand {
-                    cards: deck.deal(13),
-                };
+        //     for (user_key, p_entity) in global.users_map.iter() {
+        //         let hand = Hand {
+        //             cards: deck.deal(13),
+        //         };
 
-                let cards_str = hand.to_string();
+        //         let cards_str = hand.to_string();
 
-                let mut player = player_q.get_mut(*p_entity).unwrap();
-                *player.cards = cards_str.clone();
+        //         let mut player = player_q.get_mut(*p_entity).unwrap();
+        //         *player.cards = cards_str.clone();
 
-                let message = AcceptStartGame {
-                    cards: cards_str.clone(),
-                    // TODO: decide who play first
-                    active_player: 0,
-                };
+        //         let message = AcceptStartGame {
+        //             cards: cards_str.clone(),
+        //             // TODO: decide who play first
+        //             active_player: 0,
+        //         };
 
-                server.send_message::<GameSystemChannel, AcceptStartGame>(
-                    user_key,
-                    &message
-                );
-            }
-            }
-        }
+        //         server.send_message::<GameSystemChannel, AcceptStartGame>(
+        //             user_key,
+        //             &message
+        //         );
+        //     }
+        //     }
+        // }
 
         for (_, _) in events.read::<PlayerActionChannel, StartGame>() {
             let total_player = global.total_player;
