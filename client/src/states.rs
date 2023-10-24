@@ -6,6 +6,7 @@ pub enum MainState {
     LoadAssets,
     Welcome,
     Lobby,
+    Wait,
     Game,
 }
 

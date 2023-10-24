@@ -25,7 +25,7 @@ pub use shape::{Shape, ShapeValue};
 pub use {
     player::{Active, Host},
     table::Table,
-    timer::Counter,
+    timer::{Counter, PrestartCounter, TurnCounter},
 };
 
 // Plugin

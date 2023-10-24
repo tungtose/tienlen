@@ -12,6 +12,12 @@ pub struct PlayerMessage {
 pub struct StartGame(pub String);
 
 #[derive(Message, Default)]
+pub struct RequestStart;
+
+#[derive(Message, Default)]
+pub struct WaitForStart(pub usize);
+
+#[derive(Message, Default)]
 pub struct AcceptStartGame {
     pub cards: String,
     pub active_player: usize,

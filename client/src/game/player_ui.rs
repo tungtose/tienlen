@@ -410,7 +410,6 @@ pub fn update_timer(
 
         if (0.0..5.0).contains(&time) {
             if player_pos.0 == global.game.active_player_pos {
-                info!("Update TIMMER");
                 let time = &global.game.timer;
                 *text = Text::from_section(time, timer_text.clone());
                 *vis = Visibility::Visible;

@@ -16,7 +16,7 @@ pub use entity_assignment::EntityAssignment;
 pub use error::{ErrorCode, GameError};
 pub use game::{
     AcceptPlayCard, AcceptPlayerReady, AcceptStartGame, NewMatch, NewPlayer, PlayCard, PlayerReady,
-    SkipTurn, StartGame, UpdateScore, UpdateTurn,
+    RequestStart, SkipTurn, StartGame, UpdateScore, UpdateTurn, WaitForStart,
 };
 pub use key_command::KeyCommand;
 
@@ -34,8 +34,9 @@ impl ProtocolPlugin for MessagesPlugin {
             .add_message::<NewMatch>()
             .add_message::<NewPlayer>()
             .add_message::<AcceptStartGame>()
+            .add_message::<RequestStart>()
             .add_message::<PlayerReady>()
-            // .add_message::<NewPlayerJoin>()
+            .add_message::<WaitForStart>()
             .add_message::<PlayCard>()
             .add_message::<AcceptPlayCard>()
             .add_message::<AcceptPlayerReady>()

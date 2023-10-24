@@ -17,7 +17,7 @@ use naia_bevy_server::{
 
 use naia_bevy_demo_shared::{
     channels::{
-        EntityAssignmentChannel, GameSystemChannel, PlayerActionChannel, PlayerCommandChannel,
+        EntityAssignmentChannel, GameSystemChannel, PlayerActionChannel,
     },
     components::{
         deck::Deck,
@@ -28,8 +28,8 @@ use naia_bevy_demo_shared::{
         Color, ColorValue, Counter, Position, Shape, ShapeValue,
     },
     messages::{
-        error::GameError, Auth, EntityAssignment, ErrorCode, KeyCommand, NewMatch, NewPlayer,
-        PlayCard, PlayerMessage, PlayerReady, SkipTurn, StartGame, UpdateTurn, AcceptPlayCard, AcceptPlayerReady, AcceptStartGame,
+        error::GameError, Auth, EntityAssignment, ErrorCode, NewMatch, NewPlayer,
+        PlayCard, PlayerMessage, PlayerReady, SkipTurn, StartGame, UpdateTurn, AcceptPlayCard, AcceptPlayerReady, AcceptStartGame, WaitForStart, RequestStart,
     },
 };
 
@@ -175,6 +175,37 @@ pub fn message_events(
             }
         }
 
+        for (_, _) in events.read::<PlayerActionChannel, RequestStart>() {
+            global.total_request_play += 1;
+
+            if global.total_request_play == global.total_player {
+                
+            let mut deck = Deck::new();
+
+            for (user_key, p_entity) in global.users_map.iter() {
+                let hand = Hand {
+                    cards: deck.deal(13),
+                };
+
+                let cards_str = hand.to_string();
+
+                let mut player = player_q.get_mut(*p_entity).unwrap();
+                *player.cards = cards_str.clone();
+
+                let message = AcceptStartGame {
+                    cards: cards_str.clone(),
+                    // TODO: decide who play first
+                    active_player: 0,
+                };
+
+                server.send_message::<GameSystemChannel, AcceptStartGame>(
+                    user_key,
+                    &message
+                );
+            }
+            }
+        }
+
         for (_, _) in events.read::<PlayerActionChannel, StartGame>() {
             let total_player = global.total_player;
 
@@ -186,6 +217,13 @@ pub fn message_events(
             if player_q.iter().some_player_not_ready() {
                 info!("Game State: There are players not ready yet -> Discard Start Game!");
                 return;
+            }
+
+            for (user_key, _p_entity) in global.users_map.iter() {
+                server.send_message::<GameSystemChannel, WaitForStart>(
+                    user_key,
+                    &WaitForStart(3)
+                );
             }
 
             // Add the table component to the room
@@ -212,32 +250,32 @@ pub fn message_events(
                 .room_mut(&global.main_room_key)
                 .add_entity(&server_table_entity)
                 .add_entity(&server_counter_entity);
-            // .add_entity(&turn_entity);
+
 
             // Draw card to players and start the game
-            let mut deck = Deck::new();
+            // let mut deck = Deck::new();
 
-            for (user_key, p_entity) in global.users_map.iter() {
-                let hand = Hand {
-                    cards: deck.deal(13),
-                };
+            // for (user_key, p_entity) in global.users_map.iter() {
+            //     let hand = Hand {
+            //         cards: deck.deal(13),
+            //     };
 
-                let cards_str = hand.to_string();
+            //     let cards_str = hand.to_string();
 
-                let mut player = player_q.get_mut(*p_entity).unwrap();
-                *player.cards = cards_str.clone();
+            //     let mut player = player_q.get_mut(*p_entity).unwrap();
+            //     *player.cards = cards_str.clone();
 
-                let message = AcceptStartGame {
-                    cards: cards_str.clone(),
-                    // TODO
-                    active_player: 0,
-                };
+            //     let message = AcceptStartGame {
+            //         cards: cards_str.clone(),
+            //         // TODO: decide who play first
+            //         active_player: 0,
+            //     };
 
-                server.send_message::<GameSystemChannel, AcceptStartGame>(
-                    user_key,
-                    &message
-                );
-            }
+            //     server.send_message::<GameSystemChannel, AcceptStartGame>(
+            //         user_key,
+            //         &message
+            //     );
+            // }
         }
 
         for (user_key, _) in events.read::<PlayerActionChannel, SkipTurn>().into_iter() {
@@ -472,6 +510,65 @@ pub fn message_events(
                 // global.players_map.debug();
                 // turn.debug();
             });
+    }
+}
+
+pub fn accept_start_game(
+    mut event_reader: EventReader<MessageEvents>,
+    mut server: Server,
+    mut global: ResMut<Global>,
+    mut turn_q: Query<&mut Turn>,
+    mut player_q: Query<&mut Player>,
+    mut table_q: Query<&mut Table>,
+    mut counter_q: Query<&mut Counter>
+) {
+    for events in event_reader.iter() {
+        for (_, _) in events.read::<PlayerActionChannel, RequestStart>() {
+            global.total_request_play += 1;
+
+            if global.total_request_play == global.total_player {
+
+            global.new_match();
+
+            if let Ok(mut turn) = turn_q.get_single_mut() {
+                turn.new_match();
+                let next_player = turn.current_active_player().unwrap();
+                player_q.iter_mut().set_next_active(next_player);
+            }
+
+            if let Ok(mut table) = table_q.get_single_mut() {
+                table.new_match();
+            }
+
+            if let Ok(mut counter) = counter_q.get_single_mut() {
+                counter.recount();
+            }
+                
+            let mut deck = Deck::new();
+
+            for (user_key, p_entity) in global.users_map.iter() {
+                let hand = Hand {
+                    cards: deck.deal(13),
+                };
+
+                let cards_str = hand.to_string();
+
+                let mut player = player_q.get_mut(*p_entity).unwrap();
+                *player.cards = cards_str.clone();
+
+                let message = AcceptStartGame {
+                    cards: cards_str.clone(),
+                    // TODO: decide who play first
+                    active_player: 0,
+                };
+
+                server.send_message::<GameSystemChannel, AcceptStartGame>(
+                    user_key,
+                    &message
+                );
+            }
+            }
+        }
     }
 }
 
