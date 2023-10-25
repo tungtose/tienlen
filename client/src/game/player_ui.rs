@@ -97,6 +97,9 @@ pub trait PlayerDirection {
     fn from_server_pos(pos: usize) -> Self;
     fn get_translation(&self) -> Vec3;
     fn back_card_translation(&self) -> Vec3;
+    fn timer_translation(&self) -> Vec3 {
+        self.get_translation().add(Vec3::new(50., 0., 15.))
+    }
 }
 
 impl PlayerDirection for Bottom {
@@ -125,6 +128,10 @@ impl PlayerDirection for Left {
     fn back_card_translation(&self) -> Vec3 {
         self.get_translation().add(Vec3::new(60., 0., 0.))
     }
+
+    fn timer_translation(&self) -> Vec3 {
+        self.get_translation().add(Vec3::new(-50., 0., 15.))
+    }
 }
 
 impl PlayerDirection for Top {
@@ -139,6 +146,10 @@ impl PlayerDirection for Top {
     fn back_card_translation(&self) -> Vec3 {
         self.get_translation().add(Vec3::new(60., 0., 0.))
     }
+
+    fn timer_translation(&self) -> Vec3 {
+        self.get_translation().add(Vec3::new(-50., 0., 15.))
+    }
 }
 
 impl PlayerDirection for Right {
@@ -151,7 +162,7 @@ impl PlayerDirection for Right {
     }
 
     fn back_card_translation(&self) -> Vec3 {
-        self.get_translation().add(Vec3::new(-60., 0., 0.))
+        self.get_translation().add(Vec3::new(-50., 0., 0.))
     }
 }
 
@@ -400,20 +411,23 @@ pub fn update_timer(
     res: Res<UiAssets>,
 ) {
     let timer_text = TextStyle {
+        font: res.noto_font.clone(),
+        font_size: 16.,
+        color: Color::ORANGE_RED,
+    };
+
+    let normal_style = TextStyle {
         font: res.font.clone(),
-        font_size: 20.0,
-        color: Color::YELLOW_GREEN,
+        font_size: 16.,
+        color: Color::ORANGE_RED,
     };
 
     for (mut vis, player_pos, mut text) in text_q.iter_mut() {
-        let time = global.game.timer.parse::<f32>().unwrap();
-
-        if (0.0..5.0).contains(&time) {
-            if player_pos.0 == global.game.active_player_pos {
-                let time = &global.game.timer;
-                *text = Text::from_section(time, timer_text.clone());
-                *vis = Visibility::Visible;
-            }
+        if player_pos.0 == global.game.active_player_pos {
+            let clock = TextSection::new("⏰", timer_text.clone());
+            let time = TextSection::new(&global.game.timer, normal_style.clone());
+            *text = Text::from_sections([clock, time]);
+            *vis = Visibility::Visible;
         } else {
             *vis = Visibility::Hidden;
         }
@@ -465,8 +479,8 @@ pub fn animatetext_update(
     };
 
     for (mut vis, player_pos, mut text) in text_q.iter_mut() {
+        let name = text.sections.first().unwrap().value.clone();
         if player_pos.0 == global.game.active_player_pos {
-            let name = text.sections.first().unwrap().value.clone();
             *text = Text::from_section(name, playing_text.clone());
             match *vis {
                 Visibility::Hidden => *vis = Visibility::Visible,
@@ -477,7 +491,6 @@ pub fn animatetext_update(
             continue;
         }
 
-        let name = text.sections.first().unwrap().value.clone();
         *text = Text::from_section(name, idle_text.clone());
 
         *vis = Visibility::Visible;
@@ -586,11 +599,7 @@ pub fn create_player_ui<T: PlayerDirection>(
                 size: Vec2::new(100., 30.),
             },
             visibility: Visibility::Hidden,
-            transform: Transform::from_translation(Vec3::from_array([
-                draw_pos.x + 40.,
-                draw_pos.y,
-                15.,
-            ])),
+            transform: Transform::from_translation(direction.timer_translation()),
             ..default()
         },
     ));

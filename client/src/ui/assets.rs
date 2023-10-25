@@ -9,8 +9,11 @@ pub fn load_assets(
     asset_server: Res<AssetServer>,
     mut asset_list: ResMut<crate::assets::AssetList>,
 ) {
-    let font = asset_server.load("fonts/FiraCode-Bold.otf");
+    let font = asset_server.load("fonts/font.ttf");
     asset_list.0.push(font.clone_untyped());
+
+    let noto_font = asset_server.load("fonts/noto.ttf");
+    asset_list.0.push(noto_font.clone_untyped());
 
     let board = asset_server.load("cards/tables/table_blue.png");
     asset_list.0.push(board.clone_untyped());
@@ -57,6 +60,7 @@ pub fn load_assets(
         background,
         back_card,
         board,
+        noto_font,
         avatars,
     });
 }
