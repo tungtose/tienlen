@@ -71,6 +71,7 @@ pub struct UpdateCard;
 #[derive(Resource)]
 pub struct UiAssets {
     pub font: Handle<Font>,
+    pub noto_font: Handle<Font>,
     pub cards: HashMap<String, Handle<Image>>,
     pub board: Handle<Image>,
     pub back_card: Handle<Image>,
