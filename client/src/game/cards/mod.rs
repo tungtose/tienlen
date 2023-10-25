@@ -26,7 +26,11 @@ pub struct CardPlugin;
 impl Plugin for CardPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(TweeningPlugin)
-            .add_plugins(DefaultPickingPlugins)
+            .add_plugins(
+                DefaultPickingPlugins
+                    .build()
+                    .disable::<DebugPickingPlugin>(),
+            )
             .add_event::<SchedulePileEvent>()
             .add_systems(Startup, setup)
             .add_systems(
