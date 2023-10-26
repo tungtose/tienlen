@@ -247,6 +247,7 @@ dependencies = [
  "cfg-if",
  "naia-bevy-client",
  "naia-bevy-demo-shared",
+ "naia-shared",
  "serde",
  "wasm-bindgen",
 ]

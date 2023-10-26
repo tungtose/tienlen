@@ -13,3 +13,4 @@ bevy_core = { version = "0.11.2", default-features=false }
 bevy_ecs = { version = "0.11.2", default-features=false }
 bevy_log = { version = "0.11.2", default-features=false }
 naia-bevy-server = { version = "0.21.1", features = [ "transport_webrtc" ] }
+naia-shared = "0.21.1"

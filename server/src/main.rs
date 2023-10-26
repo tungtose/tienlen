@@ -3,6 +3,7 @@ use bevy_core::{FrameCountPlugin, TaskPoolPlugin, TypeRegistrationPlugin};
 use bevy_ecs::schedule::IntoSystemConfigs;
 use bevy_log::{info, LogPlugin};
 use bevy_time::TimePlugin;
+use naia_shared::ConnectionConfig;
 use std::time::Duration;
 
 use naia_bevy_demo_shared::protocol;
@@ -18,6 +19,16 @@ use crate::systems::common;
 fn main() {
     info!("Naia Bevy Server Demo starting up");
 
+    let connection_config = ConnectionConfig {
+        disconnection_timeout_duration: Duration::from_secs(5),
+        ..Default::default()
+    };
+
+    let server_config = ServerConfig {
+        connection: connection_config,
+        ..Default::default()
+    };
+
     // Build App
     App::default()
         // Plugins
@@ -27,7 +38,7 @@ fn main() {
             TypeRegistrationPlugin::default(),
             FrameCountPlugin::default(),
             LogPlugin::default(),
-            ServerPlugin::new(ServerConfig::default(), protocol()),
+            ServerPlugin::new(server_config, protocol()),
             ScheduleRunnerPlugin::run_loop(Duration::from_millis(3)),
         ))
         // Startup System

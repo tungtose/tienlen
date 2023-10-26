@@ -8,13 +8,14 @@ use bevy::{
 };
 use naia_bevy_client::{ClientConfig, Plugin as ClientPlugin, ReceiveEvents};
 use naia_bevy_demo_shared::protocol;
+use naia_shared::ConnectionConfig;
 
 use crate::{
     // assets::AssetPlugin,
     game::GamePlugin,
     states::MainState,
     system_set::{MainLoop, SystemSetsPlugin, Tick},
-    systems::{events, init, input, my_cursor_system, sync},
+    systems::{events, init, my_cursor_system, sync},
     ui::UiPlugin,
     welcome::WelcomeScreenPlugin,
 };
@@ -43,6 +44,14 @@ pub fn run() {
         ..default()
     };
 
+    let client_config = ClientConfig {
+        connection: ConnectionConfig {
+            disconnection_timeout_duration: Duration::from_secs(1),
+            ..Default::default()
+        },
+        ..Default::default()
+    };
+
     App::default()
         // Bevy Plugins
         .add_state::<MainState>()
@@ -53,7 +62,7 @@ pub fn run() {
                 .set(asset_plug),
         )
         // Add Naia Client Plugin
-        .add_plugins(ClientPlugin::new(ClientConfig::default(), protocol()))
+        .add_plugins(ClientPlugin::new(client_config, protocol()))
         // .add_plugins(WorldInspectorPlugin::new())
         .add_plugins(UiPlugin)
         .add_plugins(WelcomeScreenPlugin)

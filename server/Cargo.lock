@@ -1470,6 +1470,7 @@ dependencies = [
  "bevy_time",
  "naia-bevy-demo-shared",
  "naia-bevy-server",
+ "naia-shared",
 ]
 
 [[package]]
