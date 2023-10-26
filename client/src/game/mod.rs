@@ -10,13 +10,14 @@ use naia_bevy_client::{events::MessageEvents, Client};
 use naia_bevy_demo_shared::{
     channels::{GameSystemChannel, PlayerActionChannel},
     components::{card::Card, hand::Hand, Player},
-    messages::{AcceptStartGame, SkipTurn},
+    messages::{AcceptStartGame, EndMatch, SkipTurn},
 };
 
 use crate::{components::LocalPlayer, resources::Global, states::MainState};
 
 use self::{
-    cards::CardPlugin, controller::ControllerPlugin, player_ui::PlayerUiPlugin, table::TablePlugin,
+    cards::CardPlugin, controller::ControllerPlugin, player_ui::PlayerUiPlugin, status::DrawStatus,
+    table::TablePlugin,
 };
 use self::{controller::SkipTurnEvent, status::StatusPlugin};
 
@@ -64,27 +65,6 @@ fn local_init(mut commands: Commands) {
 pub fn skip_turn(mut client: Client) {
     info!("skip turn!!!");
     client.send_message::<PlayerActionChannel, SkipTurn>(&SkipTurn::default());
-}
-
-pub fn spawn_player(
-    mut next_state: ResMut<NextState<MainState>>,
-    player_q: Query<&Player, With<LocalPlayer>>,
-    mut global: ResMut<Global>,
-) {
-    let Ok(player) = player_q
-        .get_single()
-         else {
-        return;
-    };
-
-    let hand_str = player.cards.clone();
-    let hand = Hand::from(hand_str);
-
-    for card in hand.cards.as_slice() {
-        global.player_cards.insert(card.ordinal(), *card);
-    }
-
-    next_state.set(MainState::Game);
 }
 
 pub fn wait_to_ingame(

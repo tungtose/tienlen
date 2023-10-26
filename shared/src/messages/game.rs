@@ -18,6 +18,9 @@ pub struct RequestStart;
 pub struct WaitForStart(pub usize);
 
 #[derive(Message, Default)]
+pub struct EndMatch(pub usize);
+
+#[derive(Message, Default)]
 pub struct AcceptStartGame {
     pub cards: String,
     pub active_player: usize,

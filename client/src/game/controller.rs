@@ -4,7 +4,8 @@ use naia_bevy_demo_shared::{
     channels::{EntityAssignmentChannel, GameSystemChannel, PlayerActionChannel},
     components::Host,
     messages::{
-        AcceptPlayCard, AcceptStartGame, EntityAssignment, NewMatch, StartGame, UpdateTurn,
+        AcceptPlayCard, AcceptStartGame, EndMatch, EntityAssignment, NewMatch, StartGame,
+        UpdateTurn,
     },
 };
 
@@ -21,14 +22,21 @@ impl Plugin for ControllerPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<PlayEvent>()
             .add_event::<SkipTurnEvent>()
-            .add_systems(Update, (spawn_start_btn, handle_start_game_event))
+            .add_systems(
+                Update,
+                (
+                    spawn_start_btn,
+                    handle_start_game_event,
+                    handle_end_match_event,
+                ),
+            )
             .add_systems(OnEnter(MainState::Lobby), spawn_play_controller)
             .add_systems(OnEnter(MainState::Wait), hide_start_btn)
             .add_systems(Update, player_btn_click.run_if(in_state(MainState::Lobby)))
             .add_systems(
                 Update,
                 (player_btn_click, update_play_controller, handle_skip_event)
-                    .run_if(in_state(MainState::Game)),
+                    .run_if(in_state(MainState::Game).or_else(in_state(MainState::Wait))),
             );
     }
 }
@@ -356,6 +364,19 @@ pub fn player_btn_click(
             if skip_btn.is_some() {
                 // info!("Clicked skip!");
                 skip_ev.send_default()
+            }
+        }
+    }
+}
+
+pub fn handle_end_match_event(
+    mut event_reader: EventReader<MessageEvents>,
+    mut vis_q: Query<&mut Visibility, With<PlayContainer>>,
+) {
+    for event in event_reader.iter() {
+        for end_match in event.read::<GameSystemChannel, EndMatch>() {
+            for mut vis in vis_q.iter_mut() {
+                *vis = Visibility::Hidden;
             }
         }
     }
