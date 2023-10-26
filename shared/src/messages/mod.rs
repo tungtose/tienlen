@@ -15,8 +15,8 @@ pub use counter::Counter;
 pub use entity_assignment::EntityAssignment;
 pub use error::{ErrorCode, GameError};
 pub use game::{
-    AcceptPlayCard, AcceptPlayerReady, AcceptStartGame, NewMatch, NewPlayer, PlayCard, PlayerReady,
-    RequestStart, SkipTurn, StartGame, UpdateScore, UpdateTurn, WaitForStart,
+    AcceptPlayCard, AcceptPlayerReady, AcceptStartGame, EndMatch, NewMatch, NewPlayer, PlayCard,
+    PlayerReady, RequestStart, SkipTurn, StartGame, UpdateScore, UpdateTurn, WaitForStart,
 };
 pub use key_command::KeyCommand;
 
@@ -32,6 +32,7 @@ impl ProtocolPlugin for MessagesPlugin {
             .add_message::<Counter>()
             .add_message::<StartGame>()
             .add_message::<NewMatch>()
+            .add_message::<EndMatch>()
             .add_message::<NewPlayer>()
             .add_message::<AcceptStartGame>()
             .add_message::<RequestStart>()

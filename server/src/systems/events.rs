@@ -29,7 +29,7 @@ use naia_bevy_demo_shared::{
     },
     messages::{
         error::GameError, Auth, EntityAssignment, ErrorCode, NewMatch, NewPlayer,
-        PlayCard, PlayerMessage, PlayerReady, SkipTurn, StartGame, UpdateTurn, AcceptPlayCard, AcceptPlayerReady, AcceptStartGame, WaitForStart, RequestStart,
+        PlayCard, PlayerMessage, PlayerReady, SkipTurn, StartGame, UpdateTurn, AcceptPlayCard, AcceptPlayerReady, AcceptStartGame, WaitForStart, RequestStart, EndMatch,
     },
 };
 
@@ -469,6 +469,8 @@ pub fn accept_start_game(
         for (_, _) in events.read::<PlayerActionChannel, RequestStart>() {
             global.total_request_play += 1;
 
+            info!("Global total: {}", global.total_player);
+
             if global.total_request_play == global.total_player {
 
             global.new_match();
@@ -529,7 +531,7 @@ pub fn end_match(
             // Clear player hand
             info!("------ Game State: End Match ---------");
 
-            // FIXME: let client verify & finish animation -> then reset
+            // // FIXME: let client verify & finish animation -> then reset
             global.new_match();
             turn.new_match();
 
@@ -547,12 +549,11 @@ pub fn end_match(
                 let mut player = player_q.get_mut(*entity).unwrap();
                 *player.cards = hand.to_string();
 
-                let data = NewMatch {
-                    cards: hand.to_string(),
-                    active_player: next_player,
-                };
 
-                server.send_message::<GameSystemChannel, NewMatch>(user_key, &data);
+                server.send_message::<GameSystemChannel, EndMatch>(
+                    user_key,
+                    &EndMatch(5)
+                );
             }
 
             if let Ok(mut table) = table_q.get_single_mut() {

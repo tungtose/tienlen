@@ -5,12 +5,11 @@ use naia_bevy_client::{events::MessageEvents, Client};
 use naia_bevy_demo_shared::{
     channels::{GameSystemChannel, PlayerActionChannel},
     components::{deck::Deck, hand::Hand, rank::Rank, suit::Suit},
-    messages::{AcceptPlayCard, NewMatch, PlayCard},
+    messages::{AcceptPlayCard, AcceptStartGame, EndMatch, NewMatch, PlayCard},
 };
 use std::{collections::HashMap, ops::Add};
 
 use crate::{
-    game::LocalStartGame,
     resources::Global,
     system_set::{Animating, Playing},
 };
@@ -44,7 +43,8 @@ impl Plugin for CardPlugin {
                     handle_accept_play_event,
                     spawn_player_card,
                     update_status,
-                    handle_endgame,
+                    handle_end_match_event,
+                    // handle_endgame,
                     handle_reschedule_pile.in_set(Animating),
                 ),
             );
@@ -293,7 +293,10 @@ fn handle_accept_play_event(
 
             if global.game.local_player.pos as usize == data.cur_player {
                 let mut need_reschedule = false;
-                let (pile_entity, pile_child) = pile_q.get_single_mut().unwrap();
+                let Ok((pile_entity, pile_child)) = pile_q.get_single_mut() else {
+                    info!("BUG: Not found PILE");
+                    return;
+                };
 
                 for entity in cards.iter() {
                     need_reschedule = true;
@@ -438,30 +441,32 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
 fn spawn_player_card(
     mut commands: Commands,
     card_map: Res<CardMap>,
-    mut start_game_event: EventReader<LocalStartGame>,
+    mut event_reader: EventReader<MessageEvents>,
     mut schedule_pile_event: EventWriter<SchedulePileEvent>,
     mut card_q: Query<&mut Visibility, With<Card>>,
     global: Res<Global>,
 ) {
-    for ev in start_game_event.iter() {
-        let cards: Vec<Entity> = card_map.list_from_str(&ev.0);
+    for events in event_reader.iter() {
+        for message in events.read::<GameSystemChannel, AcceptStartGame>() {
+            let cards: Vec<Entity> = card_map.list_from_str(&message.cards);
 
-        for c in cards.iter() {
-            let mut vis = card_q.get_mut(*c).unwrap();
-            *vis = Visibility::Visible;
+            for c in cards.iter() {
+                let mut vis = card_q.get_mut(*c).unwrap();
+                *vis = Visibility::Visible;
+            }
+
+            commands
+                .spawn((
+                    SpatialBundle {
+                        transform: Transform::from_translation(global.game.local_player.pile_pos),
+                        ..Default::default()
+                    },
+                    Pile,
+                ))
+                .push_children(&cards);
+
+            schedule_pile_event.send(SchedulePileEvent(cards));
         }
-
-        commands
-            .spawn((
-                SpatialBundle {
-                    transform: Transform::from_translation(global.game.local_player.pile_pos),
-                    ..Default::default()
-                },
-                Pile,
-            ))
-            .push_children(&cards);
-
-        schedule_pile_event.send(SchedulePileEvent(cards));
     }
 }
 
@@ -495,6 +500,27 @@ pub fn handle_endgame(
             schedule_pile_event.send(SchedulePileEvent(new_cards));
 
             global.game.active_player_pos = message.active_player as i32;
+        }
+    }
+}
+
+pub fn handle_end_match_event(
+    mut event_reader: EventReader<MessageEvents>,
+    mut pile_q: Query<Entity, With<Pile>>,
+    // card_map: Res<CardMap>,
+    mut card_q: Query<&mut Visibility, With<Card>>,
+    mut commands: Commands,
+) {
+    for event in event_reader.iter() {
+        for _end_match in event.read::<GameSystemChannel, EndMatch>() {
+            for mut old_card_vis in card_q.iter_mut() {
+                *old_card_vis = Visibility::Hidden;
+            }
+
+            for e in pile_q.iter_mut() {
+                commands.entity(e).clear_children();
+                commands.entity(e).despawn();
+            }
         }
     }
 }

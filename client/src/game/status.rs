@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use naia_bevy_client::{events::MessageEvents, Client};
 use naia_bevy_demo_shared::{
     channels::{GameSystemChannel, PlayerActionChannel},
-    messages::{ErrorCode, GameError, RequestStart, WaitForStart},
+    messages::{EndMatch, ErrorCode, GameError, RequestStart, WaitForStart},
 };
 use std::time::Duration;
 
@@ -13,8 +13,16 @@ pub struct StatusPlugin;
 impl Plugin for StatusPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<DrawStatus>()
+            .add_event::<WaitForStartGame>()
             .add_systems(Startup, setup)
-            .add_systems(Update, (handle_server_error_event, handle_wait_event))
+            .add_systems(
+                Update,
+                (
+                    handle_server_error_event,
+                    handle_wait_event,
+                    handle_end_match_event,
+                ),
+            )
             .add_systems(
                 Update,
                 (draw_status, delete_status, update_wait_for_status)
@@ -23,10 +31,18 @@ impl Plugin for StatusPlugin {
     }
 }
 
+#[derive(Event, Default)]
+pub struct WaitForStartGame;
+
+pub enum WaitFor {
+    EndMatch(usize),
+    StartMatch(usize),
+}
+
 #[derive(Event)]
 pub enum DrawStatus {
     Info(String),
-    WaitFor(usize),
+    WaitFor(WaitFor),
     Error(String),
 }
 
@@ -151,28 +167,52 @@ pub fn draw_status(
                 });
             }
             DrawStatus::Info(_) => todo!(),
-            DrawStatus::WaitFor(time) => {
-                let msg = format!("Game start in {} seconds", time);
-                let status_text = commands
-                    .spawn((
-                        TextBundle::from_section(
-                            msg,
-                            TextStyle {
-                                font: res.font.clone(),
-                                font_size: 16.0,
-                                color: Color::YELLOW_GREEN,
-                            },
-                        ),
-                        WaitForText(*time),
-                    ))
-                    .id();
+            DrawStatus::WaitFor(wait_for) => match wait_for {
+                WaitFor::StartMatch(time) => {
+                    let msg = format!("Game start in {} seconds", time);
+                    let status_text = commands
+                        .spawn((
+                            TextBundle::from_section(
+                                msg,
+                                TextStyle {
+                                    font: res.font.clone(),
+                                    font_size: 16.0,
+                                    color: Color::YELLOW_GREEN,
+                                },
+                            ),
+                            WaitForText(*time),
+                        ))
+                        .id();
 
-                commands.entity(status_container).add_child(status_text);
+                    commands.entity(status_container).add_child(status_text);
 
-                commands.spawn(WaitForCounterConfig {
-                    timer: Timer::new(Duration::from_secs(1), TimerMode::Repeating),
-                });
-            }
+                    commands.spawn(WaitForCounterConfig {
+                        timer: Timer::new(Duration::from_secs(1), TimerMode::Repeating),
+                    });
+                }
+                WaitFor::EndMatch(time) => {
+                    let msg = "Match ended".to_string();
+                    let status_text = commands
+                        .spawn((
+                            TextBundle::from_section(
+                                msg,
+                                TextStyle {
+                                    font: res.font.clone(),
+                                    font_size: 16.0,
+                                    color: Color::YELLOW_GREEN,
+                                },
+                            ),
+                            WaitForText(*time),
+                        ))
+                        .id();
+
+                    commands.entity(status_container).add_child(status_text);
+
+                    commands.spawn(WaitForCounterConfig {
+                        timer: Timer::new(Duration::from_secs(1), TimerMode::Repeating),
+                    });
+                }
+            },
         }
     }
 }
@@ -184,7 +224,20 @@ pub fn handle_wait_event(
 ) {
     for events in event_reader.iter() {
         for wait in events.read::<GameSystemChannel, WaitForStart>() {
-            draw_status_ev.send(DrawStatus::WaitFor(wait.0));
+            draw_status_ev.send(DrawStatus::WaitFor(WaitFor::StartMatch(wait.0)));
+            next_state.set(MainState::Wait);
+        }
+    }
+}
+
+pub fn handle_end_match_event(
+    mut event_reader: EventReader<MessageEvents>,
+    mut next_state: ResMut<NextState<MainState>>,
+    mut draw_status_ev: EventWriter<DrawStatus>,
+) {
+    for event in event_reader.iter() {
+        for end_match in event.read::<GameSystemChannel, EndMatch>() {
+            draw_status_ev.send(DrawStatus::WaitFor(WaitFor::EndMatch(end_match.0)));
             next_state.set(MainState::Wait);
         }
     }
