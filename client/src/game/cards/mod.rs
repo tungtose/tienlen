@@ -5,7 +5,7 @@ use naia_bevy_client::{events::MessageEvents, Client};
 use naia_bevy_demo_shared::{
     channels::{GameSystemChannel, PlayerActionChannel},
     components::{deck::Deck, hand::Hand, rank::Rank, suit::Suit},
-    messages::{AcceptPlayCard, AcceptStartGame, EndMatch, NewMatch, PlayCard},
+    messages::{AcceptPlayCard, AcceptStartGame, EndMatch, PlayCard},
 };
 use std::{collections::HashMap, ops::Add};
 
@@ -39,12 +39,10 @@ impl Plugin for CardPlugin {
             .add_systems(
                 Update,
                 (
-                    // player_btn_click,
                     handle_accept_play_event,
                     spawn_player_card,
                     update_status,
                     handle_end_match_event,
-                    // handle_endgame,
                     handle_reschedule_pile.in_set(Animating),
                 ),
             );
@@ -212,27 +210,6 @@ fn handle_reschedule_pile(
             commands.entity(c).insert(Animator::new(tween));
         }
     }
-}
-
-fn valid_cards_condition(card_q: Query<(&CStatus, &Raw), With<Card>>) -> bool {
-    let mut active_cards = vec![];
-    for (status, raw) in card_q.iter() {
-        if let CStatus::Active = *status {
-            active_cards.push(raw.get());
-        }
-    }
-
-    if active_cards.is_empty() {
-        return false;
-    }
-
-    let hand = Hand::from_str(active_cards.join(",").as_str());
-
-    if !hand.check_combination() {
-        return false;
-    }
-
-    true
 }
 
 fn send_cards_to_server(
@@ -470,44 +447,9 @@ fn spawn_player_card(
     }
 }
 
-pub fn handle_endgame(
-    mut commands: Commands,
-    card_map: Res<CardMap>,
-    mut event_reader: EventReader<MessageEvents>,
-    mut schedule_pile_event: EventWriter<SchedulePileEvent>,
-    mut pile_q: Query<Entity, With<Pile>>,
-    mut card_q: Query<&mut Visibility, With<Card>>,
-    mut global: ResMut<Global>,
-) {
-    for events in event_reader.iter() {
-        for message in events.read::<GameSystemChannel, NewMatch>() {
-            for mut old_card_vis in card_q.iter_mut() {
-                *old_card_vis = Visibility::Hidden;
-            }
-
-            let pile = pile_q.get_single_mut().unwrap();
-
-            commands.entity(pile).clear_children();
-
-            let new_cards: Vec<Entity> = card_map.list_from_str(&message.cards);
-
-            commands.entity(pile).push_children(&new_cards);
-
-            for c in new_cards.iter() {
-                let mut vis = card_q.get_mut(*c).unwrap();
-                *vis = Visibility::Visible;
-            }
-            schedule_pile_event.send(SchedulePileEvent(new_cards));
-
-            global.game.active_player_pos = message.active_player as i32;
-        }
-    }
-}
-
 pub fn handle_end_match_event(
     mut event_reader: EventReader<MessageEvents>,
     mut pile_q: Query<Entity, With<Pile>>,
-    // card_map: Res<CardMap>,
     mut card_q: Query<&mut Visibility, With<Card>>,
     mut commands: Commands,
 ) {

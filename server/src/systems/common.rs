@@ -10,7 +10,7 @@ use bevy_time::{Time, Timer, TimerMode};
 use naia_bevy_demo_shared::{
     channels::GameSystemChannel,
     components::{hand::Hand, timer::Counter, turn::Turn, Player, Table},
-    messages::UpdateTurn,
+    messages::{AcceptPlayCard, UpdateTurn},
 };
 use naia_bevy_server::Server;
 
@@ -94,32 +94,16 @@ pub fn run_out_countdown(
             info!("------------------ Game State: Run Out Countdown -----------------------");
 
             let cur_player = player_q.iter().current_active_player().clone();
-
-            info!("Current Player: {}", cur_player.name());
-
-            // FIXME: refactor!!!
             let mut turn = turn_q.get_single_mut().unwrap();
 
-            turn.debug();
-
-            let (next_active_leader_turn, Some(next_active_pos)) = turn.skip_turn() else {
-                info!("Not found any next_active_pos -> End");
-                return;
-            };
-
-            if next_active_leader_turn {
-                // TODO:
-                // Need to do some thing here,
-                // Ex: auto play a card if player not play any cards
-                // info!("Leader turn not play card... Might counter some bug!");
-                global.leader_turn = true;
-            }
-
             if global.leader_turn {
-                info!("cards: {}", cur_player.cards());
+                *counter.counter = 3.;
+
+                let next_active_pos = turn.next_turn().unwrap();
+
                 let mut hand = Hand::from(cur_player.cards());
+
                 let card_played = hand.remove_smallest_card().to_str();
-                info!("after remove : {}", hand);
 
                 player_q
                     .iter_mut()
@@ -127,9 +111,38 @@ pub fn run_out_countdown(
 
                 let mut table = table_q.get_single_mut().unwrap();
                 *table.cards = card_played.clone();
-                global.table.push_back(Hand::from(card_played));
+
+                global.table.push_back(Hand::from(card_played.clone()));
+                // *counter.counter = 5.;
+
+                let data = AcceptPlayCard {
+                    cur_player: *cur_player.pos,
+                    cards: card_played,
+                    next_player: next_active_pos,
+                    run_out_card: false,
+                };
+
+                for (user_key, _) in global.users_map.iter() {
+                    server.send_message::<GameSystemChannel, AcceptPlayCard>(user_key, &data);
+                }
 
                 global.leader_turn = false;
+
+                player_q.iter_mut().set_next_active(next_active_pos);
+                global.cur_active_pos = next_active_pos;
+
+                counter.recount();
+
+                return;
+            }
+
+            let (next_active_leader_turn, Some(next_active_pos)) = turn.skip_turn() else {
+                info!("Not found any next_active_pos -> End");
+                return;
+            };
+
+            if next_active_leader_turn {
+                global.leader_turn = true;
             }
 
             for (u_key, _) in global.users_map.iter() {
