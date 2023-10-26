@@ -182,6 +182,11 @@ impl Hand {
         self.cards.clear();
     }
 
+    pub fn smallest_card(&mut self) -> Card {
+        self.sort();
+        *self.cards.get(0).unwrap()
+    }
+
     pub fn remove_smallest_card(&mut self) -> Card {
         self.sort();
         self.cards.remove(0)

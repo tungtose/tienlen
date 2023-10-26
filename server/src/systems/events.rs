@@ -28,7 +28,7 @@ use naia_bevy_demo_shared::{
         Color, ColorValue, Counter, Position, Shape, ShapeValue,
     },
     messages::{
-        error::GameError, Auth, EntityAssignment, ErrorCode, NewMatch, NewPlayer,
+        error::GameError, Auth, EntityAssignment, ErrorCode, NewPlayer,
         PlayCard, PlayerMessage, PlayerReady, SkipTurn, StartGame, UpdateTurn, AcceptPlayCard, AcceptPlayerReady, AcceptStartGame, WaitForStart, RequestStart, EndMatch,
     },
 };
@@ -572,7 +572,7 @@ pub fn end_match(
 
 pub fn tick_events(
     mut server: Server,
-    mut position_query: Query<&mut Position>,
+    // mut position_query: Query<&mut Position>,
     mut tick_reader: EventReader<TickEvent>,
 ) {
     let mut has_ticked = false;
@@ -581,7 +581,7 @@ pub fn tick_events(
         has_ticked = true;
 
         // All game logic should happen here, on a tick event
-        let mut messages = server.receive_tick_buffer_messages(server_tick);
+        let mut _messages = server.receive_tick_buffer_messages(server_tick);
 
         // for (_user_key, key_command) in messages.read::<PlayerCommandChannel, KeyCommand>() {
         //     let Some(entity) = &key_command.entity.get(&server) else {
