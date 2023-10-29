@@ -3,6 +3,7 @@ extern crate cfg_if;
 
 cfg_if! {
     if #[cfg(target_arch = "wasm32")] {
+        mod fps;
         mod game;
         mod system_set;
         mod welcome;

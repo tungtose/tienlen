@@ -11,6 +11,7 @@ use naia_bevy_demo_shared::protocol;
 use naia_shared::ConnectionConfig;
 
 use crate::{
+    fps::ScreenDiagsTextPlugin,
     // assets::AssetPlugin,
     game::GamePlugin,
     states::MainState,
@@ -65,6 +66,7 @@ pub fn run() {
         .add_plugins(ClientPlugin::new(client_config, protocol()))
         // .add_plugins(WorldInspectorPlugin::new())
         .add_plugins(UiPlugin)
+        .add_plugins(ScreenDiagsTextPlugin)
         .add_plugins(WelcomeScreenPlugin)
         .add_plugins(GamePlugin)
         .add_plugins(SystemSetsPlugin)
