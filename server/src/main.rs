@@ -25,6 +25,7 @@ fn main() {
     };
 
     let server_config = ServerConfig {
+        require_auth: false,
         connection: connection_config,
         ..Default::default()
     };

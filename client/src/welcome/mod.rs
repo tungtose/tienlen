@@ -50,11 +50,11 @@ pub fn setup(mut commands: Commands, res: Res<UiAssets>) {
 fn join(mut client: Client, mut join_ev: EventReader<JoinEvent>, mut global: ResMut<Global>) {
     // Process connect sever here?
     // FIXME: I don't want to messing up with these env
-    let auth_user_name = env!("AUTH_USER_NAME");
-    let auth_user_pass = env!("AUTH_USER_PASS");
+    // let auth_user_name = env!("AUTH_USER_NAME");
+    // let auth_user_pass = env!("AUTH_USER_PASS");
     let server_address = env!("SERVER_INIT_ADDRESS");
     //
-    client.auth(Auth::new(auth_user_name, auth_user_pass));
+    // client.auth(Auth::new(auth_user_name, auth_user_pass));
     let socket = webrtc::Socket::new(server_address, client.socket_config());
     client.connect(socket);
 

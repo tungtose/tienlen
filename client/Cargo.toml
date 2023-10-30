@@ -30,7 +30,7 @@ bevy_tweening = "0.8.0"
 naia-shared = "0.21.1"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-wasm-bindgen = { version = "0.2.84", features = [ "serde-serialize" ] }
+wasm-bindgen = { version = "0.2.87", features = [ "serde-serialize" ] }
 
 
 [profile.wasm-release]
