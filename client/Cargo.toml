@@ -16,13 +16,34 @@ crate-type = ["cdylib", "rlib"]
 
 [features]
 
+
+[dependencies.bevy]
+version = "0.11.3"
+default-features = false
+features = [
+  "bevy_asset",
+  "bevy_core_pipeline",
+  "bevy_render",
+  "bevy_sprite",
+  "bevy_text",
+  "bevy_ui",
+  "bevy_winit",
+  "default_font",
+  "multi-threaded",
+  "png",
+  "webgl2",
+  "x11",
+  "filesystem_watcher"
+]
+
+
 [dependencies]
 naia-bevy-client = { version = "0.21.1", features = ["transport_webrtc"] }
 naia-bevy-demo-shared = { path = "../shared" }
-bevy = { version = "0.11.3" }
-bevy_egui = "0.21"
+# bevy = { version = "0.11.3" }
+bevy_egui = "0.22"
 cfg-if = { version = "1.0" }
-bevy-inspector-egui = { version = "0.19.0", default-features = false }
+bevy-inspector-egui = { version = "0.20.0", default-features = false }
 bevy_common_assets = { version = "0.7.0", features = ["ron"] }
 serde = "1"
 bevy_mod_picking = "0.15.0"
