@@ -4,7 +4,7 @@ use std::collections::VecDeque;
 use naia_bevy_client::events::MessageEvents;
 use naia_bevy_demo_shared::{channels::GameSystemChannel, messages::AcceptPlayCard};
 
-use crate::{states::MainState, ui::UiAssets};
+use crate::{assets::UiAssets, states::MainState};
 
 use super::cards::{Card, CardMap};
 
@@ -13,7 +13,10 @@ pub struct TablePlugin;
 impl Plugin for TablePlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(OnEnter(MainState::Lobby), setup)
-            .add_systems(Update, handle_accept_play_event);
+            .add_systems(
+                Update,
+                handle_accept_play_event.run_if(in_state(MainState::Game)),
+            );
     }
 }
 

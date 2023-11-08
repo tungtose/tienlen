@@ -18,8 +18,8 @@ impl Plugin for UiPlugin {
             .add_event::<UpdateCard>()
             .add_event::<DrawStatus>()
             .add_event::<UpdateScoreUI>()
-            .add_event::<NewPlayerJoin>()
-            .add_systems(Startup, assets::load_assets);
+            .add_event::<NewPlayerJoin>();
+        // .add_systems(Startup, assets::load_assets);
         // .add_systems(OnEnter(MainState::Lobby), table::spawn_table)
         // .add_systems(
         //     Update,

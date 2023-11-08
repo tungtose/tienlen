@@ -11,6 +11,7 @@ use std::{collections::HashMap, ops::Add};
 
 use crate::{
     resources::Global,
+    states::MainState,
     system_set::{Animating, Playing},
 };
 
@@ -26,9 +27,7 @@ impl Plugin for CardPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(TweeningPlugin)
             .add_plugins(
-                DefaultPickingPlugins
-                    .build()
-                    .disable::<DebugPickingPlugin>(),
+                DefaultPickingPlugins.build(), // .disable::<DebugPickingPlugin>(),
             )
             .add_event::<SchedulePileEvent>()
             .add_systems(Startup, setup)
@@ -423,8 +422,9 @@ fn spawn_player_card(
     mut card_q: Query<&mut Visibility, With<Card>>,
     global: Res<Global>,
 ) {
-    for events in event_reader.iter() {
+    for events in event_reader.read() {
         for message in events.read::<GameSystemChannel, AcceptStartGame>() {
+            info!("GOT ACCEPT START GAME!");
             let cards: Vec<Entity> = card_map.list_from_str(&message.cards);
 
             for c in cards.iter() {
