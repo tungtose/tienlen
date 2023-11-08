@@ -1,12 +1,13 @@
 use std::{ops::Add, time::Duration};
 
-use bevy::{prelude::*, text::Text2dBounds, time::common_conditions::on_fixed_timer};
+use bevy::time::common_conditions::on_timer;
+use bevy::{prelude::*, text::Text2dBounds};
 use naia_bevy_client::events::MessageEvents;
 use naia_bevy_demo_shared::{channels::GameSystemChannel, messages::AcceptPlayerReady};
 
 use naia_bevy_demo_shared::components::Player;
 
-use crate::{components::LocalPlayer, resources::Global, states::MainState, ui::UiAssets};
+use crate::{assets::UiAssets, components::LocalPlayer, resources::Global, states::MainState};
 
 pub struct PlayerUiPlugin;
 
@@ -31,7 +32,7 @@ impl Plugin for PlayerUiPlugin {
             .add_systems(
                 Update,
                 animatetext_update.run_if(
-                    in_state(MainState::Game).and_then(on_fixed_timer(Duration::from_millis(800))),
+                    in_state(MainState::Game).and_then(on_timer(Duration::from_millis(800))),
                 ),
             );
     }

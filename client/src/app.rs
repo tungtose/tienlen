@@ -1,7 +1,6 @@
 use std::time::Duration;
 
 use bevy::{
-    asset::ChangeWatcher,
     log::{Level, LogPlugin},
     prelude::*,
     window::{Window, WindowPlugin},
@@ -36,18 +35,18 @@ pub fn run() {
     };
 
     let log_plug = LogPlugin {
-        filter: "bevy_mod_picking=error".into(),
+        filter: "bevy_mod_picking=error,wgpu_core=error".into(),
         level: Level::INFO,
     };
 
     let asset_plug = AssetPlugin {
-        watch_for_changes: ChangeWatcher::with_delay(Duration::from_millis(200)),
+        watch_for_changes_override: Some(true),
         ..default()
     };
 
     let client_config = ClientConfig {
         connection: ConnectionConfig {
-            disconnection_timeout_duration: Duration::from_secs(1),
+            disconnection_timeout_duration: Duration::from_secs(5),
             ..Default::default()
         },
         ..Default::default()

@@ -18,7 +18,7 @@ crate-type = ["cdylib", "rlib"]
 
 
 [dependencies.bevy]
-version = "0.11.3"
+version = "0.12"
 default-features = false
 features = [
   "bevy_asset",
@@ -33,22 +33,24 @@ features = [
   "png",
   "webgl2",
   "x11",
-  "filesystem_watcher"
+  "file_watcher"
+  # "filesystem_watcher"
 ]
 
 
 [dependencies]
-naia-bevy-client = { version = "0.21.1", features = ["transport_webrtc"] }
+naia-bevy-client = { git = "https://github.com/tungtose/naia.git", branch = "bevy-0.12", features = ["transport_webrtc"] }
 naia-bevy-demo-shared = { path = "../shared" }
 # bevy = { version = "0.11.3" }
-bevy_egui = "0.22"
+bevy_egui = "0.23"
 cfg-if = { version = "1.0" }
 bevy-inspector-egui = { version = "0.20.0", default-features = false }
-bevy_common_assets = { version = "0.7.0", features = ["ron"] }
+bevy_common_assets = { version = "0.8.0", features = ["ron"] }
 serde = "1"
-bevy_mod_picking = "0.15.0"
-bevy_tweening = "0.8.0"
-naia-shared = "0.21.1"
+# bevy_mod_picking = "0.16.0"
+bevy_mod_picking = { git = "https://github.com/TristanCacqueray/bevy_mod_picking.git", branch = "bevy-0.12", features = ["backend_sprite"], default-features = false }
+bevy_tweening = "0.9.0"
+naia-shared = { git = "https://github.com/tungtose/naia.git", branch = "bevy-0.12" }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen = { version = "0.2.87", features = [ "serde-serialize" ] }

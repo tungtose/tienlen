@@ -6,7 +6,7 @@ use naia_bevy_demo_shared::{
 };
 use std::time::Duration;
 
-use crate::{states::MainState, ui::UiAssets};
+use crate::{assets::UiAssets, states::MainState};
 
 pub struct StatusPlugin;
 

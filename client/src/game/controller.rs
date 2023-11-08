@@ -9,7 +9,7 @@ use naia_bevy_demo_shared::{
     },
 };
 
-use crate::{resources::Global, states::MainState, ui::UiAssets};
+use crate::{assets::UiAssets, resources::Global, states::MainState};
 
 use super::{
     cards::{CStatus, Card, Ordinal},
