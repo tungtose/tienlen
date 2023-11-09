@@ -35,7 +35,6 @@ pub struct UiAssets {
 #[derive(serde::Deserialize, Asset, TypePath, Debug)]
 pub struct GameConfig {
     pub window_title: String,
-    window_size: (f32, f32),
     pile_position: (f32, f32, f32),
     p0_position: (f32, f32),
     p1_position: (f32, f32),

@@ -16,9 +16,7 @@ use naia_bevy_server::{
 };
 
 use naia_bevy_demo_shared::{
-    channels::{
-        EntityAssignmentChannel, GameSystemChannel, PlayerActionChannel,
-    },
+    channels::{EntityAssignmentChannel, GameSystemChannel, PlayerActionChannel},
     components::{
         deck::Deck,
         hand::Hand,
@@ -28,8 +26,9 @@ use naia_bevy_demo_shared::{
         Color, ColorValue, Counter, Position, Shape, ShapeValue,
     },
     messages::{
-        error::GameError, Auth, EntityAssignment, ErrorCode, NewPlayer,
-        PlayCard, PlayerMessage, PlayerReady, SkipTurn, StartGame, UpdateTurn, AcceptPlayCard, AcceptPlayerReady, AcceptStartGame, WaitForStart, RequestStart, EndMatch,
+        error::GameError, AcceptPlayCard, AcceptPlayerReady, AcceptStartGame, Auth, EndMatch,
+        EntityAssignment, ErrorCode, NewPlayer, PlayCard, PlayerMessage, PlayerReady, RequestStart,
+        SkipTurn, StartGame, UpdateTurn, WaitForStart,
     },
 };
 
@@ -41,7 +40,7 @@ use crate::{
 use super::common::PlayerIterator;
 
 pub fn auth_events(mut server: Server, mut event_reader: EventReader<AuthEvents>) {
-    for events in event_reader.iter() {
+    for events in event_reader.read() {
         for (user_key, auth) in events.read::<Auth>() {
             if auth.username == "charlie" && auth.password == "12345" {
                 // Accept incoming connection
@@ -59,7 +58,7 @@ pub fn connect_events(
     mut server: Server,
     mut event_reader: EventReader<ConnectEvent>,
 ) {
-    for ConnectEvent(user_key) in event_reader.iter() {
+    for ConnectEvent(user_key) in event_reader.read() {
         let address = server
             .user_mut(user_key)
             // Add User to the main Room
@@ -77,7 +76,7 @@ pub fn disconnect_events(
     mut global: ResMut<Global>,
     mut event_reader: EventReader<DisconnectEvent>,
 ) {
-    for DisconnectEvent(user_key, user) in event_reader.iter() {
+    for DisconnectEvent(user_key, user) in event_reader.read() {
         info!("Naia Server disconnected from: {:?}", user.address);
 
         if let Some(entity) = global.users_map.remove(user_key) {
@@ -91,7 +90,7 @@ pub fn disconnect_events(
 }
 
 pub fn error_events(mut event_reader: EventReader<ErrorEvent>) {
-    for ErrorEvent(error) in event_reader.iter() {
+    for ErrorEvent(error) in event_reader.read() {
         info!("Naia Server Error: {:?}", error);
     }
 }
@@ -107,7 +106,7 @@ pub fn message_events(
     mut turn_q: Query<&mut Turn>,
     mut counter_q: Query<&mut Counter>,
 ) {
-    for events in event_reader.iter() {
+    for events in event_reader.read() {
         for (user_key, new_player_data) in events.read::<PlayerActionChannel, NewPlayer>() {
             let player_name = new_player_data.0.chars().take(10).collect::<String>();
 
@@ -167,7 +166,10 @@ pub fn message_events(
             if let Ok(mut player) = player_q.get_mut(*player_entity) {
                 *player.ready = true;
 
-                let new_player = AcceptPlayerReady { name: player.name(), server_pos: *player.pos  };
+                let new_player = AcceptPlayerReady {
+                    name: player.name(),
+                    server_pos: *player.pos,
+                };
 
                 for (u_key, _) in global.users_map.iter() {
                     server.send_message::<GameSystemChannel, AcceptPlayerReady>(u_key, &new_player);
@@ -189,10 +191,7 @@ pub fn message_events(
             }
 
             for (user_key, _p_entity) in global.users_map.iter() {
-                server.send_message::<GameSystemChannel, WaitForStart>(
-                    user_key,
-                    &WaitForStart(3)
-                );
+                server.send_message::<GameSystemChannel, WaitForStart>(user_key, &WaitForStart(3));
             }
 
             // Add the table component to the room
@@ -463,55 +462,51 @@ pub fn accept_start_game(
     mut turn_q: Query<&mut Turn>,
     mut player_q: Query<&mut Player>,
     mut table_q: Query<&mut Table>,
-    mut counter_q: Query<&mut Counter>
+    mut counter_q: Query<&mut Counter>,
 ) {
-    for events in event_reader.iter() {
+    for events in event_reader.read() {
         for (_, _) in events.read::<PlayerActionChannel, RequestStart>() {
             global.total_request_play += 1;
 
             info!("Global total: {}", global.total_player);
 
             if global.total_request_play == global.total_player {
+                global.new_match();
 
-            global.new_match();
+                if let Ok(mut turn) = turn_q.get_single_mut() {
+                    turn.new_match();
+                    let next_player = turn.current_active_player().unwrap();
+                    player_q.iter_mut().set_next_active(next_player);
+                }
 
-            if let Ok(mut turn) = turn_q.get_single_mut() {
-                turn.new_match();
-                let next_player = turn.current_active_player().unwrap();
-                player_q.iter_mut().set_next_active(next_player);
-            }
+                if let Ok(mut table) = table_q.get_single_mut() {
+                    table.new_match();
+                }
 
-            if let Ok(mut table) = table_q.get_single_mut() {
-                table.new_match();
-            }
+                if let Ok(mut counter) = counter_q.get_single_mut() {
+                    counter.recount();
+                }
 
-            if let Ok(mut counter) = counter_q.get_single_mut() {
-                counter.recount();
-            }
-                
-            let mut deck = Deck::new();
+                let mut deck = Deck::new();
 
-            for (user_key, p_entity) in global.users_map.iter() {
-                let hand = Hand {
-                    cards: deck.deal(13),
-                };
+                for (user_key, p_entity) in global.users_map.iter() {
+                    let hand = Hand {
+                        cards: deck.deal(13),
+                    };
 
-                let cards_str = hand.to_string();
+                    let cards_str = hand.to_string();
 
-                let mut player = player_q.get_mut(*p_entity).unwrap();
-                *player.cards = cards_str.clone();
+                    let mut player = player_q.get_mut(*p_entity).unwrap();
+                    *player.cards = cards_str.clone();
 
-                let message = AcceptStartGame {
-                    cards: cards_str.clone(),
-                    // TODO: decide who play first
-                    active_player: 0,
-                };
+                    let message = AcceptStartGame {
+                        cards: cards_str.clone(),
+                        // TODO: decide who play first
+                        active_player: 0,
+                    };
 
-                server.send_message::<GameSystemChannel, AcceptStartGame>(
-                    user_key,
-                    &message
-                );
-            }
+                    server.send_message::<GameSystemChannel, AcceptStartGame>(user_key, &message);
+                }
             }
         }
     }
@@ -549,11 +544,7 @@ pub fn end_match(
                 let mut player = player_q.get_mut(*entity).unwrap();
                 *player.cards = hand.to_string();
 
-
-                server.send_message::<GameSystemChannel, EndMatch>(
-                    user_key,
-                    &EndMatch(5)
-                );
+                server.send_message::<GameSystemChannel, EndMatch>(user_key, &EndMatch(5));
             }
 
             if let Ok(mut table) = table_q.get_single_mut() {
@@ -577,7 +568,7 @@ pub fn tick_events(
 ) {
     let mut has_ticked = false;
 
-    for TickEvent(server_tick) in tick_reader.iter() {
+    for TickEvent(server_tick) in tick_reader.read() {
         has_ticked = true;
 
         // All game logic should happen here, on a tick event
@@ -610,13 +601,13 @@ pub fn tick_events(
 }
 
 pub fn spawn_entity_events(mut event_reader: EventReader<SpawnEntityEvent>) {
-    for SpawnEntityEvent(_, _) in event_reader.iter() {
+    for SpawnEntityEvent(_, _) in event_reader.read() {
         info!("spawned client entity");
     }
 }
 
 pub fn despawn_entity_events(mut event_reader: EventReader<DespawnEntityEvent>) {
-    for DespawnEntityEvent(_, _) in event_reader.iter() {
+    for DespawnEntityEvent(_, _) in event_reader.read() {
         info!("despawned client entity");
     }
 }
@@ -628,7 +619,7 @@ pub fn insert_component_events(
     mut event_reader: EventReader<InsertComponentEvents>,
     position_query: Query<&Position>,
 ) {
-    for events in event_reader.iter() {
+    for events in event_reader.read() {
         for (user_key, client_entity) in events.read::<Position>() {
             info!("insert component into client entity");
 
@@ -683,11 +674,11 @@ pub fn update_component_events(
     mut event_reader: EventReader<UpdateComponentEvents>,
     mut _position_query: Query<&mut Position>,
 ) {
-    for _events in event_reader.iter() {}
+    for _events in event_reader.read() {}
 }
 
 pub fn remove_component_events(mut event_reader: EventReader<RemoveComponentEvents>) {
-    for events in event_reader.iter() {
+    for events in event_reader.read() {
         for (_user_key, _entity, _component) in events.read::<Position>() {
             info!("removed Position component from client entity");
         }

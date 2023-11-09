@@ -9,15 +9,14 @@ use bevy::prelude::*;
 use naia_bevy_client::{events::MessageEvents, Client};
 use naia_bevy_demo_shared::{
     channels::{GameSystemChannel, PlayerActionChannel},
-    components::{card::Card, hand::Hand, Player},
-    messages::{AcceptStartGame, EndMatch, SkipTurn},
+    components::card::Card,
+    messages::{AcceptStartGame, SkipTurn},
 };
 
-use crate::{components::LocalPlayer, resources::Global, states::MainState};
+use crate::states::MainState;
 
 use self::{
-    cards::CardPlugin, controller::ControllerPlugin, player_ui::PlayerUiPlugin, status::DrawStatus,
-    table::TablePlugin,
+    cards::CardPlugin, controller::ControllerPlugin, player_ui::PlayerUiPlugin, table::TablePlugin,
 };
 use self::{controller::SkipTurnEvent, status::StatusPlugin};
 
@@ -71,7 +70,7 @@ pub fn wait_to_ingame(
     mut event_reader: EventReader<MessageEvents>,
     mut next_state: ResMut<NextState<MainState>>,
 ) {
-    for event in event_reader.iter() {
+    for event in event_reader.read() {
         for _ in event.read::<GameSystemChannel, AcceptStartGame>() {
             info!("Switching to InGame");
             next_state.set(MainState::Game);

@@ -12,7 +12,7 @@ impl Plugin for WelcomeScreenPlugin {
         app.add_plugins(EguiPlugin)
             .add_event::<JoinEvent>()
             .init_resource::<UiState>()
-            // .add_systems(OnEnter(MainState::Welcome), setup)
+            .add_systems(OnEnter(MainState::Welcome), setup)
             .add_systems(Update, join.run_if(on_event::<JoinEvent>()))
             .add_systems(
                 Update,
@@ -36,16 +36,16 @@ impl JoinEvent {
     }
 }
 
-// pub fn setup(mut commands: Commands, res: Res<UiAssets>) {
-//     let background = res.background.clone();
-//
-//     commands.spawn(SpriteBundle {
-//         texture: background,
-//         transform: Transform::from_scale(Vec3::new(1.5, 1.5, 0.0)),
-//         ..Default::default()
-//     });
-// }
-//
+pub fn setup(mut commands: Commands, res: Res<UiAssets>) {
+    let background = res.background.clone();
+
+    commands.spawn(SpriteBundle {
+        texture: background,
+        transform: Transform::from_scale(Vec3::new(1.5, 1.5, 0.0)),
+        ..Default::default()
+    });
+}
+
 fn join(mut client: Client, mut join_ev: EventReader<JoinEvent>, mut global: ResMut<Global>) {
     // Process connect sever here?
     // FIXME: I don't want to messing up with these env
@@ -57,7 +57,7 @@ fn join(mut client: Client, mut join_ev: EventReader<JoinEvent>, mut global: Res
     let socket = webrtc::Socket::new(server_address, client.socket_config());
     client.connect(socket);
 
-    for join_data in join_ev.iter() {
+    for join_data in join_ev.read() {
         info!("Sending Player Data: {:?}", join_data.player_name());
         // Pass to global is a hack!!!
         global.player_name = join_data.player_name();

@@ -147,7 +147,7 @@ pub fn draw_status(
 ) {
     let status_container = status_container_q.get_single().unwrap();
 
-    for status in status_ev.iter() {
+    for status in status_ev.read() {
         match status {
             DrawStatus::Error(msg) => {
                 let status_text = commands
@@ -222,7 +222,7 @@ pub fn handle_wait_event(
     mut draw_status_ev: EventWriter<DrawStatus>,
     mut next_state: ResMut<NextState<MainState>>,
 ) {
-    for events in event_reader.iter() {
+    for events in event_reader.read() {
         for wait in events.read::<GameSystemChannel, WaitForStart>() {
             draw_status_ev.send(DrawStatus::WaitFor(WaitFor::StartMatch(wait.0)));
             next_state.set(MainState::Wait);
@@ -235,7 +235,7 @@ pub fn handle_end_match_event(
     mut next_state: ResMut<NextState<MainState>>,
     mut draw_status_ev: EventWriter<DrawStatus>,
 ) {
-    for event in event_reader.iter() {
+    for event in event_reader.read() {
         for end_match in event.read::<GameSystemChannel, EndMatch>() {
             draw_status_ev.send(DrawStatus::WaitFor(WaitFor::EndMatch(end_match.0)));
             next_state.set(MainState::Wait);
@@ -247,7 +247,7 @@ pub fn handle_server_error_event(
     mut event_reader: EventReader<MessageEvents>,
     mut draw_status_ev: EventWriter<DrawStatus>,
 ) {
-    for events in event_reader.iter() {
+    for events in event_reader.read() {
         for error_code in events.read::<GameSystemChannel, ErrorCode>() {
             let game_error = GameError::from(error_code);
             match game_error {

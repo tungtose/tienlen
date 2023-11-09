@@ -1,7 +1,6 @@
 use std::time::Duration;
 
 use bevy_ecs::{
-    query::With,
     system::{Commands, Query, Res, ResMut, Resource},
     world::Mut,
 };

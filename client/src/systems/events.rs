@@ -1,6 +1,9 @@
 use std::default::Default;
 
-use bevy::prelude::{info, Commands, EventReader, EventWriter, NextState, Query, ResMut};
+use bevy::{
+    prelude::{Commands, EventReader, EventWriter, NextState, Query, ResMut},
+    utils::info,
+};
 
 use naia_bevy_client::{
     events::{
@@ -12,7 +15,7 @@ use naia_bevy_client::{
 
 use naia_bevy_demo_shared::messages::{
     AcceptStartGame, EntityAssignment, KeyCommand, NewPlayer, PlayerMessage, PlayerReady,
-    UpdateScore, UpdateTurn, WaitForStart,
+    UpdateScore, UpdateTurn,
 };
 use naia_bevy_demo_shared::{
     channels::{
@@ -35,11 +38,11 @@ pub fn connect_events(
     mut next_state: ResMut<NextState<MainState>>,
     mut event_reader: EventReader<ConnectEvent>,
 ) {
-    for _ in event_reader.iter() {
+    for _ in event_reader.read() {
         let Ok(server_address) = client.server_address() else {
             panic!("Not found server address!");
         };
-        info!("Client connected to: {}", server_address);
+        info("Client connected to: {server_address}");
 
         client
             .send_message::<PlayerActionChannel, NewPlayer>(&NewPlayer(global.player_name.clone()));
@@ -49,14 +52,14 @@ pub fn connect_events(
 }
 
 pub fn reject_events(mut event_reader: EventReader<RejectEvent>) {
-    for _ in event_reader.iter() {
-        info!("Client rejected from connecting to Server");
+    for _ in event_reader.read() {
+        info("Client rejected from connecting to Server");
     }
 }
 
 pub fn disconnect_events(mut event_reader: EventReader<DisconnectEvent>) {
-    for _ in event_reader.iter() {
-        info!("Client disconnected from Server");
+    for _ in event_reader.read() {
+        info("Client disconnected from Server");
     }
 }
 
@@ -74,7 +77,7 @@ pub fn message_events(
     mut new_player_join_ev: EventWriter<NewPlayerJoin>,
     mut player_message_ev: EventWriter<PlayerMessageEvent>,
 ) {
-    for events in event_reader.iter() {
+    for events in event_reader.read() {
         for message in events.read::<GameSystemChannel, PlayerMessage>() {
             let event = PlayerMessageEvent(message.0, message.1.to_string());
             player_message_ev.send(event);
@@ -108,11 +111,11 @@ pub fn message_events(
 
             let entity = message.entity.get(&client).unwrap();
             if assign {
-                info!("gave ownership of entity");
+                info("gave ownership of entity");
 
                 match player_query.get(entity) {
                     Ok(_) => {
-                        info!("CONNECTED!!!");
+                        info("CONNECTED!!!");
                         global.player_entity = Some(entity);
                         commands.entity(entity).insert(LocalPlayer);
 
@@ -120,7 +123,7 @@ pub fn message_events(
                             &PlayerReady::default(),
                         );
                     }
-                    Err(err) => info!("Gave Ownership Error: {}", err),
+                    Err(err) => info("Gave Ownership Error: {err}"),
                 }
             }
         }
@@ -128,14 +131,14 @@ pub fn message_events(
 }
 
 pub fn spawn_entity_events(mut event_reader: EventReader<SpawnEntityEvent>) {
-    for SpawnEntityEvent(_entity) in event_reader.iter() {
-        info!("spawned entity");
+    for SpawnEntityEvent(_entity) in event_reader.read() {
+        info("spawned entity");
     }
 }
 
 pub fn despawn_entity_events(mut event_reader: EventReader<DespawnEntityEvent>) {
-    for DespawnEntityEvent(_entity) in event_reader.iter() {
-        info!("despawned entity");
+    for DespawnEntityEvent(_entity) in event_reader.read() {
+        info("despawned entity");
     }
 }
 
@@ -148,7 +151,7 @@ pub fn tick_events(
         return;
     };
 
-    for ClientTickEvent(client_tick) in tick_reader.iter() {
+    for ClientTickEvent(client_tick) in tick_reader.read() {
         if !global.command_history.can_insert(client_tick) {
             // History is full
             continue;

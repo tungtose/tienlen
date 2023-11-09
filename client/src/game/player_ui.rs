@@ -173,7 +173,7 @@ pub fn handle_load_exist_player(
     mut event_reader: EventReader<LoadExistPlayerEvent>,
     player_q: Query<&Player, Without<LocalPlayer>>,
 ) {
-    for event in event_reader.iter() {
+    for event in event_reader.read() {
         let cur_local_pos = event.0;
 
         if cur_local_pos == 0 {
@@ -288,7 +288,7 @@ pub fn new_player_join(
     top_player_q: Query<(), With<Top>>,
     right_player_q: Query<(), With<Right>>,
 ) {
-    for events in event_reader.iter() {
+    for events in event_reader.read() {
         for new_player in events.read::<GameSystemChannel, AcceptPlayerReady>() {
             let player_name = new_player.name;
             let player_pos = new_player.server_pos as i32;
@@ -447,7 +447,7 @@ pub fn update_player_message(
         color: Color::DARK_GREEN,
     };
 
-    for message in message_ev.iter() {
+    for message in message_ev.read() {
         for (mut text, pos) in ui_q.iter_mut() {
             if pos.0 == message.0 as i32 {
                 *text = Text::from_section(message.1.clone(), text_style.clone());

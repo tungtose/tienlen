@@ -21,8 +21,6 @@ pub fn sync_main_player(
 pub fn sync_foreign_player(
     player_q: Query<&Player, Without<LocalPlayer>>,
     mut global: ResMut<Global>,
-    // config_res: Res<GameConfigHandle>,
-    // mut game_config: ResMut<Assets<GameConfig>>,
 ) {
     let main_player_pos = global.game.local_player.pos;
     let is_join = global.game.local_player.is_join;
@@ -102,49 +100,49 @@ pub fn sync_foreign_player(
     }
 }
 
-pub fn sync_main_player_cards(
-    player_q: Query<&Player, With<LocalPlayer>>,
-    mut local_player_cards_q: Query<&mut LocalPlayerCards>,
-) {
-    let Ok(player) = player_q.get_single() else {
-        return;
-    };
-
-    let hand_str = player.cards.clone();
-
-    let hand = Hand::from(hand_str);
-
-    if hand.is_empty() {
-        return;
-    }
-
-    let Ok(mut ppp) = local_player_cards_q.get_single_mut() else {
-        return;
-    };
-
-    let cur_value: usize = ppp.0.values().map(|c| c.ordinal()).sum();
-
-    if hand.total_value() != cur_value {
-        ppp.0.clear();
-        for card in hand.cards.as_slice() {
-            ppp.0.insert(card.ordinal(), *card);
-        }
-    }
-}
-
-pub fn sync_table_cards(mut global: ResMut<Global>, server_table_q: Query<&Table>) {
-    let Ok(table_server) = server_table_q.get_single() else {
-        return;
-    };
-
-    let table_cards_str = table_server.cards.to_string();
-
-    if table_cards_str.is_empty() {
-        return;
-    }
-
-    global.game.table_cards = table_server.cards.to_string();
-}
+// pub fn sync_main_player_cards(
+//     player_q: Query<&Player, With<LocalPlayer>>,
+//     mut local_player_cards_q: Query<&mut LocalPlayerCards>,
+// ) {
+//     let Ok(player) = player_q.get_single() else {
+//         return;
+//     };
+//
+//     let hand_str = player.cards.clone();
+//
+//     let hand = Hand::from(hand_str);
+//
+//     if hand.is_empty() {
+//         return;
+//     }
+//
+//     let Ok(mut ppp) = local_player_cards_q.get_single_mut() else {
+//         return;
+//     };
+//
+//     let cur_value: usize = ppp.0.values().map(|c| c.ordinal()).sum();
+//
+//     if hand.total_value() != cur_value {
+//         ppp.0.clear();
+//         for card in hand.cards.as_slice() {
+//             ppp.0.insert(card.ordinal(), *card);
+//         }
+//     }
+// }
+//
+// pub fn sync_table_cards(mut global: ResMut<Global>, server_table_q: Query<&Table>) {
+//     let Ok(table_server) = server_table_q.get_single() else {
+//         return;
+//     };
+//
+//     let table_cards_str = table_server.cards.to_string();
+//
+//     if table_cards_str.is_empty() {
+//         return;
+//     }
+//
+//     global.game.table_cards = table_server.cards.to_string();
+// }
 
 pub fn sync_timer(mut global: ResMut<Global>, timer_q: Query<&Counter>) {
     let Ok(server_timer) = timer_q.get_single() else {

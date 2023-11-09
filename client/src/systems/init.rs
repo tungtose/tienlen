@@ -5,7 +5,7 @@ use crate::resources::Global;
 #[derive(Component)]
 pub struct MainCamera;
 
-pub fn init(mut commands: Commands, asset_server: Res<AssetServer>) {
+pub fn init(mut commands: Commands) {
     info!("Tienlen client started");
 
     // Setup Camera

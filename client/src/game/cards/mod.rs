@@ -11,7 +11,6 @@ use std::{collections::HashMap, ops::Add};
 
 use crate::{
     resources::Global,
-    states::MainState,
     system_set::{Animating, Playing},
 };
 
@@ -176,7 +175,7 @@ fn handle_reschedule_pile(
     mut reschedule_pile_ev: EventReader<SchedulePileEvent>,
     mut card_q: Query<(&Transform, &mut CStatus, &Ordinal, &mut Visibility), With<Card>>,
 ) {
-    for event in reschedule_pile_ev.iter() {
+    for event in reschedule_pile_ev.read() {
         let mut pile_pos = Vec3::new(0., 0., 10.);
         let mut cards = vec![];
 
@@ -217,7 +216,7 @@ fn send_cards_to_server(
     card_q: Query<&Raw, With<Card>>,
     mut draw_status_ev: EventWriter<DrawStatus>,
 ) {
-    for event in play_event_reader.iter() {
+    for event in play_event_reader.read() {
         let cards: Vec<String> = event
             .0
             .iter()
@@ -262,7 +261,7 @@ fn handle_accept_play_event(
     back_card_q: Query<(&Transform, &PlayerPos), (With<BackCard>, Without<Card>)>,
     mut reschedule_pile_ev: EventWriter<SchedulePileEvent>,
 ) {
-    for events in event_reader.iter() {
+    for events in event_reader.read() {
         for data in events.read::<GameSystemChannel, AcceptPlayCard>() {
             let mut table_pos = Vec3::new(-150., 50., 10.);
             let cards = card_map.list_from_str(&data.cards);
@@ -339,7 +338,7 @@ fn update_status(
     mut query_event: EventReader<TweenCompleted>,
     mut card_q: Query<&mut CStatus, With<Card>>,
 ) {
-    for ev in query_event.iter() {
+    for ev in query_event.read() {
         let mut status = card_q.get_mut(ev.entity).unwrap();
 
         if ev.user_data == 0 {
@@ -453,7 +452,7 @@ pub fn handle_end_match_event(
     mut card_q: Query<&mut Visibility, With<Card>>,
     mut commands: Commands,
 ) {
-    for event in event_reader.iter() {
+    for event in event_reader.read() {
         for _end_match in event.read::<GameSystemChannel, EndMatch>() {
             for mut old_card_vis in card_q.iter_mut() {
                 *old_card_vis = Visibility::Hidden;

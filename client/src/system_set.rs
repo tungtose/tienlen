@@ -6,14 +6,14 @@ pub struct SystemSetsPlugin;
 
 impl Plugin for SystemSetsPlugin {
     fn build(&self, app: &mut App) {
-        app.configure_set(Update, Playing.before(Animating))
-            .configure_set(Update, Playing.before(Waiting))
-            .configure_set(Update, Animating.before(WaitingAnotherPlayer))
-            .configure_set(Update, Animating.after(ReceiveEvents))
-            .configure_set(Update, Animating.after(RenderSet::Render))
-            .configure_set(Update, Tick.after(ReceiveEvents))
+        app.configure_sets(Update, Playing.before(Animating))
+            .configure_sets(Update, Playing.before(Waiting))
+            .configure_sets(Update, Animating.before(WaitingAnotherPlayer))
+            .configure_sets(Update, Animating.after(ReceiveEvents))
+            .configure_sets(Update, Animating.after(RenderSet::Render))
+            .configure_sets(Update, Tick.after(ReceiveEvents))
             // Realtime Gameplay Loop
-            .configure_set(Update, MainLoop.after(Tick));
+            .configure_sets(Update, MainLoop.after(Tick));
     }
 }
 

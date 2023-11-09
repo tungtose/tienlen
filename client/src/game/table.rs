@@ -32,7 +32,7 @@ fn handle_accept_play_event(
     mut card_q: Query<&mut Visibility, With<Card>>,
     mut table_pile_q: Query<&mut TablePile>,
 ) {
-    for events in event_reader.iter() {
+    for events in event_reader.read() {
         for data in events.read::<GameSystemChannel, AcceptPlayCard>() {
             let mut table_pile = table_pile_q.get_single_mut().unwrap();
             if let Some(pile) = table_pile.0.back() {

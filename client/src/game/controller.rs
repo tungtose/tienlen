@@ -69,7 +69,7 @@ pub fn spawn_start_btn(
     res: Res<UiAssets>,
     global: Res<Global>,
 ) {
-    for events in event_reader.iter() {
+    for events in event_reader.read() {
         for _message in events.read::<EntityAssignmentChannel, EntityAssignment>() {
             if let Some(player_entity) = global.player_entity {
                 // This player is not a host
@@ -146,7 +146,7 @@ pub fn handle_skip_event(
     mut event_reader: EventReader<MessageEvents>,
     player_q: Query<&PlayerPos, With<Bottom>>,
 ) {
-    for event in event_reader.iter() {
+    for event in event_reader.read() {
         for message in event.read::<GameSystemChannel, UpdateTurn>() {
             let mut vis = vis_q.get_single_mut().unwrap();
             for player_pos in player_q.iter() {
@@ -165,7 +165,7 @@ pub fn handle_start_game_event(
     mut event_reader: EventReader<MessageEvents>,
     player_q: Query<&PlayerPos, With<Bottom>>,
 ) {
-    for event in event_reader.iter() {
+    for event in event_reader.read() {
         for message in event.read::<GameSystemChannel, AcceptStartGame>() {
             let mut vis = vis_q.get_single_mut().unwrap();
             for player_pos in player_q.iter() {
@@ -184,7 +184,7 @@ pub fn update_play_controller(
     mut event_reader: EventReader<MessageEvents>,
     player_q: Query<&PlayerPos, With<Bottom>>,
 ) {
-    for event in event_reader.iter() {
+    for event in event_reader.read() {
         for message in event.read::<GameSystemChannel, AcceptPlayCard>() {
             let mut vis = vis_q.get_single_mut().unwrap();
             for player_pos in player_q.iter() {
@@ -373,8 +373,8 @@ pub fn handle_end_match_event(
     mut event_reader: EventReader<MessageEvents>,
     mut vis_q: Query<&mut Visibility, With<PlayContainer>>,
 ) {
-    for event in event_reader.iter() {
-        for end_match in event.read::<GameSystemChannel, EndMatch>() {
+    for event in event_reader.read() {
+        for _end_match in event.read::<GameSystemChannel, EndMatch>() {
             for mut vis in vis_q.iter_mut() {
                 *vis = Visibility::Hidden;
             }
